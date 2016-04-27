@@ -7,9 +7,10 @@ type = "RPKM" # Expression types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms
 # Clinical values: http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf
 
 # Get the data
-mtx <- getTCGA(disease = cancer, data.type = data.type, type = type, clinical = TRUE)
+# mtx <- getTCGA(disease = cancer, data.type = data.type, type = type, clinical = TRUE)
 # Save to speed up loading next time
 # save(file = paste0("data/mtx_", cancer, ".rda", list = c("mtx"))
+load(file = paste0("data/mtx_", cancer, ".rda"))
 
 # Data exploration
 # dim(mtx$dat)
@@ -36,6 +37,7 @@ fileName.gz <- gzfile(paste0("results/mtx_", cancer, "_mapping.txt.gz"), "w")
 write.table(mtx.mapping, fileName.gz, sep = ";", quote = FALSE, col.names = FALSE, row.names = FALSE)
 close(fileName.gz)
 
+
 ## Create sample annotation matrix
 mtx.sample <- mtx$merged.dat[, c("bcr", "OS", "status")] # First 3 columns are c("sample_id", "surv_time", "dead_1_alive_0")
 colnames(mtx.sample) <- c("sample_id", "surv_time", "dead_1_alive_0")
@@ -43,3 +45,13 @@ colnames(mtx.sample) <- c("sample_id", "surv_time", "dead_1_alive_0")
 fileName.gz <- gzfile(paste0("results/mtx_", cancer, "_3sample.txt.gz"), "w")
 write.table(mtx.sample, fileName.gz, sep = ";", quote = FALSE, row.names = FALSE)
 close(fileName.gz)
+
+## BRCA-specific investigation of clinical parameters
+sink(paste0("results/clinical_", cancer, ".txt"))
+clinical_annotations <- c("pathologicstage", "pathologyTstage", "pathologyNstage", "pathologyMstage", "radiationtherapy", "histologicaltype", "race", "ethnicity")
+for (annotation in clinical_annotations) {
+  print("----------------------------------------------------------------")
+  print(annotation)
+  print(table(mtx$clinical[, annotation]))
+}
+sink()
