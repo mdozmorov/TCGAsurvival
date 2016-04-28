@@ -38,14 +38,6 @@ write.table(mtx.mapping, fileName.gz, sep = ";", quote = FALSE, col.names = FALS
 close(fileName.gz)
 
 
-## Create sample annotation matrix
-mtx.sample <- mtx$merged.dat[, c("bcr", "OS", "status")] # First 3 columns are c("sample_id", "surv_time", "dead_1_alive_0")
-colnames(mtx.sample) <- c("sample_id", "surv_time", "dead_1_alive_0")
-# Save gzipped matrix
-fileName.gz <- gzfile(paste0("results/mtx_", cancer, "_3sample.txt.gz"), "w")
-write.table(mtx.sample, fileName.gz, sep = ";", quote = FALSE, row.names = FALSE)
-close(fileName.gz)
-
 ## BRCA-specific investigation of clinical parameters
 sink(paste0("results/clinical_", cancer, ".txt"))
 clinical_annotations <- c("pathologicstage", "pathologyTstage", "pathologyNstage", "pathologyMstage", "radiationtherapy", "histologicaltype", "race", "ethnicity")
@@ -55,3 +47,16 @@ for (annotation in clinical_annotations) {
   print(table(mtx$clinical[, annotation]))
 }
 sink()
+
+
+## Create sample annotation matrix
+mtx.sample <- mtx$merged.dat[, c("bcr", "OS", "status")] # First 3 columns are c("sample_id", "surv_time", "dead_1_alive_0")
+colnames(mtx.sample) <- c("sample_id", "surv_time", "dead_1_alive_0")
+# Append selected clinical annotations
+mtx.sample <- left_join(mtx.sample, data.frame(bcr = rownames(mtx$clinical), mtx$clinical[, colnames(mtx$clinical) %in% clinical_annotations], stringsAsFactors = FALSE), by = "bcr")
+mtx.sample[ is.na(mtx.sample) ] <- "N/A"
+# Save gzipped matrix
+fileName.gz <- gzfile(paste0("results/mtx_", cancer, "_3sample.txt.gz"), "w")
+write.table(mtx.sample, fileName.gz, sep = ";", quote = FALSE, row.names = FALSE)
+close(fileName.gz)
+
