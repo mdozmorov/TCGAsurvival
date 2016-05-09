@@ -1,16 +1,27 @@
 library(TCGA2STAT)
 library(dplyr)
 
+DIR = "/Users/mikhail/Documents/Data/GenomeRunner/TCGAsurvival/data" # Path where the downloaded data is stored
+
 cancer = "BRCA" # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 data.type = "RNASeq" # Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
 type = "RPKM" # Expression types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
 # Clinical values: http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf
 
-# Get the data
-# mtx <- getTCGA(disease = cancer, data.type = data.type, type = type, clinical = TRUE)
-# Save to speed up loading next time
-# save(file = paste0("data/mtx_", cancer, ".rda", list = c("mtx"))
-load(file = paste0("data/mtx_", cancer, ".rda"))
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, DIR = DIR) {
+  FILE = paste0(DIR, "/mtx_", disease, ".rda") # R object with data
+  if (file.exists(FILE)) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = cancer, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+}
+
+load_data(disease = cancer, data.type = data.type, type = type, DIR = DIR)
 
 # Data exploration
 # dim(mtx$dat)
