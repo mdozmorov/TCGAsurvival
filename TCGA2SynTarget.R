@@ -60,9 +60,18 @@ make_expression_matrix <- function(mtx = mtx, disease = cancer, data.type = data
   close(fileName.gz)
 }
 
-make_mapping_matrix <- function() {
-  
+# A function to create probe ID - gene symbol mapping
+make_mapping_matrix <- function(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir) {
+  mtx.mapping <- data.frame(probeID = colnames(mtx$merged.dat)[ 4:ncol(mtx$merged.dat) ],
+                            geneID = colnames(mtx$merged.dat)[ 4:ncol(mtx$merged.dat) ])
+  # Save gzipped matrix
+  fileName.gz <- gzfile(paste0(results_dir, "/mtx_", disease, "_", data.type, "_", type, "_2mapping.txt.gz"), "w")
+  write.table(mtx.mapping, fileName.gz, sep = ";", quote = FALSE, col.names = FALSE, row.names = FALSE)
+  close(fileName.gz)
 }
+
+
+
 
 mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 
@@ -70,15 +79,10 @@ summarize_data(mtx = mtx)
 
 make_expression_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
 
+make_mapping_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
 
 
-## Create probe ID - gene symbol mapping
-mtx.mapping <- data.frame(probeID = colnames(mtx$merged.dat)[ 4:ncol(mtx$merged.dat) ],
-                          geneID = colnames(mtx$merged.dat)[ 4:ncol(mtx$merged.dat) ])
-# Save gzipped matrix
-fileName.gz <- gzfile(paste0("results/mtx_", cancer, "_mapping.txt.gz"), "w")
-write.table(mtx.mapping, fileName.gz, sep = ";", quote = FALSE, col.names = FALSE, row.names = FALSE)
-close(fileName.gz)
+
 
 
 ## BRCA-specific investigation of clinical parameters
