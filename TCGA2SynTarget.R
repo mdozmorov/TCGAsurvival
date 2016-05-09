@@ -1,5 +1,6 @@
 library(TCGA2STAT)
 library(dplyr)
+library(knitr)
 
 data_dir = "/Users/mikhail/Documents/Data/GenomeRunner/TCGAsurvival/data" # Path where the downloaded data is stored
 results_dir = "/Users/mikhail/Dropbox" # Path where the results are stored
@@ -42,8 +43,10 @@ summarize_data <- function(mtx = mtx) {
   print(mtx$merged.dat[1:5, 1:10])
   print("Head of the clinical matrix")
   print(mtx$clinical[1:5, 1:7])
-  print("List of clinical values: ")
-  print(colnames(mtx$clinical))
+  print("List of clinical values, and frequency of each variable: ")
+  clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
+  print(kable(clin_vars))
+  return(rownames(clin_vars)[ as.numeric(clin_vars$.) > 1])
 }
 
 # A function to create expression matrix
@@ -70,40 +73,26 @@ make_mapping_matrix <- function(mtx = mtx, disease = cancer, data.type = data.ty
   close(fileName.gz)
 }
 
-
+# A function to create sample annotation matrix
+make_annotation_matrix <- function(mtx = mtx, disease = cancer, data.type = data.type, type = type, clinical_annotations = clinical_annotations, results_dir = results_dir) {
+  mtx.sample <- mtx$merged.dat[, c("bcr", "OS", "status")] # First 3 columns are c("sample_id", "surv_time", "dead_1_alive_0")
+  colnames(mtx.sample) <- c("sample_id", "surv_time", "dead_1_alive_0")
+  # Append selected clinical annotations
+  mtx.sample <- left_join(mtx.sample, data.frame(sample_id = rownames(mtx$clinical), mtx$clinical[, colnames(mtx$clinical) %in% clinical_annotations], stringsAsFactors = FALSE), by = "sample_id")
+  mtx.sample[ is.na(mtx.sample) ] <- "N/A"
+  # Save gzipped matrix
+  fileName.gz <- gzfile(paste0(results_dir, "/mtx_", disease, "_", data.type, "_", type, "_3sample.txt.gz"), "w")
+  write.table(mtx.sample, fileName.gz, sep = ";", quote = FALSE, row.names = FALSE)
+  close(fileName.gz)
+}
 
 
 mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 
-summarize_data(mtx = mtx)
+clinical_annotations <- summarize_data(mtx = mtx)
 
 make_expression_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
 
 make_mapping_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
 
-
-
-
-
-## BRCA-specific investigation of clinical parameters
-sink(paste0("results/clinical_", cancer, ".txt"))
-clinical_annotations <- c("pathologicstage", "pathologyTstage", "pathologyNstage", "pathologyMstage", "radiationtherapy", "histologicaltype", "race", "ethnicity")
-for (annotation in clinical_annotations) {
-  print("----------------------------------------------------------------")
-  print(annotation)
-  print(table(mtx$clinical[, annotation]))
-}
-sink()
-
-
-## Create sample annotation matrix
-mtx.sample <- mtx$merged.dat[, c("bcr", "OS", "status")] # First 3 columns are c("sample_id", "surv_time", "dead_1_alive_0")
-colnames(mtx.sample) <- c("sample_id", "surv_time", "dead_1_alive_0")
-# Append selected clinical annotations
-mtx.sample <- left_join(mtx.sample, data.frame(bcr = rownames(mtx$clinical), mtx$clinical[, colnames(mtx$clinical) %in% clinical_annotations], stringsAsFactors = FALSE), by = "bcr")
-mtx.sample[ is.na(mtx.sample) ] <- "N/A"
-# Save gzipped matrix
-fileName.gz <- gzfile(paste0("results/mtx_", cancer, "_3sample.txt.gz"), "w")
-write.table(mtx.sample, fileName.gz, sep = ";", quote = FALSE, row.names = FALSE)
-close(fileName.gz)
-
+make_annotation_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, clinical_annotations = clinical_annotations, results_dir = results_dir)
