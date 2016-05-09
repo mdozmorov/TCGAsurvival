@@ -80,6 +80,7 @@ make_annotation_matrix <- function(mtx = mtx, disease = cancer, data.type = data
   # Append selected clinical annotations
   mtx.sample <- left_join(mtx.sample, data.frame(sample_id = rownames(mtx$clinical), mtx$clinical[, colnames(mtx$clinical) %in% clinical_annotations], stringsAsFactors = FALSE), by = "sample_id")
   mtx.sample[ is.na(mtx.sample) ] <- "N/A"
+  mtx.sample <- mtx.sample[, apply(mtx.sample, 2, function(x) length(x[ x != "N/A"])) > 40] # Keep clinical annitations with at least 40 patients
   # Save gzipped matrix
   fileName.gz <- gzfile(paste0(results_dir, "/mtx_", disease, "_", data.type, "_", type, "_3sample.txt.gz"), "w")
   write.table(mtx.sample, fileName.gz, sep = ";", quote = FALSE, row.names = FALSE)
