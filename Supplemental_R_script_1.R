@@ -159,16 +159,20 @@ mySurvplot = function(surv, gene_expr, xlab="Time (years)", ylab="Probability", 
 
 createDirectory = function(base){
 	i="";
-	while(file.exists(paste(base, i, sep=""))){
-		if(i==""){
-			i=1;
-		}else{
-			i=i+1;
-		}
-	}
-	toDir = paste(base, i, sep="")
-	dir.create(toDir)
+# 	while(file.exists(paste(base, i, sep=""))){
+# 		if(i==""){
+# 			i=1;
+# 		}else{
+# 			i=i+1;
+# 		}
+# 	}
+# }
+  toDir = paste(base, i, sep="")
 	
+  if (!file.exists(toDir)) {
+	  dir.create(toDir)
+	}
+  
 	toDir
 }
 
