@@ -234,7 +234,7 @@ getParameter = function(c_args, id){
 
 }
 
-kmplot = function(expr, clin, event_index=3, time_index=4, affyid="", auto_cutoff="true", quartile=50){
+kmplot = function(expr, clin, event_index=3, time_index=4, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE){
 
 # checks the input: if the expression data and clinical data don't match, the script will fail.
 checkData(expr, clin);
@@ -255,7 +255,11 @@ for(j in 1:length(index_arr)){
 	i=index_arr[j]
 	print(paste("Processing...", colnames(expr)[i]));
 	
-	row = as.numeric(expr[[i]]);
+	if (transform_to_log2) {
+	  row = log2(as.numeric(expr[[i]]) + 1)
+	} else {
+	  row = as.numeric(expr[[i]]);
+	}
 	# Output expression summary statistics
 	row_summary <- summary(row)
 	row_summary <- data.frame(stats = names(row_summary), nums = as.vector(row_summary), stringsAsFactors = FALSE)
