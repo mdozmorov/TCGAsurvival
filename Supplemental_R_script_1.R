@@ -50,7 +50,8 @@ library(survival)
 library(survplot)
 
 
-demo = getParameter(c_args, "demo");
+# demo = getParameter(c_args, "demo");
+demo = "false"
 if(demo == "true"){
 	d = loadData();
 	
@@ -241,7 +242,7 @@ resTable=rbind();
 
 index_arr = 2:dim(expr)[2];
 if(affyid != ""){
-	index = which(colnames(expr) == paste("X", affyid, sep=""));
+	index = which(colnames(expr) == affyid);
 	if(length(index) > 0){
 		index_arr = c(index);
 	}
@@ -251,10 +252,14 @@ for(j in 1:length(index_arr)){
 	print(paste("Processing...", colnames(expr)[i]));
 	
 	row = as.numeric(expr[[i]]);
+	# Output expression summary statistics
+	row_summary <- summary(row)
+	data.frame(stats = names(row_summary), nums = as.vector(row_summary), stringsAsFactors = FALSE) %>% kable %>% print
 	
 	# --------------------- CUTOFF ----------------------
 	if(auto_cutoff == "true"){
 		m = auto_cutoff(row, survival_data, 1, 2)
+		print(paste0("Automatic cutoff at ", m))
 	}else{
 		# calculates lower quartile, median, or upper quartile
 		tmp = getCutoff(quartile, row)
@@ -263,7 +268,7 @@ for(j in 1:length(index_arr)){
 		minValue = tmp[[2]]
 		maxValue = tmp[[3]]
 		indices = tmp[[4]]
-		
+		print(paste0("Median cutoff at ", m))
 	}
 	
 	# gene_expr consists 1 if m smaller then the gene expression value,
