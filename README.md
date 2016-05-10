@@ -36,3 +36,7 @@ MB-0117,8.2,0, 2, WT, moderate, 1, HT/RT, 2, ..
 
 
 - `TCGA2SynTarget.R` - prepares TCGA data for SynTarget format.
+
+- `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
+
+- `survival_analysis.R` - an example of running survival analysis
