@@ -256,11 +256,11 @@ toDir = createDirectory("res");
 resTable=rbind();
 
 # Prepare a file for global statistics
-write.table( paste("Gene", "p-value", "HR", "HR_left", "HR_right", collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table( paste(c("Gene", "p-value", "HR", "HR_left", "HR_right", "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.", "Cutoff_type", "Cutoff_value"), collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 index_arr = 2:dim(expr)[2];
 if(affyid != ""){
-	index = which(colnames(expr) == affyid);
+	index = which(colnames(expr) %in% affyid);
 	if(length(index) > 0){
 		index_arr = c(index);
 	}
@@ -278,7 +278,6 @@ for(j in 1:length(index_arr)){
 	row_summary <- summary(row)
 	row_summary <- data.frame(stats = names(row_summary), nums = as.vector(row_summary), stringsAsFactors = FALSE)
 	print(kable(row_summary))
-	write.table(row_summary, paste0(toDir, "/", colnames(expr)[i], "_stats.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 	
 	# --------------------- CUTOFF ----------------------
 	if(auto_cutoff == "true"){
@@ -294,8 +293,7 @@ for(j in 1:length(index_arr)){
 		indices = tmp[[4]]
 		print(paste0("Median cutoff at ", m))
 	}
-	write.table( paste0(ifelse(auto_cutoff == "true", "Automatic", "Manual"), " cutoff at ", round(m, 2)) , paste0(toDir, "/", colnames(expr)[i], "_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
-	
+
 	# gene_expr consists 1 if m smaller then the gene expression value,
 	# 0 if m bigger then the gene expression value
 	gene_expr=vector(mode="numeric", length=length(row))
@@ -321,7 +319,7 @@ for(j in 1:length(index_arr)){
 		dev.off();
 		
 		# Save global statistics
-		write.table( paste(colnames(expr)[i], formatC(pvalue, digits = 2, format = "e"), hr, hr_left, hr_right, collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
+		write.table( paste(c(colnames(expr)[i], formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right, row_summary$nums), digits = 2), ifelse(auto_cutoff == "true", "Automatic", "Manual"), round(m, digits = 2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
 		
 	}, interrupt = function(ex){
 		cat("Interrupt during the KM draw");
