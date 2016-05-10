@@ -45,6 +45,17 @@
 #	d = loadData(expr="expression_table.txt", clin="clinical_table.txt");
 #	kmplot(d$expr, d$clin, event_index=2, time_index=3, auto_cutoff="false", quartile=50);
 #
+# Example 4:
+# # Prepare expression data
+# expr <- mtx$merged.dat[ ,c(1, 4:ncol(mtx$merged.dat))] 
+# colnames(expr)[1] <- "AffyID"
+# # Prepare clinical data
+# clin <- mtx$merged.dat[, 1:3]
+# colnames(clin)[1] <- "AffyID"
+# # Run survival analysis for selected genes
+# kmplot(expr, clin, event_index=2, time_index=3,  affyid = c("SND1", "MTDH"), auto_cutoff="true", transform_to_log2 = TRUE)
+# # Run survival analysis for all genes
+# kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
 
 library(survival)
 library(survplot)
