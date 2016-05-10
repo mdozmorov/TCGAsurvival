@@ -1,3 +1,5 @@
+source("Supplemental_R_script_1.R")
+
 # Prepare expression data
 expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
 # Filter out low expressed genes
