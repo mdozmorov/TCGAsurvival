@@ -2,7 +2,9 @@ library(TCGA2STAT)
 library(dplyr)
 library(knitr)
 
-data_dir = "/Users/mikhail/Documents/Data/GenomeRunner/TCGAsurvival/data" # Path where the downloaded data is stored
+# Path where the downloaded data is stored
+data_dir = "/Users/mikhail/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 results_dir = "/Users/mikhail/Dropbox" # Path where the results are stored
 
 # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
