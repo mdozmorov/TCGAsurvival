@@ -244,6 +244,9 @@ survival_data = cbind(as.numeric(clin[[time_index]]), as.numeric(clin[[event_ind
 toDir = createDirectory("res");
 resTable=rbind();
 
+# Prepare a file for global statistics
+write.table( paste("Gene", "p-value", "HR", "HR_left", "HR_right", collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+
 index_arr = 2:dim(expr)[2];
 if(affyid != ""){
 	index = which(colnames(expr) == affyid);
@@ -305,6 +308,9 @@ for(j in 1:length(index_arr)){
 		resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
 
 		dev.off();
+		
+		# Save global statistics
+		write.table( paste(colnames(expr)[i], formatC(pvalue, digits = 2, format = "e"), hr, hr_left, hr_right, collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
 		
 	}, interrupt = function(ex){
 		cat("Interrupt during the KM draw");
