@@ -27,6 +27,11 @@ cancer = "HNSC"
 data.type = "RNASeq2"
 type = ""
 
+# Sarcoma
+cancer = "SARC" 
+data.type = "RNASeq2"
+type = ""
+
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
   FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
