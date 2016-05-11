@@ -40,7 +40,7 @@ load_data <- function(disease = cancer, data.type = data.type, type = type, data
     load(file = FILE)
   } else {
     # If no saved data exists, get it from the remote source
-    mtx <- getTCGA(disease = cancer, data.type = data.type, type = type, clinical = TRUE)
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
     save(file = FILE, list = c("mtx")) # Save it
   }
   return(mtx)
@@ -112,3 +112,22 @@ make_expression_matrix(mtx = mtx, disease = cancer, data.type = data.type, type 
 make_mapping_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
 
 make_annotation_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, clinical_annotations = clinical_annotations, results_dir = results_dir)
+
+# Get data for all cancers
+get_data <- function(cancers, data.type = data.type, type = type, data_dir = data_dir, force_reload) {
+  for (cancer in cancers) {
+    print(paste0("Processing cancer ", cancer))
+    mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload)
+    clinical_annotations <- summarize_data(mtx = mtx)
+    make_expression_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
+    make_mapping_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
+    make_annotation_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, clinical_annotations = clinical_annotations, results_dir = results_dir)
+    rm(list = c("mtx", "clinical_annotations"))
+  }
+}
+
+# All cancers with RNASeq2 data
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS"); data.type = "RNASeq2"; type = "" 
+sink("TCGA2SynTarget.txt", split = FALSE)
+get_data(cancers = cancer_RNASeq2, data.type = data.type, type = type, data_dir = data_dir, force_reload = TRUE)
+sink()
