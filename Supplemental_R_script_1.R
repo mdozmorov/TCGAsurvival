@@ -249,7 +249,7 @@ getParameter = function(c_args, id){
 
 }
 
-kmplot = function(expr, clin, event_index=3, time_index=4, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE){
+kmplot = function(expr, clin, event_index=3, time_index=4, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE, cancer_type = "BRCA"){
 
 # checks the input: if the expression data and clinical data don't match, the script will fail.
 checkData(expr, clin);
@@ -260,7 +260,7 @@ toDir = createDirectory("res");
 resTable=rbind();
 
 # Prepare a file for global statistics
-write.table( paste(c("Gene", "p-value", "HR", "HR_left", "HR_right", "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.", "Cutoff_type", "Cutoff_value"), collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table( paste(c("Cancer", "Gene", "p-value", "HR", "HR_left", "HR_right", "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.", "Cutoff_type", "Cutoff_value"), collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 index_arr = 2:dim(expr)[2];
 if(affyid != ""){
@@ -307,7 +307,7 @@ for(j in 1:length(index_arr)){
 	tryCatch({
 		# draws the KM plot into a png file
 		
-		png(paste(toDir, "/", colnames(expr)[i], ".png", sep=""));
+		png(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".png", sep=""));
 
 		# Surv(time, event)
 		surv<-Surv(survival_data[,1], survival_data[,2]);
@@ -323,7 +323,7 @@ for(j in 1:length(index_arr)){
 		dev.off();
 		
 		# Save global statistics
-		write.table( paste(c(colnames(expr)[i], formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right, row_summary$nums), digits = 2), ifelse(auto_cutoff == "true", "Automatic", "Manual"), round(m, digits = 2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
+		write.table( paste(c(cancer_type, colnames(expr)[i], formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right, row_summary$nums), digits = 2), ifelse(auto_cutoff == "true", "Automatic", "Manual"), round(m, digits = 2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
 		
 	}, interrupt = function(ex){
 		cat("Interrupt during the KM draw");
