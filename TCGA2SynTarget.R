@@ -14,8 +14,8 @@ results_dir = "/Users/mikhail/Dropbox" # Path where the results are stored
 
 # Breast cancer
 cancer = "BRCA" 
-data.type = "RNASeq"
-type = "RPKM" 
+data.type = "RNASeq2"
+type = "" 
 
 # Liver hepatocellular carcinoma
 cancer = "LIHC" 
