@@ -260,7 +260,9 @@ toDir = createDirectory("res");
 resTable=rbind();
 
 # Prepare a file for global statistics
-write.table( paste(c("Cancer", "Gene", "p-value", "HR", "HR_left", "HR_right", "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.", "Cutoff_type", "Cutoff_value"), collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+if (!file.exists(paste0(toDir, "/global_stats.txt"))) {
+  write.table( paste(c("Cancer", "Gene", "p-value", "HR", "HR_left", "HR_right", "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.", "Cutoff_type", "Cutoff_value"), collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+}
 
 index_arr = 2:dim(expr)[2];
 if(affyid != ""){
