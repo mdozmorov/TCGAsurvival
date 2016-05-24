@@ -59,7 +59,7 @@ summarize_data <- function(mtx = mtx) {
   clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
   # Filter clinical variables to have at least 2, but no more than 10 categories,
   # And they are not dates
-  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
+  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
   print(kable(clin_vars))
   return(rownames(clin_vars))
 }
