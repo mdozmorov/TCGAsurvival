@@ -40,3 +40,46 @@ for (cancer_type in cancer_RNASeq2) {
   # Run survival analysis for selected genes
   kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type)
 }
+
+### Run survival analysis for selected genes, in selected cancer, 
+### across all combinations of categories in each clinical annotation
+# Full clinical information
+clin_full <- mtx$clinical
+# Selected genes
+selected_genes = c("LAPTM4B", "PIP5K1C")
+# For each clinical annotation
+for (annotation in clinical_annotations) { 
+  # Get the number of patients per category in the current annotation
+  annotations <- table(clin_full[, annotation], useNA = "no") 
+  # How many categories in the current annotation
+  num_of_annot_categories <- length(annotations) 
+  # How many categories to select at one time
+  for (num_of_selected_categories in 1:num_of_annot_categories) {
+    # All combinations of categories, m categories selected at one time
+    combination_of_categories <- combn(x = names(annotations), m = num_of_selected_categories)
+    # For each combination of categories (column)
+    for (combination in 1:ncol(combination_of_categories)) {
+      # Select patients annotated with this combination of categories
+      patients <- rownames(clin_full)[ clin_full[, annotation] %in% combination_of_categories[, combination]]
+      # Get their index in the clin and expr matrixes
+      index_patients <- which(clin$AffyID %in% patients)
+      # If the number of patients annotated with the combination of categories is large enough, proceed
+      if (length(index_patients) > 40) {
+        print(paste("Processing annotation:", annotation, 
+                    ", categories:", paste(combination_of_categories[, combination], collapse = ","),
+                    ", number of patients:", length(index_patients)))
+        # Get a subset of clinical information for these patients
+        clin_selected <- clin[ index_patients, ]
+        # Get a subset of expression information for these patients
+        expr_selected <- expr[ index_patients, ]
+        # For this subset of expression, filter out low expressed genes
+        index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
+        expr_selected <- cbind(expr_selected$AffyID, select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
+        # Perform actual survival analysis
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer, combination_of_categories[, combination]), collapse = "-"))
+      }
+    }
+  }
+}
+
+
