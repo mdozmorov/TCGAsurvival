@@ -12,14 +12,19 @@ expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 clin <- mtx$merged.dat[, 1:3]
 colnames(clin)[1] <- "AffyID"
 
+# Select genes of interest
+selected_genes = c("TMEM212", "IGFBP3") # BRCA
+selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
+selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
+
+
 ### Run survival analysis for selected genes
-kmplot(expr, clin, event_index=2, time_index=3,  affyid = c("BCL2L11", "MYC", "MYCN"), auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = "BRCA")
+kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = "BRCA")
 
 ### Run survival analysis for all genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
 
 ### Run survival analysis for selected genes in all cancers
-selected_genes = "IGFBP3"
 # All cancers with RNASeq2 data
 cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS"); data.type = "RNASeq2"; type = "" 
 #  "LAML" - something wrong with merged data
@@ -45,8 +50,6 @@ for (cancer_type in cancer_RNASeq2) {
 ### across all combinations of categories in each clinical annotation
 # Full clinical information
 clin_full <- mtx$clinical
-# Selected genes
-selected_genes = c("LAPTM4B", "PIP5K1C")
 # For each clinical annotation
 for (annotation in clinical_annotations) { 
   # Get the number of patients per category in the current annotation
