@@ -18,6 +18,7 @@ selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
 selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
 selected_genes = c("MTDH", "SND1") # LIHC
 selected_genes = c("TAF2") # LIHC
+selected_genes = c("CPEB2") # BRCA
 
 ### Run survival analysis for selected genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer)
@@ -46,6 +47,27 @@ for (cancer_type in cancer_RNASeq2) {
   # Run survival analysis for selected genes
   kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type)
 }
+# Plot the results of one gene across all cancers
+library(dplyr)
+library(ggplot2)
+# Read in analysis natrix
+mtx <- read.table("res/global_stats.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE, fill = TRUE)
+# Add -log10-transformed p-value
+mtx <- mtx %>% mutate(log10.pval = -1 * log10(p.value))
+# Specify gene name
+gene <- "CPEB2"
+# Print into PDF
+pdf(paste0("Figures/", gene, "_all_TCGA_cancers.pdf"))
+mtx %>% subset(Gene == gene) %>% 
+  ggplot(aes(x = factor(Cancer, levels(factor(Cancer))[order(log10.pval)]), y = log10.pval)) + 
+  geom_bar(stat = "identity") + 
+  theme(legend.position="none") +
+  labs(x="Cancer", y="-log10(p-value)") +
+  coord_flip()
+dev.off()
+
+
+
 
 ### Run survival analysis for selected genes, in selected cancer, 
 ### across all combinations of categories in each clinical annotation
