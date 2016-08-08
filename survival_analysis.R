@@ -17,6 +17,7 @@ selected_genes = c("TMEM219", "IGFBP3") # BRCA
 selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
 selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
 selected_genes = c("MTDH", "SND1") # LIHC
+selected_genes = c("NF1") # LIHC
 selected_genes = c("TAF2") # LIHC
 selected_genes = c("CPEB2") # BRCA
 
