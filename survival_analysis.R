@@ -21,12 +21,15 @@ selected_genes = c("NF1") # LIHC
 selected_genes = c("TAF2") # LIHC
 selected_genes = c("CPEB2") # BRCA
 
+### Selected genes, selected cancers, no clinical annotations
 ### Run survival analysis for selected genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer)
 
+### All genes, selected cancers, no clinical annotations
 ### Run survival analysis for all genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
 
+### Selected genes, all cancers, no clinical annotations
 ### Run survival analysis for selected genes in all cancers
 # All cancers with RNASeq2 data
 cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS"); data.type = "RNASeq2"; type = "" 
@@ -48,7 +51,7 @@ for (cancer_type in cancer_RNASeq2) {
   # Run survival analysis for selected genes
   kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type)
 }
-# Plot the results of one gene across all cancers
+### Plot the results of one gene across all cancers
 library(dplyr)
 library(ggplot2)
 # Read in analysis natrix
@@ -69,9 +72,8 @@ dev.off()
 
 
 
-
-### Run survival analysis for selected genes, in selected cancer, 
-### across all combinations of categories in each clinical annotation
+### Selected genes, selected cancers, all combinations of clinical annotations
+### Run survival analysis for selected genes, in selected cancer, across all combinations of categories in each clinical annotation
 # Full clinical information
 clin_full <- mtx$clinical
 # For each clinical annotation
@@ -109,9 +111,8 @@ for (annotation in clinical_annotations) {
   }
 }
 
-
-### Run survival analysis for selected genes, in ALL cancer, 
-### across all categories in each clinical annotation
+### Selected genes, all cancers, all unique categories
+### Run survival analysis for selected genes, in all cancer, across all unique categories in each clinical annotation
 for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
