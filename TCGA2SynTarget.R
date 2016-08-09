@@ -3,7 +3,7 @@ library(dplyr)
 library(knitr)
 
 # Path where the downloaded data is stored
-data_dir = "/Users/mikhail/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
 data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 results_dir = "/Users/mikhail/Dropbox" # Path where the results are stored
 
