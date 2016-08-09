@@ -21,6 +21,13 @@ selected_genes = c("NF1") # LIHC
 selected_genes = c("TAF2") # LIHC
 selected_genes = c("CPEB2") # BRCA
 
+### Correlation analysis, selected genes vs. all others, selected cancers, no clinical annotations
+print(paste("Number of patients in", cancer, "cancer:", nrow(expr)))
+cor.corr <- apply(expr, 2, function(x) Hmisc::rcorr(as.numeric(x), as.numeric(expr[, which(colnames(expr) == selected_genes)]))[[1]][1, 2])
+cor.pval <- apply(expr, 2, function(x) Hmisc::rcorr(as.numeric(x), as.numeric(expr[, which(colnames(expr) == selected_genes)]))[[3]][1, 2])
+cor.combined <- data.frame(genes = names(cor.corr), pearson = cor.corr, pval = cor.pval)
+openxlsx::write.xlsx(cor.combined[ order(cor.combined$pearson, decreasing = TRUE), ], paste0("results/CORR_", cancer, "_", selected_genes, ".xlsx"))
+
 ### Selected genes, selected cancers, no clinical annotations
 ### Run survival analysis for selected genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer)
