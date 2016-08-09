@@ -12,26 +12,24 @@ results_dir = "/Users/mikhail/Dropbox" # Path where the results are stored
 # Expression types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
 # Clinical values: http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf
 
-# Breast cancer
-cancer = "BRCA" 
+# General settings
 data.type = "RNASeq2"
 type = "" 
 
+# Breast cancer
+cancer = "BRCA" 
+
 # Liver hepatocellular carcinoma
 cancer = "LIHC" 
-data.type = "RNASeq2"
-type = ""
 
 # Head and Neck squamous cell carcinoma
 cancer = "HNSC" 
-data.type = "RNASeq2"
-type = ""
 
 # Sarcoma
 cancer = "SARC" 
-data.type = "RNASeq2"
-type = ""
 
+# Pancreatic cancer
+cancer = "PAAD" 
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
   FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
