@@ -20,6 +20,7 @@ selected_genes = c("MTDH", "SND1") # LIHC
 selected_genes = c("NF1") # LIHC
 selected_genes = c("TAF2") # LIHC
 selected_genes = c("CPEB2") # BRCA
+selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
 
 ### Correlation analysis, selected genes vs. all others, selected cancers, no clinical annotations
 print(paste("Number of patients in", cancer, "cancer:", nrow(expr)))
@@ -36,7 +37,7 @@ kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_c
 ### Run survival analysis for all genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
 
-### Selected genes, all cancers, no clinical annotations
+### Selected genes, all (or selected) cancers, no clinical annotations
 ### Run survival analysis for selected genes in all cancers
 # All cancers with RNASeq2 data
 cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS"); data.type = "RNASeq2"; type = "" 
