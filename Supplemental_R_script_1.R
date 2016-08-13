@@ -152,7 +152,7 @@ loadData = function(exprFile="@supplemental table 1_GEO expression data_sorted.t
 	list("expr"=expr, "clin"=clin);
 }
 
-mySurvplot = function(surv, gene_expr, xlab="Time (years)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA){
+mySurvplot = function(surv, gene_expr, xlab="Time (days)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA){
 	survplot(surv ~ gene_expr, xlab=xlab, ylab=ylab, snames = snames, stitle = stitle, hr.pos=hr.pos);
 	
 	cox = summary(coxph(surv ~ gene_expr))
@@ -307,9 +307,9 @@ for(j in 1:length(index_arr)){
 	
 	# --------------------- KMplot ----------------------
 	tryCatch({
-		# draws the KM plot into a png file
+		# draws the KM plot into a pdf file
 		
-		png(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".png", sep=""));
+		pdf(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".pdf", sep=""));
 
 		# Surv(time, event)
 		surv<-Surv(survival_data[,1], survival_data[,2]);
