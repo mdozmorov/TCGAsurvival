@@ -2,7 +2,7 @@
 # All cancers with RNASeq2 data
 cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS"); data.type = "RNASeq2"; type = "" 
 # Get correlation matrixes for the gene of interest in each cancer
-for (cancer_type in cancer_RNASeq2[23:34]) {
+for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   # Prepare expression data
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
