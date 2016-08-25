@@ -23,6 +23,29 @@ selected_genes = c("TAF2") # LIHC
 selected_genes = c("CPEB2") # BRCA
 selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
 
+# View and subset by expression and quantiles of the selected genes
+library(ggplot2)
+library(reshape2)
+selected_genes_expression <- melt(expr[, colnames(expr) %in% selected_genes])
+ggplot(selected_genes_expression, aes(x = variable, y = log2(value))) + geom_boxplot()
+selected_genes_quantiles_up <- with(selected_genes_expression, tapply(value, variable, quantile, probs = 0.75)) # Select upper quantile!
+selected_genes_quantiles_lo <- with(selected_genes_expression, tapply(value, variable, quantile, probs = 0.25)) # Select lower quantile!
+# Subset exprs by top expression
+selected_index_up <- list() # Collect boolean indexes for each gene
+selected_index_lo <- list() # Collect boolean indexes for each gene
+for (gene in selected_genes) {
+  ind_up <- expr[, gene] > selected_genes_quantiles_up[ gene ] # True, if expressed above the selected upper quantile
+  ind_lo <- expr[, gene] < selected_genes_quantiles_lo[ gene ] # True, if expressed below the selected lower quantile
+  selected_index_up <- c(selected_index, list(ind_up))
+  selected_index_lo <- c(selected_index, list(ind_lo))
+}
+ind_up <- apply(as.data.frame(selected_index_up), 1, all) # Collapse, all selected genes should be expressed in the upper quantile
+ind_lo <- apply(as.data.frame(selected_index_lo), 1, all) # Collapse, all selected genes should be expressed in the lower quantile
+ind <- ind_up | ind_lo # One or the other
+sum(ind) # How many patients
+expr <- expr[ind, ] 
+clin <- clin[ind, ]
+
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer)
 
