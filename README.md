@@ -1,4 +1,16 @@
-Scripts to extract TCGA data for survival analysis.
+# Scripts to extract TCGA data for survival analysis.
+
+- `TCGA2SynTarget.R` - prepares TCGA data for SynTarget format. Now, general data processing script
+
+- `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
+
+- `survival.R` - an example of running survival analyses
+
+- `correlation.R` - co-expression analysis of selected genes vs. others, in all cancers
+
+- `diff_exp.R` - sepatate expression matrix by hogh/low expression of selected genes, and perfirm differential expression
+
+- `patiview.R` - separate script to generate colorod KEGG pathways
 
 # TCGA data
 
@@ -35,8 +47,3 @@ MB-5119,59.8,0, 0, NA, moderate, 0, NONE, 2,..
 MB-0117,8.2,0, 2, WT, moderate, 1, HT/RT, 2, ..
 
 
-- `TCGA2SynTarget.R` - prepares TCGA data for SynTarget format.
-
-- `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
-
-- `survival_analysis.R` - an example of running survival analysis

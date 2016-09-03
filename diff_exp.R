@@ -54,3 +54,13 @@ save_res(res, fileName, wb = wb, sheetName = "GOCC")
 # KEGG canonical pathways
 res <- gene_enrichment(selected = rownames(degs), id="symbol", organism = "Hs", use="KEGG")
 save_res(res, fileName, wb = wb, sheetName = "KEGG")
+
+# Plotting
+index.to.plot <- order(group)
+matrix.to.plot <- expr[rownames(degs)[1:50], index.to.plot]
+genes.to.plot <- rownames(degs)[1:50]
+group.to.plot <- group[index.to.plot]
+
+NMF::aheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20), Colv = NA, Rowv = FALSE, hclust = "ward", scale = "row", annCol = group.to.plot, annColors = list(c("red", "blue")), labRow = genes.to.plot, fontsize = 10, cexRow = 10) # color="-RdYlBu"
+
+
