@@ -1,0 +1,217 @@
+---
+title: "Differential expression analysis of TCGA data between groups with high/low expression of selected genes"
+output:
+  html_document:
+    toc: true
+    theme: united
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is') #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+```{r results='hide'}
+library(TCGA2STAT)
+library(dplyr)
+library(knitr)
+
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+
+# General settings
+data.type = "RNASeq2"
+type = "" 
+# Pancreatic cancer
+cancer = "PAAD" 
+
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+
+# A function to get data overview
+summarize_data <- function(mtx = mtx) {
+  print(paste0("Dimensions of expression matrix, genex X patients: ", paste(dim(mtx$dat), collapse = " ")))
+  print(paste0("Dimensions of clinical matrix, patients X parameters: ", paste(dim(mtx$clinical), collapse = " ")))
+  print(paste0("Dimensions of merged matrix, patients X parameters + genes: ", paste(dim(mtx$merged.dat), collapse = " ")))
+  print("Head of the merged matrix")
+  print(mtx$merged.dat[1:5, 1:10])
+  print("Head of the clinical matrix")
+  print(mtx$clinical[1:5, 1:7])
+  print("List of clinical values, and frequency of each variable: ")
+  clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
+  # Filter clinical variables to have at least 2, but no more than 10 categories,
+  # And they are not dates
+  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
+  print(kable(clin_vars))
+  return(rownames(clin_vars))
+}
+
+mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+
+clinical_annotations <- summarize_data(mtx = mtx)
+
+
+# source("Supplemental_R_script_1.R")
+
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+
+# Prepare clinical data
+clin <- mtx$merged.dat[, 1:3]
+colnames(clin)[1] <- "AffyID"
+
+
+selected_genes = c("PECAM1"); cancer_RNASeq2 = cancer
+
+# View and subset by expression and quantiles of the selected genes
+library(ggplot2)
+library(reshape2)
+# Define quantile qutoffs
+quantile_up <- 0.51 # 0.75
+quantile_lo <- 0.49 # 0.25
+selected_genes_expression <- melt(expr[, colnames(expr) %in% selected_genes, drop = FALSE])
+ggplot(selected_genes_expression, aes(x = variable, y = log2(value))) + geom_boxplot()
+selected_genes_quantiles_up <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_up)) # Select upper quantile!
+selected_genes_quantiles_lo <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_lo)) # Select lower quantile!
+# Subset exprs by top expression
+selected_index_up <- list() # Collect boolean indexes for each gene
+selected_index_lo <- list() # Collect boolean indexes for each gene
+for (gene in selected_genes) {
+  ind_up <- expr[, gene] > selected_genes_quantiles_up[ gene ] # True, if expressed above the selected upper quantile
+  ind_lo <- expr[, gene] < selected_genes_quantiles_lo[ gene ] # True, if expressed below the selected lower quantile
+  selected_index_up <- c(selected_index_up, list(ind_up))
+  selected_index_lo <- c(selected_index_lo, list(ind_lo))
+}
+ind_up <- apply(as.data.frame(selected_index_up), 1, all) # Collapse indexes from multiple selected genes, all selected genes should be expressed in the upper quantile
+ind_lo <- apply(as.data.frame(selected_index_lo), 1, all) # Collapse indexes from multiple selected genes, all selected genes should be expressed in the lower quantile
+
+# For differential analysis, create group labels
+group <- vector(mode = "numeric", length = nrow(expr)) # Empty bector
+group[ind_up] <- 1 # Assign numeric groups
+group[ind_lo] <- 2
+table(group) # How many patients we have
+expr <- expr[group != 0, ] # Remove those that are not in quantiles
+group <- group[ group != 0 ]
+```
+
+
+```{r}
+# Prerequisites, prepared by the survival.R script
+# expr - expression matrix separated by the high/low expression of the selected genes
+# group - labeling of samples having high/low expression of the selected genes
+
+# Reshape expression matrix
+expr <- (t(expr))
+colnames(expr) <- expr[1, ]
+expr <- expr[-1, ]
+class(expr) <- "numeric"
+expr <- log2(expr + 1)
+boxplot(expr)
+
+library(limma)
+library(openxlsx)
+library(MDmisc)
+library(org.Hs.eg.db)
+
+# Limma
+design <- model.matrix(~0 + factor(group))
+colnames(design) <- c("up", "lo")
+fit <- lmFit(expr, design)
+contrast.matrix <- makeContrasts(up-lo, levels = design)
+fit2 <- contrasts.fit(fit, contrast.matrix)
+fit2 <- eBayes(fit2)
+# topTable(fit2, coef=1, adjust="BH")
+
+degs <- topTable(fit2, coef = 1, number = Inf, p.value = 0.01)
+```
+
+We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having CD31 in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value 0.01. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
+
+Top 50 are shown
+
+```{r fig.height=10}
+index.to.plot <- order(group)
+matrix.to.plot <- expr[rownames(degs)[1:50], index.to.plot]
+genes.to.plot <- rownames(degs)[1:50]
+group.to.plot <- group[index.to.plot]
+group.to.plot <- ifelse(group.to.plot == 1, "UP", "LO")
+
+NMF::aheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20), Colv = NA, Rowv = FALSE, hclust = "ward", scale = "row", annCol = group.to.plot, annColors = list(c("blue", "red")), labRow = genes.to.plot, fontsize = 10, cexRow = 10) # color="-RdYlBu"
+```
+
+List of differentially expressed genes are stored in Excel file  *PAAD_CD31_hi51_lo49_DEGs.xlsx*
+
+- Legend for gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
+
+- Legend for GO/KEGG functional enrichment results: "ID" - unique identifier of functional category; "Pvalue" - non-adjusted p-value; "OddsRatio" - enrichment odds ratio; "ExpCount" - number of genes expected to be selected in a category; "Count" - number of genes observed in the current list; "Size" - total number of genes in a category; "Term" - category description; "p.adj" - false discovery rate; "SYMBOL", "ENTREZ" - genes observed in the current list as annotated with a category
+
+```{r eval = F}
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+# Create (or, load)  Excel file
+fileName <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "DEGs.xlsx", sep = "_")
+wb <- openxlsx::createWorkbook(fileName) # openxlsx::loadWorkbook(fileName)
+openxlsx::addWorksheet(wb = wb, sheetName = "DEGs")
+openxlsx::writeData(wb, data.frame(Gene = rownames(degs), degs), sheet = "DEGs")
+openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+
+# Gene ontology, molecular function
+res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="MF")
+save_res(res, fileName, wb = wb, sheetName = "GOMF")
+# Gene ontology, biological process 
+res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="BP")
+save_res(res, fileName, wb = wb, sheetName = "GOBP")
+# Gene ontology, cellular component
+res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="CC")
+save_res(res, fileName, wb = wb, sheetName = "GOCC")
+# KEGG canonical pathways
+res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="KEGG")
+save_res(res, fileName, wb = wb, sheetName = "KEGG")
+```
+
+## pathway
+
+The most significant pathway with genes overlayes
+
+![](hsa04514.CD31.png)
+
+```{r session_info}
+diagnostics <- devtools::session_info()
+platform <- data.frame(diagnostics$platform %>% unlist, stringsAsFactors = FALSE)
+colnames(platform) <- c("description")
+pander(platform)
+
+packages <- as.data.frame(diagnostics$packages)
+pander(packages[ packages$`*` == "*", ])
+```
