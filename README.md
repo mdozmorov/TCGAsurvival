@@ -8,9 +8,7 @@
 
 - `correlation.R` - co-expression analysis of selected genes vs. others, in all cancers
 
-- `diff_exp.R` - sepatate expression matrix by hogh/low expression of selected genes, and perfirm differential expression
-
-- `patiview.R` - separate script to generate colorod KEGG pathways
+- `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes
 
 # TCGA data
 

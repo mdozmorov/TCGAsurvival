@@ -84,15 +84,14 @@ expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 clin <- mtx$merged.dat[, 1:3]
 colnames(clin)[1] <- "AffyID"
 
-
-selected_genes = c("PECAM1"); cancer_RNASeq2 = cancer
+selected_genes = c("PECAM1") # Can be multiple
 
 # View and subset by expression and quantiles of the selected genes
 library(ggplot2)
 library(reshape2)
 # Define quantile qutoffs
-quantile_up <- 0.51 # 0.75
-quantile_lo <- 0.49 # 0.25
+quantile_up <- 0.75 # 0.75
+quantile_lo <- 0.25 # 0.25
 selected_genes_expression <- melt(expr[, colnames(expr) %in% selected_genes, drop = FALSE])
 ggplot(selected_genes_expression, aes(x = variable, y = log2(value))) + geom_boxplot()
 selected_genes_quantiles_up <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_up)) # Select upper quantile!
@@ -146,10 +145,11 @@ fit2 <- contrasts.fit(fit, contrast.matrix)
 fit2 <- eBayes(fit2)
 # topTable(fit2, coef=1, adjust="BH")
 
-degs <- topTable(fit2, coef = 1, number = Inf, p.value = 0.01)
+p.value_cutoff <- 0.01 # P-value cutoff
+degs <- topTable(fit2, coef = 1, number = Inf, p.value = p.value_cutoff)
 ```
 
-We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having CD31 in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value 0.01. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
+We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having `r paste(selected_genes, collapse = ", ") ` in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value 0.01. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
 
 Top 50 are shown
 
@@ -161,15 +161,18 @@ group.to.plot <- group[index.to.plot]
 group.to.plot <- ifelse(group.to.plot == 1, "UP", "LO")
 
 NMF::aheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20), Colv = NA, Rowv = FALSE, hclust = "ward", scale = "row", annCol = group.to.plot, annColors = list(c("blue", "red")), labRow = genes.to.plot, fontsize = 10, cexRow = 10) # color="-RdYlBu"
+
+# Filename to same the results
+fileName <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "DEGs", p.value_cutoff, ".xlsx", sep = "_")
 ```
 
-List of differentially expressed genes are stored in Excel file  *PAAD_CD31_hi51_lo49_DEGs.xlsx*
+List of differentially expressed genes are stored in Excel file  `r fileName`
 
 - Legend for gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
 
 - Legend for GO/KEGG functional enrichment results: "ID" - unique identifier of functional category; "Pvalue" - non-adjusted p-value; "OddsRatio" - enrichment odds ratio; "ExpCount" - number of genes expected to be selected in a category; "Count" - number of genes observed in the current list; "Size" - total number of genes in a category; "Term" - category description; "p.adj" - false discovery rate; "SYMBOL", "ENTREZ" - genes observed in the current list as annotated with a category
 
-```{r eval = F}
+```{r eval = TRUE}
 # A wrapper function to perform all functional enrichment analyses.
 # Helper function to save non-empty results
 save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
@@ -180,31 +183,37 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
   }
 }
 # Create (or, load)  Excel file
-fileName <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "DEGs.xlsx", sep = "_")
 wb <- openxlsx::createWorkbook(fileName) # openxlsx::loadWorkbook(fileName)
 openxlsx::addWorksheet(wb = wb, sheetName = "DEGs")
 openxlsx::writeData(wb, data.frame(Gene = rownames(degs), degs), sheet = "DEGs")
 openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
 
-# Gene ontology, molecular function
-res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="MF")
-save_res(res, fileName, wb = wb, sheetName = "GOMF")
-# Gene ontology, biological process 
-res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="BP")
-save_res(res, fileName, wb = wb, sheetName = "GOBP")
-# Gene ontology, cellular component
-res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="CC")
-save_res(res, fileName, wb = wb, sheetName = "GOCC")
+# # Gene ontology, molecular function
+# res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="MF")
+# save_res(res, fileName, wb = wb, sheetName = "GOMF")
+# # Gene ontology, biological process 
+# res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="BP")
+# save_res(res, fileName, wb = wb, sheetName = "GOBP")
+# # Gene ontology, cellular component
+# res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="CC")
+# save_res(res, fileName, wb = wb, sheetName = "GOCC")
 # KEGG canonical pathways
 res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="KEGG")
 save_res(res, fileName, wb = wb, sheetName = "KEGG")
 ```
 
-## pathway
+```{r eval=FALSE}
+library(pathview)
+library(openxlsx)
+degs <- read.xlsx(fileName, cols = c(1, 2))
+degs.genes <- degs$logFC
+names(degs.genes) <- degs$Gene
+# Adjust as needed
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "03010", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+```
 
-The most significant pathway with genes overlayes
+## The most significant pathway with genes overlayed
 
-![](hsa04514.CD31.png)
 
 ```{r session_info}
 diagnostics <- devtools::session_info()
