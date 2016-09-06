@@ -23,3 +23,7 @@ results
 .DS*
 *.Rproj
 .Rproj.user
+cache
+img
+res
+
