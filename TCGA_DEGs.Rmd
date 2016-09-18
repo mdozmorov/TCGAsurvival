@@ -202,6 +202,28 @@ res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr),
 save_res(res, fileName, wb = wb, sheetName = "KEGG")
 ```
 
+```{r}
+# GSEA analysis
+library(gage)
+data("kegg.gs")
+# Convert Symbols to EntrezIDs
+ids <- clusterProfiler::bitr(rownames(expr), fromType="SYMBOL", toType="ENTREZID", OrgDb = "org.Hs.eg.db")
+expr <- left_join(data.frame(SYMBOL = rownames(expr), expr), ids, by = "SYMBOL") # Append converted EntrezIDs
+expr$SYMBOL <- NULL # Remove symbols
+expr <- expr[!is.na(expr$ENTREZID), ] # Remove unmapped rows
+rownames(expr) <- expr$ENTREZID # Add EntrezIDs as rows
+expr$ENTREZID <- NULL # Remove them from the data frame
+# Analysis for pathways overrepresented by up/downregulated genes
+kegg.p <- gage(expr,
+               gsets = kegg.gs,
+               ref = which(group == 1, arr.ind = TRUE),
+               samp = which(group == 2, arr.ind = TRUE),
+               same.dir = TRUE,
+               compare = "unpairedd")
+save_res(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGUP")
+save_res(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGDN")
+```
+
 ```{r eval=FALSE}
 library(pathview)
 library(openxlsx)
