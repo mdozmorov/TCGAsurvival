@@ -31,7 +31,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 data.type = "RNASeq2"
 type = "" 
 # Pancreatic cancer
-cancer = "PAAD" 
+cancer = "BRCA" 
 
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
@@ -84,7 +84,7 @@ expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 clin <- mtx$merged.dat[, 1:3]
 colnames(clin)[1] <- "AffyID"
 
-selected_genes = c("PECAM1") # Can be multiple
+selected_genes = c("TMEM219") # Can be multiple
 
 # View and subset by expression and quantiles of the selected genes
 library(ggplot2)
@@ -223,6 +223,36 @@ kegg.p <- gage(expr,
 save_res(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGUP")
 save_res(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGDN")
 ```
+
+```{r}
+library(clusterProfiler)
+## GSEA using clusterProfiler
+# All DEGs
+degs.all <- topTable(fit2, coef = 1, number = Inf)
+# Convert symbols to entrezids
+eid <- bitr(rownames(degs.all), fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+# Attach converted entrezids
+degs.all <- left_join(data.frame(SYMBOL = rownames(degs.all), degs.all), eid, by = "SYMBOL")
+degs.all <- degs.all[ degs.all$ENTREZID != "", ]
+# List of t-statistics
+geneList <- degs.all$t
+# Make it named
+names(geneList) <- degs.all$ENTREZID
+# And decreasing sorted
+geneList <- sort(geneList, decreasing = TRUE)
+# 
+ego3 <- gseKEGG(geneList     = geneList,
+                organism     = "hsa",
+                nPerm        = 1000,
+                minGSSize    = 10,
+                pvalueCutoff = 0.1,
+                verbose      = FALSE)
+kegg.summary <- summary(ego3)
+if (rownames(kegg.summary) > 0) {
+  save_res(kegg.summary, fileName, wb = wb, sheetName = "KEGG.clusterProfiler")
+}
+```
+
 
 ```{r eval=FALSE}
 library(pathview)
