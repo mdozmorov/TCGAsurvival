@@ -216,8 +216,8 @@ expr$ENTREZID <- NULL # Remove them from the data frame
 # Analysis for pathways overrepresented by up/downregulated genes
 kegg.p <- gage(expr,
                gsets = kegg.gs,
-               ref = which(group == 1, arr.ind = TRUE),
-               samp = which(group == 2, arr.ind = TRUE),
+               ref = which(group == 2, arr.ind = TRUE),
+               samp = which(group == 1, arr.ind = TRUE),
                same.dir = TRUE,
                compare = "unpairedd")
 save_res(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGUP")
