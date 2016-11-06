@@ -5,7 +5,7 @@ library(knitr)
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
 data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
-results_dir = "/Users/mikhail/Dropbox" # Path where the results are stored
+results_dir = "/Users/mdozmorov/Dropbox" # Path where the results are stored
 
 # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 # Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
@@ -15,6 +15,8 @@ results_dir = "/Users/mikhail/Dropbox" # Path where the results are stored
 # General settings
 data.type = "RNASeq2"
 type = "" 
+data.type = "miRNASeq" # miRNASeq - "count" for raw read counts (default); "rpmmm" for normalized read counts
+type = "rpmmm"
 
 # Breast cancer
 cancer = "BRCA" 
