@@ -23,6 +23,7 @@ selected_genes = c("TAF2") # LIHC
 selected_genes = c("CPEB2") # BRCA
 selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
 selected_genes = c("PECAM1"); cancer_RNASeq2 = c("PAAD")
+selected_genes <- c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
 
 # View and subset by expression and quantiles of the selected genes
 library(ggplot2)
