@@ -17,6 +17,9 @@ data.type = "RNASeq2"
 type = "" 
 data.type = "miRNASeq" # miRNASeq - "count" for raw read counts (default); "rpmmm" for normalized read counts
 type = "rpmmm"
+data.type = "Mutation"
+type = "somatic"
+type="all"
 
 # Breast cancer
 cancer = "BRCA" 
