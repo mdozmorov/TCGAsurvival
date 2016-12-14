@@ -307,9 +307,9 @@ for(j in 1:length(index_arr)){
 	
 	# --------------------- KMplot ----------------------
 	tryCatch({
-		# draws the KM plot into a pdf file
-		
-		pdf(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".pdf", sep=""));
+		# draws the KM plot into a  file
+	  png(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".png", sep=""));
+		# pdf(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".pdf", sep=""));
 
 		# Surv(time, event)
 		surv<-Surv(survival_data[,1], survival_data[,2]);
