@@ -93,7 +93,7 @@ mtx <- read.table("res/global_stats.txt", sep = "\t", header = TRUE, stringsAsFa
 # Add -log10-transformed p-value
 mtx <- mtx %>% mutate(log10.pval = -1 * log10(p.value))
 # Print into PDF
-pdf(paste0("res/", selected_genes, "_all_TCGA_cancers.pdf"))
+png(paste0("res/", selected_genes, "_all_TCGA_cancers.png"))
 mtx %>% subset(Gene == selected_genes) %>% 
   ggplot(aes(x = factor(Cancer, levels(factor(Cancer))[order(log10.pval)]), y = log10.pval)) + 
   geom_bar(stat = "identity") + 
