@@ -68,7 +68,8 @@ kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true"
 
 ### Analysis 2: Selected genes, all (or selected) cancers, no clinical annotations
 # All cancers with RNASeq2 data
-cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS"); data.type = "RNASeq2"; type = "" 
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+data.type = "RNASeq2"; type = "" 
 for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
