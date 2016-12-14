@@ -4,7 +4,9 @@ library(knitr)
 
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+data_dir = "/Users/mdozmorov/Documents/nobackup" # Mac
 data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
+data_dir = "D:"
 results_dir = "/Users/mdozmorov/Dropbox" # Path where the results are stored
 
 # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
@@ -21,8 +23,16 @@ data.type = "Mutation"
 type = "somatic"
 type="all"
 
+disease = "BRCA"
+data.type = "Methylation"
+type = "450K"
+clinical = TRUE
+
 # Breast cancer
 cancer = "BRCA" 
+
+# Ovarian cancer
+cancer = "OV"
 
 # Liver hepatocellular carcinoma
 cancer = "LIHC" 
