@@ -1,4 +1,9 @@
+library(openxlsx)
+library(MDmisc)
+library(org.Hs.eg.db)
+library(KEGG.db)
 ### Pan-cancer correlation analysis, selected genes vs. all others, all cancers (or one), no clinical annotations
+selected_genes <- c("MBD2")
 # All cancers with RNASeq2 data
 cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS"); data.type = "RNASeq2"; type = "" 
 # Get correlation matrixes for the gene of interest in each cancer
@@ -64,14 +69,14 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
 fileName <- paste0("results/CORR_", selected_genes, ".xlsx")
 wb <- loadWorkbook(fileName)
 # Gene ontology, molecular function
-res <- gene_enrichment(selected = all_summary$hgnc[all_summary$total >= total_cutoff], id="symbol", use="GO", ont="MF")
-save_res(res, fileName, wb = wb, sheetName = "GLOBAL_GOMF")
-# Gene ontology, biological process 
-res <- gene_enrichment(selected = all_summary$hgnc[all_summary$total >= total_cutoff], id="symbol", use="GO", ont="BP")
-save_res(res, fileName, wb = wb, sheetName = "GLOBAL_GOBP")
-# Gene ontology, cellular component
-res <- gene_enrichment(selected = all_summary$hgnc[all_summary$total >= total_cutoff], id="symbol", use="GO", ont="CC")
-save_res(res, fileName, wb = wb, sheetName = "GLOBAL_GOCC")
+# res <- gene_enrichment(selected = all_summary$hgnc[all_summary$total >= total_cutoff], id="symbol", use="GO", ont="MF")
+# save_res(res, fileName, wb = wb, sheetName = "GLOBAL_GOMF")
+# # Gene ontology, biological process 
+# res <- gene_enrichment(selected = all_summary$hgnc[all_summary$total >= total_cutoff], id="symbol", use="GO", ont="BP")
+# save_res(res, fileName, wb = wb, sheetName = "GLOBAL_GOBP")
+# # Gene ontology, cellular component
+# res <- gene_enrichment(selected = all_summary$hgnc[all_summary$total >= total_cutoff], id="symbol", use="GO", ont="CC")
+# save_res(res, fileName, wb = wb, sheetName = "GLOBAL_GOCC")
 # KEGG canonical pathways
 res <- gene_enrichment(selected = all_summary$hgnc[all_summary$total >= total_cutoff], id="symbol", use="KEGG")
 save_res(res, fileName, wb = wb, sheetName = "GLOBAL_KEGG")
