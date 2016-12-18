@@ -4,11 +4,20 @@
 
 - `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
 
-- `survival.R` - an example of running survival analyses
+- `correlations.Rmd` - Correlation analysis of a selected gene across all cancers. Semi-automatic.
 
-- `correlation.R` - co-expression analysis of selected genes vs. others, in all cancers
+- `survival.R` - an example of various survival analyses. 
 
-- `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes
+    - "res.genes.Analysis2" - Selected genes, all (or selected) cancers, no clinical annotations
+    - "res.genes.Analysis3" - Selected genes, all (or, selected) cancers, all unique categories
+
+- `TCGA_summary.Rmd` - Summarizes results of `survival.R` into one report
+
+- `CELLX_analysis.Rmd` - Visualizing differential expression of a selected genes using data from http://54.149.52.246/cgi-bin/RPPA/cellx.cgi
+
+- `TCGA_DEGs.Rmd` - Differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes
+
+- `TCGA_cancers.xlsx` - cancer abbreviations
 
 # TCGA data
 
@@ -43,5 +52,9 @@ MB-0101,90.4,0, 2, WT, moderate, 0, HT/RT, 2,..
 MB-4832,141.7,1, 0, WT, moderate, 0, RT, 1, ..
 MB-5119,59.8,0, 0, NA, moderate, 0, NONE, 2,..
 MB-0117,8.2,0, 2, WT, moderate, 1, HT/RT, 2, ..
+
+### Old, not used
+
+- `correlation.R` - co-expression analysis of selected genes vs. others, in all cancers. Analysis of correlations in separate cancers, and counting in how many cancers correlations are significant.
 
 

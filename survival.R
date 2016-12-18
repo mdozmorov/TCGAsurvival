@@ -16,14 +16,16 @@ colnames(clin)[1] <- "AffyID"
 selected_genes = c("TMEM219", "IGFBP3") # BRCA
 selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
 selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
-selected_genes = c("MTDH", "SND1") # LIHC
+selected_genes = c("MTDH", "SND1", "TAF2") # LIHC
 selected_genes = c("NF1") # LIHC
 selected_genes = c("ANLN") # PAN
 selected_genes = c("TAF2") # LIHC
 selected_genes = c("CPEB2") # BRCA
 selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
-selected_genes = c("PECAM1"); cancer_RNASeq2 = c("PAAD")
-selected_genes <- c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
+selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
+selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
+selected_genes = "DYRK1A"
+selected_genes = "MBD2" # AML
 
 # View and subset by expression and quantiles of the selected genes
 library(ggplot2)

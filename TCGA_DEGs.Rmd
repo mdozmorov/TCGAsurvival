@@ -23,15 +23,13 @@ options(stringsAsFactors = FALSE)
 library(TCGA2STAT)
 library(dplyr)
 library(knitr)
-
-# Path where the downloaded data is stored
-data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
-
-# General settings
-data.type = "RNASeq2"
-type = "" 
-# Pancreatic cancer
-cancer = "BRCA" 
+library(ggplot2)
+library(reshape2)
+library(gridExtra)
+library(limma)
+library(openxlsx)
+library(MDmisc)
+library(org.Hs.eg.db)
 
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
@@ -64,12 +62,25 @@ summarize_data <- function(mtx = mtx) {
   print(kable(clin_vars))
   return(rownames(clin_vars))
 }
+```
 
+```{r}
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+
+# General settings
+data.type = "RNASeq2"
+type = "" 
+# Cancer type
+cancer = "BRCA" 
+# Gene(s) of interest
+selected_genes = c("MIA") # Can be multiple
+```
+
+```{r results='hide'}
 mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 
 clinical_annotations <- summarize_data(mtx = mtx)
-
-
 # source("Supplemental_R_script_1.R")
 
 # Prepare expression data
@@ -83,17 +94,25 @@ expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 # Prepare clinical data
 clin <- mtx$merged.dat[, 1:3]
 colnames(clin)[1] <- "AffyID"
+```
 
-selected_genes = c("TMEM219") # Can be multiple
+# Expression distribution for `r selected_genes` gene
 
+```{r fig.height=3}
+selected_genes_expression <- melt(expr[, colnames(expr) %in% selected_genes, drop = FALSE])
+p1 <- ggplot(selected_genes_expression, aes(x = variable, y = log2(value))) + geom_boxplot()
+p2 <- ggplot(selected_genes_expression, aes(x = log2(value))) + geom_density()
+grid.arrange(p1, p2, ncol = 2)
+```
+
+
+```{r}
 # View and subset by expression and quantiles of the selected genes
-library(ggplot2)
-library(reshape2)
 # Define quantile qutoffs
 quantile_up <- 0.75 # 0.75
 quantile_lo <- 0.25 # 0.25
-selected_genes_expression <- melt(expr[, colnames(expr) %in% selected_genes, drop = FALSE])
-ggplot(selected_genes_expression, aes(x = variable, y = log2(value))) + geom_boxplot()
+
+
 selected_genes_quantiles_up <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_up)) # Select upper quantile!
 selected_genes_quantiles_lo <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_lo)) # Select lower quantile!
 # Subset exprs by top expression
@@ -117,6 +136,7 @@ expr <- expr[group != 0, ] # Remove those that are not in quantiles
 group <- group[ group != 0 ]
 ```
 
+# Differential expression analysis
 
 ```{r}
 # Prerequisites, prepared by the survival.R script
@@ -129,12 +149,7 @@ colnames(expr) <- expr[1, ]
 expr <- expr[-1, ]
 class(expr) <- "numeric"
 expr <- log2(expr + 1)
-boxplot(expr)
-
-library(limma)
-library(openxlsx)
-library(MDmisc)
-library(org.Hs.eg.db)
+# boxplot(expr)
 
 # Limma
 design <- model.matrix(~0 + factor(group))
@@ -161,16 +176,24 @@ group.to.plot <- group[index.to.plot]
 group.to.plot <- ifelse(group.to.plot == 1, "UP", "LO")
 
 NMF::aheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20), Colv = NA, Rowv = FALSE, hclust = "ward", scale = "row", annCol = group.to.plot, annColors = list(c("blue", "red")), labRow = genes.to.plot, fontsize = 10, cexRow = 10) # color="-RdYlBu"
+```
 
+```{r}
 # Filename to same the results
 fileName <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "DEGs", p.value_cutoff, ".xlsx", sep = "_")
 ```
 
-List of differentially expressed genes are stored in Excel file  `r fileName`
+**Results are stored in the Excel file** `r fileName`
 
 - Legend for gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
 
+# KEGG canonical pathway enrichment analysis 
+
 - Legend for GO/KEGG functional enrichment results: "ID" - unique identifier of functional category; "Pvalue" - non-adjusted p-value; "OddsRatio" - enrichment odds ratio; "ExpCount" - number of genes expected to be selected in a category; "Count" - number of genes observed in the current list; "Size" - total number of genes in a category; "Term" - category description; "p.adj" - false discovery rate; "SYMBOL", "ENTREZ" - genes observed in the current list as annotated with a category
+
+## KEGG 
+
+Pathways for **differentially expressed genes** identified above
 
 ```{r eval = TRUE}
 # A wrapper function to perform all functional enrichment analyses.
@@ -200,7 +223,12 @@ openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
 # KEGG canonical pathways
 res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="KEGG")
 save_res(res, fileName, wb = wb, sheetName = "KEGG")
+DT::datatable(res)
 ```
+
+## KEGGUP
+
+**Upregulated** pathways
 
 ```{r}
 # GSEA analysis
@@ -223,6 +251,22 @@ kegg.p <- gage(expr,
 save_res(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGUP")
 save_res(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGDN")
 ```
+
+```{r}
+DT::datatable(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]))
+```
+
+## KEGGDN
+
+**Downregulated** pathways
+
+```{r}
+DT::datatable(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]))
+```
+
+## KEGG clusterprofiler
+
+Pathways identified using GSEA method
 
 ```{r}
 library(clusterProfiler)
@@ -253,6 +297,11 @@ if (rownames(kegg.summary) > 0) {
 }
 ```
 
+```{r}
+DT::datatable(kegg.summary)
+```
+
+## Selected pathway
 
 ```{r eval=FALSE}
 library(pathview)
@@ -261,13 +310,12 @@ degs <- read.xlsx(fileName, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "03010", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04514", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-## The most significant pathway with genes overlayed
+![](/Users/mdozmorov/Documents/Work/VCU_work/Theresa/hsa04514.MIA.png)
 
-
-```{r session_info}
+```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()
 platform <- data.frame(diagnostics$platform %>% unlist, stringsAsFactors = FALSE)
 colnames(platform) <- c("description")
