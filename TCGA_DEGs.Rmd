@@ -74,7 +74,7 @@ type = ""
 # Cancer type
 cancer = "BRCA" 
 # Gene(s) of interest
-selected_genes = c("MIA") # Can be multiple
+selected_genes = c("DYRK1A") # Can be multiple
 ```
 
 ```{r results='hide'}
@@ -196,21 +196,6 @@ fileName <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", qu
 Pathways for **differentially expressed genes** identified above
 
 ```{r eval = TRUE}
-# A wrapper function to perform all functional enrichment analyses.
-# Helper function to save non-empty results
-save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
-  if (nrow(res) > 0) {
-    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
-    openxlsx::writeData(wb, res, sheet = sheetName)
-    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
-  }
-}
-# Create (or, load)  Excel file
-wb <- openxlsx::createWorkbook(fileName) # openxlsx::loadWorkbook(fileName)
-openxlsx::addWorksheet(wb = wb, sheetName = "DEGs")
-openxlsx::writeData(wb, data.frame(Gene = rownames(degs), degs), sheet = "DEGs")
-openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
-
 # # Gene ontology, molecular function
 # res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="MF")
 # save_res(res, fileName, wb = wb, sheetName = "GOMF")
@@ -222,7 +207,6 @@ openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
 # save_res(res, fileName, wb = wb, sheetName = "GOCC")
 # KEGG canonical pathways
 res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="KEGG")
-save_res(res, fileName, wb = wb, sheetName = "KEGG")
 DT::datatable(res)
 ```
 
@@ -248,8 +232,6 @@ kegg.p <- gage(expr,
                samp = which(group == 1, arr.ind = TRUE),
                same.dir = TRUE,
                compare = "unpairedd")
-save_res(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGUP")
-save_res(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGDN")
 ```
 
 ```{r}
@@ -292,13 +274,35 @@ ego3 <- gseKEGG(geneList     = geneList,
                 pvalueCutoff = 0.1,
                 verbose      = FALSE)
 kegg.summary <- summary(ego3)
-if (rownames(kegg.summary) > 0) {
-  save_res(kegg.summary, fileName, wb = wb, sheetName = "KEGG.clusterProfiler")
-}
 ```
 
 ```{r}
 DT::datatable(kegg.summary)
+```
+
+```{r}
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+# Create (or, load)  Excel file
+wb <- openxlsx::createWorkbook(fileName) # openxlsx::loadWorkbook(fileName)
+openxlsx::addWorksheet(wb = wb, sheetName = "DEGs")
+openxlsx::writeData(wb, data.frame(Gene = rownames(degs), degs), sheet = "DEGs")
+openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+
+save_res(res, fileName, wb = wb, sheetName = "KEGG")
+save_res(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGUP")
+save_res(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGDN")
+if (rownames(kegg.summary) > 0) {
+  save_res(kegg.summary, fileName, wb = wb, sheetName = "KEGG.clusterProfiler")
+}
+
 ```
 
 ## Selected pathway
@@ -310,10 +314,10 @@ degs <- read.xlsx(fileName, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "04514", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04110", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-![](/Users/mdozmorov/Documents/Work/VCU_work/Theresa/hsa04514.MIA.png)
+![](hsa04110.CPEB2.png)
 
 ```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()
