@@ -89,6 +89,7 @@ t.table <- data.frame(Cancer_name = NA,
                       Number_of_cancer = NA, 
                       Mean_expression_normal = NA, 
                       Mean_expression_cancer = NA, 
+                      Fold_change = NA,
                       t_statistic = NA, 
                       Degrees_of_freedom = NA, 
                       p_value = NA, 
@@ -116,7 +117,9 @@ for (i in 1:length(cancer)) {
     # Otherwise fill in normal tissue info and run t test
     normal_i <- paste0(cancer[i], "_N")
     t.table[i, c(2, 4)] <- c(length(which(expr$affy_source == normal_i)), round(mean(expr[which(expr$affy_source == normal_i), 3]), 4))
-    
+    # Add fold change
+    t.table$Fold_change[i] <- signif( 2^(t.table$Mean_expression_cancer[i] - t.table$Mean_expression_normal[i]) )
+
     # Skip t.test errors when N of normal samples is too small; else run and save output
     if (is.null(tryCatch(res <- t.test(expr[which(expr$affy_source == normal_i), 3], expr[which(expr$affy_source ==  cancer[i]), 3], alternative = "two.sided"), error = function(e) NULL))) {
         t.table$Method[i] <- "Not Conducted"
@@ -125,8 +128,8 @@ for (i in 1:length(cancer)) {
     res <- t.test(expr[which(expr$affy_source == cancer[i]), 3], expr[which(expr$affy_source == normal_i), 3], alternative = "two.sided")
     
     # Write results to t.table
-    t.table[i, 6:8] <- c(round(res$statistic, 3), round(res$parameter, 3), round(res$p.value, 6))
-    t.table[i, 9:10] <- c(paste0("(", round(res$conf.int[1], 2), ", ", round(res$conf.int[2], 2), ")"), 
+    t.table[i, 7:9] <- c(round(res$statistic, 3), round(res$parameter, 3), round(res$p.value, 6))
+    t.table[i, 10:11] <- c(paste0("(", round(res$conf.int[1], 2), ", ", round(res$conf.int[2], 2), ")"), 
         res$method)
 }
 
