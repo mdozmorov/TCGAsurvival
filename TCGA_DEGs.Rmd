@@ -74,7 +74,7 @@ type = ""
 # Cancer type
 cancer = "BRCA" 
 # Gene(s) of interest
-selected_genes = c("DYRK1A") # Can be multiple
+selected_genes = c("FOXP3") # Can be multiple
 ```
 
 ```{r results='hide'}
@@ -314,10 +314,11 @@ degs <- read.xlsx(fileName, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "04110", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04640", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-![](hsa04110.CPEB2.png)
+![](hsa04060.FOXP3.png)
+![](hsa04640.FOXP3.png)
 
 ```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()

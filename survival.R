@@ -26,6 +26,7 @@ selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
 selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
 selected_genes = "DYRK1A"
 selected_genes = "MBD2" # AML
+selected_genes = c("FOXP3") # BRCA
 
 # View and subset by expression and quantiles of the selected genes
 library(ggplot2)
@@ -107,6 +108,7 @@ dev.off()
 
 
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
+cancer_RNASeq2 = c("BRCA")
 for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
