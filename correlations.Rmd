@@ -204,19 +204,22 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
 # Create (or, load)  Excel file
 unlink(fileName)
 wb <- createWorkbook(fileName)
-save_res(correlations, fileName = fileName, wb = wb, sheetName = "GLOBAL_CORR")
-save_res(res, fileName = fileName, wb = wb, sheetName = "GLOBAL_KEGG")
+save_res(correlations[order(correlations$corr, decreasing = TRUE), ], fileName = fileName, wb = wb, sheetName = "POSITIVE_CORR")
+save_res(res, fileName = fileName, wb = wb, sheetName = "POSITIVEL_KEGG")
+# Save full correlation table
+load(file = paste0("results/CORR_", selected_genes, "_", cancer_RNASeq2, ".Rda"))
+save_res(correlations[order(correlations$corr, decreasing = TRUE), ], fileName = fileName, wb = wb, sheetName = "ALL_CORR")
 ```
 
 Results are stored in `r fileName` file.
 
 ```{r eval = F}
-degs       <- read.xlsx(fileName, cols = c(1, 3)) # Read in two columns, gene symbol and fold change
+degs       <- read.xlsx(fileName, cols = c(1, 3), sheet = "ALL_CORR") # Read in two columns, gene symbol and fold change
 degs.genes <- degs$corr                           # A vector of numeric log fold changes 
 names(degs.genes) <- degs$symbol                   # Give this vector names
 
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = res$ID[1], species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = "my_pathway")
+pv.out <- pathview(gene.data = degs.genes, pathway.id = res$ID[2], species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = "my_pathway")
 # ![](hsa04110.my_pathway.png)
 ```
 
