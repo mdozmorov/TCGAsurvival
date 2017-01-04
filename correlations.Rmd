@@ -61,13 +61,17 @@ grch38 <- grch38[ !duplicated(grch38), ]
 ```
 
 ```{r}
-selected_genes <- c("CPEB2")
+selected_genes <- c("FOXP3")
 data.type = "RNASeq2"; type = "" 
+# All cancers with RNASeq2 data
+# cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+cancer_RNASeq2 = c("BRCA")
 ```
 
 ```{r eval = FALSE}
 # All cancers with RNASeq2 data
-cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+# cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+cancer_RNASeq2 = c("BRCA")
 all_exprs <- list() # List to store cancer-specific expression matrixes
 # Get correlation matrixes for the gene of interest in each cancer
 for (cancer_type in cancer_RNASeq2) {
@@ -90,11 +94,13 @@ all_expression <- log2(all_expression + 1)
 all_expression <- limma::normalizeQuantiles(all_expression)
 # sd_cutoff <- quantile(apply(all_expression, 1, sd), 0.10)
 # all_expression <- all_expression[ apply(all_expression, 1, sd) > sd_cutoff, ]
-# save(all_expression, file = (paste0("all_expression_", data.type, "_", type, ".Rda")))
+# save(all_expression, file = (paste0("data/all_expression_", data.type, "_", type, ".Rda"))) # All cancers
+save(all_expression, file = (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))) # Select cancers
 ```
 
 ```{r eval = F}
-load(file = (paste0("all_expression_", data.type, "_", type, ".Rda")))
+# load(file = (paste0("data/all_expression_", data.type, "_", type, ".Rda")))
+load(file = (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda")))
 ```
 
 ```{r}
@@ -115,11 +121,11 @@ for (i in 1:nrow(all_expression)) {
 # all_pvals <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[3]][1, 2])
 correlations <- data_frame(hgnc = rownames(all_expression), corr = all_corrs, pval = all_pvals)
 correlations <- inner_join(grch38, correlations, by = c("symbol" = "hgnc"))
-save(correlations, file = paste0("results/CORR_", selected_genes, ".Rda"))
+save(correlations, file = paste0("results/CORR_", selected_genes, "_", cancer_RNASeq2, ".Rda"))
 ```
 
 ```{r eval = T}
-load(file = paste0("results/CORR_", selected_genes, ".Rda"))
+load(file = paste0("results/CORR_", selected_genes, "_", cancer_RNASeq2, ".Rda"))
 ```
 
 # Correlation analysis
@@ -214,4 +220,5 @@ pv.out <- pathview(gene.data = degs.genes, pathway.id = res$ID[1], species = "hs
 # ![](hsa04110.my_pathway.png)
 ```
 
-![](hsa04110.my_pathway.png)
+![]( hsa04060.my_pathway.png)
+![]( hsa04062.my_pathway.png)
