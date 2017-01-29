@@ -6,6 +6,8 @@
 
 - `correlations.Rmd` - Correlation analysis of a selected gene across all cancers. Semi-automatic.
 
+- `RTCGA.R` - Playground for RTCGA package
+
 - `survival.R` - an example of various survival analyses. 
 
     - "res.genes.Analysis2" - Selected genes, all (or selected) cancers, no clinical annotations
