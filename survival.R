@@ -63,7 +63,7 @@ expr <- expr[group != 0, ] # Remove those that are not in quantiles
 group <- group[ group != 0 ]
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
-kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer)
+kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = TRUE)
 
 ### All genes, selected cancers, no clinical annotations
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
@@ -108,7 +108,7 @@ dev.off()
 
 
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
-cancer_RNASeq2 = c("BRCA")
+cancer_RNASeq2 = c("LUAD")
 for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
@@ -151,7 +151,7 @@ for (cancer_type in cancer_RNASeq2) {
         index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
         expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
         # Perform actual survival analysis
-        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"))
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "pdf", use_survminer = TRUE)
       }
     }
   }
@@ -189,7 +189,7 @@ for (annotation in clinical_annotations) {
         index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
         expr_selected <- cbind(expr_selected$AffyID, select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
         # Perform actual survival analysis
-        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer, annotation, combination_of_categories[, combination]), collapse = "-"))
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer, annotation, combination_of_categories[, combination]), collapse = "-"), fileType = "pdf")
       }
     }
   }

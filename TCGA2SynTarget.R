@@ -30,21 +30,20 @@ clinical = TRUE
 
 # Breast cancer
 cancer = "BRCA" 
-
 # Ovarian cancer
 cancer = "OV"
-
 # Liver hepatocellular carcinoma
 cancer = "LIHC" 
-
 # Head and Neck squamous cell carcinoma
 cancer = "HNSC" 
-
 # Sarcoma
 cancer = "SARC" 
-
 # Pancreatic cancer
 cancer = "PAAD" 
+# Lung adenocarcinoma
+cancer = "LUAD"
+# Lung squamous cell carcinoma
+cancer = "LUSC"
 
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
