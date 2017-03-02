@@ -249,7 +249,7 @@ getParameter = function(c_args, id){
 
 }
 
-kmplot = function(expr, clin, event_index=3, time_index=4, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE, cancer_type = "BRCA"){
+kmplot = function(expr, clin, event_index=3, time_index=4, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE, cancer_type = "BRCA", fileType = "png"){
 
 # checks the input: if the expression data and clinical data don't match, the script will fail.
 checkData(expr, clin);
@@ -307,9 +307,13 @@ for(j in 1:length(index_arr)){
 	
 	# --------------------- KMplot ----------------------
 	tryCatch({
-		# draws the KM plot into a  file
-	  png(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".png", sep=""));
-		# pdf(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".pdf", sep=""));
+	  # draws the KM plot into a  file
+	  if (fileType == "png") {
+	    png(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".png", sep=""));
+	  }
+	  if (fileType == "pdf") {
+	    pdf(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".pdf", sep=""));
+	  }
 
 		# Surv(time, event)
 		surv<-Surv(survival_data[,1], survival_data[,2]);
