@@ -195,4 +195,30 @@ for (annotation in clinical_annotations) {
   }
 }
 
+## Plot boxplot of gene expression split by high/low expression
+# Make sure correct mtx is loaded
+# Check cancer value
+# Check selected_gene value
+# Get full clinical data
+clin.full <- mtx$clinical
+# Select major category
+clinical_annotations
+clinical_category <- "radiationtherapy"
+table(clin.full[, clinical_category])
+clinical_subcategory <- "yes"
+# Cutoff value
+cutoff_value <- 10.4 # log2 expression value affecting the survival. from global_stats
+# Select subset of expression data
+selected_samples <- rownames(mtx$clinical)[mtx$clinical[, clinical_category] %in% clinical_subcategory] # Sample names from clinical annotations
+mtx_subset <- expr[ mtx$merged.dat$bcr %in% selected_samples, selected_genes] # Expression subset 
+mtx_subset <- data.frame(gene = log2(mtx_subset + 1), group = ifelse(log2(mtx_subset + 1) >= cutoff_value, "high", "low"), stringsAsFactors = FALSE)
+# Boxplots split by expression
+res <- ggplot(mtx_subset, aes(x = group, y = gene)) + 
+  geom_boxplot(aes(fill = group)) +
+  xlab("Group") +
+  ylab("log2-transformed expression")
+# scale_fill_manual(name = "", values = c("red", "blue"))
+ggsave(filename = paste0("res/boxplot_", selected_genes, "_", cancer, "-", clinical_category, "-", clinical_subcategory, ".pdf"), plot = res, width = 7, height = 7)
+
+
 
