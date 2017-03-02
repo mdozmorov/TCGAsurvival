@@ -63,7 +63,7 @@
 
 library(survival)
 library(survplot)
-
+library(survminer)
 
 # demo = getParameter(c_args, "demo");
 demo = "false"
@@ -152,24 +152,29 @@ loadData = function(exprFile="@supplemental table 1_GEO expression data_sorted.t
 	list("expr"=expr, "clin"=clin);
 }
 
-mySurvplot = function(surv, gene_expr, xlab="Time (days)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA){
-	survplot(surv ~ gene_expr, xlab=xlab, ylab=ylab, snames = snames, stitle = stitle, hr.pos=hr.pos);
-	
-	cox = summary(coxph(surv ~ gene_expr))
-	
-	pvalue=cox$sctest['pvalue'];
-	hr = round(cox$conf.int[1],2)
-	hr_left = round(cox$conf.int[3],2)
-	hr_right = round(cox$conf.int[4],2)
-	
-	conf_int =  paste(" (", hr_left, " - ", hr_right, ")", sep=""); 
-	
-	txt = paste("HR = ", hr, conf_int, "\nlogrank P = ", signif(pvalue, 2), sep="")
-	text(grconvertX(0.98, "npc"), grconvertY(.97, "npc"),
+mySurvplot = function(surv, gene_expr, xlab="Time (days)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA, use_survminer = TRUE, conf.int = FALSE) {
+  if (use_survminer) {
+    res <- ggsurvplot(survfit(surv ~ gene_expr), risk.table = TRUE, pval = TRUE, conf.int = conf.int, xlab = "Time (days)", palette = c("#67A9CF", "#EF8A62"),
+               legend = "top", legend.title = "Expression", legend.labs = c("Low", "High"))
+    return(res)
+  } else {
+    survplot(surv ~ gene_expr, xlab=xlab, ylab=ylab, snames = snames, stitle = stitle, hr.pos=hr.pos);
+    cox = summary(coxph(surv ~ gene_expr))
+    
+    pvalue=cox$sctest['pvalue'];
+    hr = round(cox$conf.int[1],2)
+    hr_left = round(cox$conf.int[3],2)
+    hr_right = round(cox$conf.int[4],2)
+    
+    conf_int =  paste(" (", hr_left, " - ", hr_right, ")", sep=""); 
+    
+    txt = paste("HR = ", hr, conf_int, "\nlogrank P = ", signif(pvalue, 2), sep="")
+    text(grconvertX(0.98, "npc"), grconvertY(.97, "npc"),
          labels=txt,
          adj=c(1, 1))
-	
-	list(pvalue, hr, hr_left, hr_right)
+    
+    list(pvalue, hr, hr_left, hr_right)
+  }
 }
 
 createDirectory = function(base){
@@ -249,7 +254,7 @@ getParameter = function(c_args, id){
 
 }
 
-kmplot = function(expr, clin, event_index=3, time_index=4, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE, cancer_type = "BRCA", fileType = "png"){
+kmplot = function(expr, clin, event_index=2, time_index=3, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE, cancer_type = "BRCA", fileType = "png", use_survminer = TRUE, ...){
 
 # checks the input: if the expression data and clinical data don't match, the script will fail.
 checkData(expr, clin);
@@ -314,22 +319,27 @@ for(j in 1:length(index_arr)){
 	  if (fileType == "pdf") {
 	    pdf(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".pdf", sep=""));
 	  }
-
+	  
 		# Surv(time, event)
 		surv<-Surv(survival_data[,1], survival_data[,2]);
-
-		res = mySurvplot(surv, gene_expr)
-		pvalue = res[[1]];
-		hr = res[[2]]
-		hr_left = res[[3]]
-		hr_right = res[[4]]
-		
-		resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
-
+    if (use_survminer) {
+      res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer)
+      pvalue <- res$plot$plot_env$pval
+      hr <- hr_left <- hr_right <- NA
+      print(res)
+    } else {
+      res = mySurvplot(surv, gene_expr, use_survminer = use_survminer)
+      pvalue = res[[1]];
+      hr = res[[2]]
+      hr_left = res[[3]]
+      hr_right = res[[4]]
+      resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
+    }
 		dev.off();
-		
 		# Save global statistics
 		write.table( paste(c(cancer_type, colnames(expr)[i], formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right, row_summary$nums), digits = 2), ifelse(auto_cutoff == "true", "Automatic", "Manual"), round(m, digits = 2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
+		
+		
 		
 	}, interrupt = function(ex){
 		cat("Interrupt during the KM draw");
