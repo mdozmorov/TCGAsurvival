@@ -32,10 +32,16 @@ library(dplyr)
 library(knitr)
 # library(clusterProfiler)
 library(pathview)
-# Path where the downloaded data is stored
-# data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
-data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
+library(enrichR)
+library(annotables)
+# Remove non-canonical chromosome names
+grch38 <- grch38[ !(grepl("_", grch38$chr) | grepl("GL", grch38$chr)), ]
+grch38 <- grch38[, c("symbol", "description")]
+grch38 <- grch38[ complete.cases(grch38) , ]
+grch38 <- grch38[ !duplicated(grch38), ]
+```
 
+```{r functions}
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
   FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
@@ -49,127 +55,183 @@ load_data <- function(disease = cancer, data.type = data.type, type = type, data
   }
   return(mtx)
 }
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+
+# A wrapper to save the results
+save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
+  print(paste("Running", databases, "analysis", sep = " "))
+  if (is.null(dn.genes)) {
+    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+  } else {
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+  }
+  
+  res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
+  res.kegg$qval <- formatC(res.kegg$qval, digits = 3, format = "e")
+  if (!is.null(fileNameOut)) {
+    if (nchar(databases) > 30) databases <- paste0(substr(databases, 1, 20), "_", substr(databases, nchar(databases) - 8, nchar(databases))) # If a database is longer that 30 characters, keep first 20 and last 10 characters
+    save_res(res.kegg, fileNameOut, wb = wb, sheetName = databases)
+  }
+  # Pause for a few seconds
+  pause_sec <- round(runif(1, min = 1, max = 10))
+  Sys.sleep(pause_sec)
+  return(res.kegg)
+}
 ```
 
-```{r}
-library(annotables)
-# Remove non-canonical chromosome names
-grch38 <- grch38[ !(grepl("_", grch38$chr) | grepl("GL", grch38$chr)), ]
-grch38 <- grch38[, c("symbol", "description")]
-grch38 <- grch38[ complete.cases(grch38) , ]
-grch38 <- grch38[ !duplicated(grch38), ]
-```
+```{r settings}
+system("mkdir -p data")
+system("mkdir -p results")
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+# data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 
-```{r}
-selected_genes <- c("FOXP3")
+# Selected genes
+selected_genes <- c("SDC1")
 data.type = "RNASeq2"; type = "" 
 # All cancers with RNASeq2 data
 # cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+# fileNameIn <- (paste0("data/All_expression_", data.type, "_", type, ".Rda")) # Save expression data
+# fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
+# fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
+# Or, one cancer
 cancer_RNASeq2 = c("BRCA")
+fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))  # Save expression data
+fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
+fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
+
+# Correlation type
+corr_type    <- "pearson"
+# Correlation cutoffs
+corr_cutoff  <- 0.2
+pval_cutoff  <- 0.05
+# Enrichment cutoffs
+p.adj.cutoff <- 0.1
+fdr.cutoff   <- 0.3
 ```
 
-```{r eval = FALSE}
-# All cancers with RNASeq2 data
-# cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
-cancer_RNASeq2 = c("BRCA")
-all_exprs <- list() # List to store cancer-specific expression matrixes
-# Get correlation matrixes for the gene of interest in each cancer
-for (cancer_type in cancer_RNASeq2) {
-#   print(paste0("Processing cancer ", cancer_type))
-  # Prepare expression data
-  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
-  expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
-  # Filter out low expressed genes
-  expr <- data.frame(hgnc = colnames(expr), t(expr))
-  all_exprs[length(all_exprs) + 1] <- list(expr)
+```{r loadExpressionData}
+if (!file.exists(fileNameIn)) {
+  all_exprs <- list() # List to store cancer-specific expression matrixes
+  # Get correlation matrixes for the gene of interest in each cancer
+  for (cancer_type in cancer_RNASeq2) {
+  #   print(paste0("Processing cancer ", cancer_type))
+    # Prepare expression data
+    mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+    expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+    # Filter out low expressed genes
+    expr <- data.frame(hgnc = colnames(expr), t(expr))
+    all_exprs[length(all_exprs) + 1] <- list(expr)
+  }
+  all_expression <- Reduce(function(...) inner_join(..., by = "hgnc"), all_exprs) # Combine all expression matrixes
+  rownames(all_expression) <- all_expression$hgnc
+  all_expression$hgnc <- NULL
+  all_expression <- as.matrix(all_expression)
+  ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) # Should be more than 90% of non-zero values
+  all_expression <- all_expression[apply(all_expression, 1, ff), ] 
+  # boxplot(all_expression[1:1000, 2:100])
+  all_expression <- log2(all_expression + 1)
+  all_expression <- limma::normalizeQuantiles(all_expression)
+  # sd_cutoff <- quantile(apply(all_expression, 1, sd), 0.10)
+  # all_expression <- all_expression[ apply(all_expression, 1, sd) > sd_cutoff, ]
+  # save(all_expression, file = (paste0("data/all_expression_", data.type, "_", type, ".Rda"))) # All cancers
+  save(all_expression, file = fileNameIn) # Select cancers
+} else {
+  load(file = fileNameIn)
 }
-all_expression <- Reduce(function(...) inner_join(..., by = "hgnc"), all_exprs) # Combine all expression matrixes
-rownames(all_expression) <- all_expression$hgnc
-all_expression$hgnc <- NULL
-all_expression <- as.matrix(all_expression)
-ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) # Should be more than 90% of non-zero values
-all_expression <- all_expression[apply(all_expression, 1, ff), ] 
-# boxplot(all_expression[1:1000, 2:100])
-all_expression <- log2(all_expression + 1)
-all_expression <- limma::normalizeQuantiles(all_expression)
-# sd_cutoff <- quantile(apply(all_expression, 1, sd), 0.10)
-# all_expression <- all_expression[ apply(all_expression, 1, sd) > sd_cutoff, ]
-# save(all_expression, file = (paste0("data/all_expression_", data.type, "_", type, ".Rda"))) # All cancers
-save(all_expression, file = (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))) # Select cancers
 ```
 
-```{r eval = F}
-# load(file = (paste0("data/all_expression_", data.type, "_", type, ".Rda")))
-load(file = (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda")))
-```
-
-```{r}
-corr_type <- "pearson"
-```
-
-```{r eval = F}
-all_corrs <- vector(mode = "numeric", length = nrow(all_expression))
-all_pvals <- vector(mode = "numeric", length = nrow(all_expression))
-for (i in 1:nrow(all_expression)) {
-  cors <- Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes],
-                       all_expression[ i, ], type = corr_type)
-  all_corrs[i] <- cors[[1]][1, 2]
-  all_pvals[i] <- cors[[3]][1, 2]
+```{r correlations}
+if (!file.exists(fileNameOut)) {
+  all_corrs <- vector(mode = "numeric", length = nrow(all_expression))
+  all_pvals <- vector(mode = "numeric", length = nrow(all_expression))
+  for (i in 1:nrow(all_expression)) {
+    cors <- Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes],
+                         all_expression[ i, ], type = corr_type)
+    all_corrs[i] <- cors[[1]][1, 2]
+    all_pvals[i] <- cors[[3]][1, 2]
+  }
+  
+  # all_corrs <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[1]][1, 2])
+  # all_pvals <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[3]][1, 2])
+  correlations <- data_frame(hgnc = rownames(all_expression), corr = all_corrs, pval = all_pvals)
+  correlations <- inner_join(grch38, correlations, by = c("symbol" = "hgnc"))
+  save(correlations, file = fileNameOut)
+} else {
+  load(file = fileNameOut)
 }
-
-# all_corrs <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[1]][1, 2])
-# all_pvals <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[3]][1, 2])
-correlations <- data_frame(hgnc = rownames(all_expression), corr = all_corrs, pval = all_pvals)
-correlations <- inner_join(grch38, correlations, by = c("symbol" = "hgnc"))
-save(correlations, file = paste0("results/CORR_", selected_genes, "_", cancer_RNASeq2, ".Rda"))
-```
-
-```{r eval = T}
-load(file = paste0("results/CORR_", selected_genes, "_", cancer_RNASeq2, ".Rda"))
+# Save correlation results
+# Create (or, load)  Excel file
+unlink(fileNameRes)
+wb <- openxlsx::createWorkbook(fileNameOut) # loadWorkbook(fileNameRes) # 
+save_res(correlations[ order(correlations$corr, decreasing = TRUE), ], fileName = fileNameRes, wb = wb, sheetName = "CORR")
 ```
 
 # Correlation analysis
 
 ```{r}
-corr_cutoff <- 0.2
-pval_cutoff <- 0.05
-
 # sum(correlations$pval < pval_cutoff & correlations$corr > corr_cutoff)
-correlations <- correlations[ correlations$pval < pval_cutoff & correlations$corr > corr_cutoff, ]
-correlations$corr <- signif(correlations$corr)
-correlations$pval <- signif(correlations$pval)
-DT::datatable(correlations[ order(correlations$corr, decreasing = TRUE), ])
+correlations.subset <- correlations[ correlations$pval < pval_cutoff & abs(correlations$corr) > corr_cutoff, ]
+correlations.subset$corr <- signif(correlations.subset$corr)
+correlations.subset$pval <- signif(correlations.subset$pval)
+DT::datatable(correlations.subset[ order(correlations.subset$corr, decreasing = TRUE), ])
+up.genes <- sort(unique(correlations[ correlations$pval < pval_cutoff & correlations$corr >  corr_cutoff, ]$symbol))
+dn.genes <- sort(unique(correlations[ correlations$pval < pval_cutoff & correlations$corr < -corr_cutoff, ]$symbol))
 ```
 
-Genes significantly (p < `r pval_cutoff`) correlating with the selected gene `r selected_genes` across all cancers. Correlation method: `r corr_type`, correlation coefficient cutoff: >`r corr_cutoff`. Legend:
+Genes positively (n = `r length(up.genes)`) and negatively (n = `r length(dn.genes)`) correlating with the selected gene `r selected_genes` at p < `r pval_cutoff` cutoff and  `r corr_type` correlation coefficient cutoff: >`r corr_cutoff`. Legend:
 
 - `symbol`, `description` - gene symbols/description
 - `cor`, `pval - Pearson correlation coefficient, and p-value of correlation significance
 
-We have `r nrow(correlations)` genes best correlated with `r selected_genes`.
+Full correlation results are saved in `r fileNameRes` file.
 
-# KEGG canonical pathway enrichment analysis 
+# Functional enrichment analysis
 
-For the genes best correlating with the selected gene `r selected_genes` across all cancers. Legend:
+## KEGG canonical pathway enrichment analysis 
 
-- `ID` - unique identifier of functional category
-- `Pvalue` - non-adjusted p-value
-- `OddsRatio` - enrichment odds ratio
-- `ExpCount` - number of genes expected to be selected in a category
-- `Count` - number of genes observed in the current list
-- `Size` - total number of genes in a category
-- `Term` - category description
-- `p.adj` - false discovery rate
-- `SYMBOL`, `ENTREZ` - genes observed in the current list as annotated with a category
+- Genes positively and negatively correlated with the `r selected_genes` are tested for pathway enrichment separately. 
+
+- Each table has enrichment results for both positively/negatively correlated genes. The "direction" column indicate which pathways are enriched in "UP"- or "DN"-regulated genes for positively/negatively correlated genes, respectively.
+
+- Use the "Search" box for each table, to filter the results for "UP" or "DN" only. Search is global within the table, case insensitive.
+
+- FDR cutoff of the significant enrichments - `r fdr.cutoff`.
+
+**Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category,  "direction" - UP/DN, an indicator whether genes are up- or downregulated.
 
 ```{r}
+res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileNameOut = fileNameRes, wb = wb)
+DT::datatable(res.kegg)
+```
+
+```{r eval = FALSE}
+# For the genes best correlating with the selected gene `r selected_genes` across all cancers. Legend:
+# 
+# - `ID` - unique identifier of functional category
+# - `Pvalue` - non-adjusted p-value
+# - `OddsRatio` - enrichment odds ratio
+# - `ExpCount` - number of genes expected to be selected in a category
+# - `Count` - number of genes observed in the current list
+# - `Size` - total number of genes in a category
+# - `Term` - category description
+# - `p.adj` - false discovery rate
+# - `SYMBOL`, `ENTREZ` - genes observed in the current list as annotated with a category
+
 res <- gene_enrichment(selected = correlations$symbol, id="symbol", use="KEGG")
 res$Pvalue <- signif(res$Pvalue)
 res$OddsRatio <- signif(res$OddsRatio)
 res$ExpCount <- signif(res$ExpCount)
 DT::datatable(res)
 ```
-
 
 ```{r eval = FALSE}
 eg = bitr(correlations$symbol, fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
@@ -188,40 +250,13 @@ kk2 <- gseKEGG(geneList     = geneList,
 head(summary(kk2))
 ```
 
-```{r}
-fileName <- paste0("results/CORR_", selected_genes, ".xlsx")
-```
-
 ```{r eval = F}
-# Helper function to save non-empty results
-save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
-  if (nrow(res) > 0) {
-    addWorksheet(wb = wb, sheetName = sheetName)
-    writeData(wb, res, sheet = sheetName)
-    saveWorkbook(wb, fileName, overwrite = TRUE)
-  }
-}
-# Create (or, load)  Excel file
-unlink(fileName)
-wb <- createWorkbook(fileName)
-save_res(correlations[order(correlations$corr, decreasing = TRUE), ], fileName = fileName, wb = wb, sheetName = "POSITIVE_CORR")
-save_res(res, fileName = fileName, wb = wb, sheetName = "POSITIVEL_KEGG")
-# Save full correlation table
-load(file = paste0("results/CORR_", selected_genes, "_", cancer_RNASeq2, ".Rda"))
-save_res(correlations[order(correlations$corr, decreasing = TRUE), ], fileName = fileName, wb = wb, sheetName = "ALL_CORR")
-```
-
-Results are stored in `r fileName` file.
-
-```{r eval = F}
-degs       <- read.xlsx(fileName, cols = c(1, 3), sheet = "ALL_CORR") # Read in two columns, gene symbol and fold change
+degs       <- read.xlsx(fileNameRes, cols = c(1, 3), sheet = "CORR") # Read in two columns, gene symbol and fold change
 degs.genes <- degs$corr                           # A vector of numeric log fold changes 
 names(degs.genes) <- degs$symbol                   # Give this vector names
 
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = res$ID[2], species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = "my_pathway")
-# ![](hsa04110.my_pathway.png)
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "hsa04510", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = "my_pathway")
 ```
 
-![]( hsa04060.my_pathway.png)
-![]( hsa04062.my_pathway.png)
+![](hsa04510.my_pathway.png)

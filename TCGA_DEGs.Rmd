@@ -30,6 +30,7 @@ library(limma)
 library(openxlsx)
 library(MDmisc)
 library(org.Hs.eg.db)
+library(enrichR)
 
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
@@ -62,6 +63,36 @@ summarize_data <- function(mtx = mtx) {
   print(kable(clin_vars))
   return(rownames(clin_vars))
 }
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+
+# A wrapper to save the results
+save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
+  print(paste("Running", databases, "analysis", sep = " "))
+  if (is.null(dn.genes)) {
+    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+  } else {
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+  }
+  
+  res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
+  res.kegg$qval <- formatC(res.kegg$qval, digits = 3, format = "e")
+  if (!is.null(fileNameOut)) {
+    if (nchar(databases) > 30) databases <- paste0(substr(databases, 1, 20), "_", substr(databases, nchar(databases) - 8, nchar(databases))) # If a database is longer that 30 characters, keep first 20 and last 10 characters
+    save_res(res.kegg, fileNameOut, wb = wb, sheetName = databases)
+  }
+  # Pause for a few seconds
+  pause_sec <- round(runif(1, min = 1, max = 10))
+  Sys.sleep(pause_sec)
+  return(res.kegg)
+}
 ```
 
 ```{r}
@@ -74,7 +105,19 @@ type = ""
 # Cancer type
 cancer = "BRCA" 
 # Gene(s) of interest
-selected_genes = c("FOXP3") # Can be multiple
+selected_genes = c("SDC1") # Can be multiple
+
+# Define quantile qutoffs
+quantile_up <- 0.75 # 0.75
+quantile_lo <- 0.25 # 0.25
+
+# Differential expression cutoff
+pval_cutoff <- 0.01 # P-value cutoff
+# Enrichment cutoffs
+fdr.cutoff   <- 0.3
+
+# Filename to same the results
+fileNameRes <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "DEGs", pval_cutoff, ".xlsx", sep = "_")
 ```
 
 ```{r results='hide'}
@@ -108,9 +151,6 @@ grid.arrange(p1, p2, ncol = 2)
 
 ```{r}
 # View and subset by expression and quantiles of the selected genes
-# Define quantile qutoffs
-quantile_up <- 0.75 # 0.75
-quantile_lo <- 0.25 # 0.25
 
 
 selected_genes_quantiles_up <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_up)) # Select upper quantile!
@@ -158,15 +198,16 @@ fit <- lmFit(expr, design)
 contrast.matrix <- makeContrasts(up-lo, levels = design)
 fit2 <- contrasts.fit(fit, contrast.matrix)
 fit2 <- eBayes(fit2)
-# topTable(fit2, coef=1, adjust="BH")
 
-p.value_cutoff <- 0.01 # P-value cutoff
-degs <- topTable(fit2, coef = 1, number = Inf, p.value = p.value_cutoff)
+degs <- topTable(fit2, coef = 1, number = Inf, p.value = pval_cutoff)
+
+up.genes <- sort(unique(rownames(degs)[ degs$t > 0 ]))
+dn.genes <- sort(unique(rownames(degs)[ degs$t < 0 ]))
 ```
 
 We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having `r paste(selected_genes, collapse = ", ") ` in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value 0.01. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
 
-Top 50 are shown
+Top 50 the most differentially expressed genes are shown
 
 ```{r fig.height=10}
 index.to.plot <- order(group)
@@ -179,23 +220,48 @@ NMF::aheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow')
 ```
 
 ```{r}
-# Filename to same the results
-fileName <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "DEGs", p.value_cutoff, ".xlsx", sep = "_")
+# Save results
+# Create (or, load)  Excel file
+unlink(fileNameRes)
+wb <- openxlsx::createWorkbook(fileNameRes) # loadWorkbook(fileNameRes) # 
+save_res(data.frame(Gene = rownames(degs), degs), fileName = fileNameRes, wb = wb, sheetName = "DEGS")
 ```
 
-**Results are stored in the Excel file** `r fileName`
+Results are stored in the Excel file `r fileNameRes`
 
 - Legend for gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
 
+```{r}
+DT::datatable(degs)
+```
+
+# Functional enrichment analysis
+
+## KEGG canonical pathway enrichment analysis 
+
+- Up- and downregulated genes are tested for pathway enrichment separately. 
+
+- Each table has enrichment results for both up-/downregulated genes. The "direction" column indicate which pathways are enriched in "UP"- or "DN"-regulated genes.
+
+- Use the "Search" box for each table, to filter the results for "UP" or "DN" only. Search is global within the table, case insensitive.
+
+- FDR cutoff of the significant enrichments - `r fdr.cutoff`.
+
+**Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category,  "direction" - UP/DN, an indicator whether genes are up- or downregulated.
+
+```{r}
+res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileNameOut = fileNameRes, wb = wb)
+DT::datatable(res.kegg)
+```
+
+
+```{r eval = FALSE}
 # KEGG canonical pathway enrichment analysis 
 
-- Legend for GO/KEGG functional enrichment results: "ID" - unique identifier of functional category; "Pvalue" - non-adjusted p-value; "OddsRatio" - enrichment odds ratio; "ExpCount" - number of genes expected to be selected in a category; "Count" - number of genes observed in the current list; "Size" - total number of genes in a category; "Term" - category description; "p.adj" - false discovery rate; "SYMBOL", "ENTREZ" - genes observed in the current list as annotated with a category
+# - Legend for GO/KEGG functional enrichment results: "ID" - unique identifier of functional category; "Pvalue" - non-adjusted p-value; "OddsRatio" - enrichment odds ratio; "ExpCount" - number of genes expected to be selected in a category; "Count" - number of genes observed in the current list; "Size" - total number of genes in a category; "Term" - category description; "p.adj" - false discovery rate; "SYMBOL", "ENTREZ" - genes observed in the current list as annotated with a category
+# 
+# Pathways for **differentially expressed genes** identified above
 
-## KEGG 
-
-Pathways for **differentially expressed genes** identified above
-
-```{r eval = TRUE}
 # # Gene ontology, molecular function
 # res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr), id="symbol", organism = "Hs", use="GO", ont="MF")
 # save_res(res, fileName, wb = wb, sheetName = "GOMF")
@@ -210,11 +276,11 @@ res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr),
 DT::datatable(res)
 ```
 
+```{r eval = FALSE}
 ## KEGGUP
 
-**Upregulated** pathways
+# **Upregulated** pathways
 
-```{r}
 # GSEA analysis
 library(gage)
 data("kegg.gs")
@@ -234,23 +300,23 @@ kegg.p <- gage(expr,
                compare = "unpairedd")
 ```
 
-```{r}
+```{r eval = FALSE}
 DT::datatable(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]))
 ```
 
+```{r eval = FALSE}
 ## KEGGDN
 
-**Downregulated** pathways
+# **Downregulated** pathways
 
-```{r}
 DT::datatable(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]))
 ```
 
+```{r eval = FALSE}
 ## KEGG clusterprofiler
 
-Pathways identified using GSEA method
+# Pathways identified using GSEA method
 
-```{r}
 library(clusterProfiler)
 ## GSEA using clusterProfiler
 # All DEGs
@@ -276,11 +342,11 @@ ego3 <- gseKEGG(geneList     = geneList,
 kegg.summary <- summary(ego3)
 ```
 
-```{r}
+```{r eval = FALSE}
 DT::datatable(kegg.summary)
 ```
 
-```{r}
+```{r eval = FALSE}
 # A wrapper function to perform all functional enrichment analyses.
 # Helper function to save non-empty results
 save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
@@ -310,15 +376,14 @@ if (rownames(kegg.summary) > 0) {
 ```{r eval=FALSE}
 library(pathview)
 library(openxlsx)
-degs <- read.xlsx(fileName, cols = c(1, 2))
+degs <- read.xlsx(fileNameRes, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "04640", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04510", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-![](hsa04060.FOXP3.png)
-![](hsa04640.FOXP3.png)
+![](hsa04510.SDC1.png)
 
 ```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()

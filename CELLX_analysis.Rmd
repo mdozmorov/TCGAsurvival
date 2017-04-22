@@ -40,14 +40,14 @@ library(plotly)
 - Import the downloaded data into R
 
 ```{r}
-gene <- "FOXP3" # Change 
+gene <- "SDC1" # Change 
 ```
 
 # Gene `r gene` analysis
 
 ```{r data.setup, include=F}
-# expr <- read.table(paste0("data/RSEM_expression_", gene, ".data.tsv"), header = TRUE, stringsAsFactors = FALSE)
-expr <- read.table("/Users/mdozmorov/Documents/Work/VCU_work/Paula_Bos/TCGAsurvival/FOXP3/RSEM_expression_FOXP3.data.tsv", header = TRUE, stringsAsFactors = FALSE)
+expr <- read.table(paste0("data/RSEM_expression_", gene, ".data.tsv"), header = TRUE, stringsAsFactors = FALSE)
+# expr <- read.table("/Users/mdozmorov/Documents/Work/VCU_work/Paula_Bos/TCGAsurvival/FOXP3/RSEM_expression_FOXP3.data.tsv", header = TRUE, stringsAsFactors = FALSE)
 
 samples <- unique(expr$affy_source)
 cancer <- sort(samples[substr(samples, (nchar(samples) - 1), nchar(samples)) != "_N"])

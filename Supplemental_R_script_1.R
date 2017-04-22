@@ -93,7 +93,7 @@ checkData = function(expr, clin){
 }
 
 
-auto_cutoff = function(row, gene_db, time_index, event_index){
+auto_cutoff_surv = function(row, gene_db, time_index, event_index){
 
 	ordered_row = order(row);
 	q1 = round(length(ordered_row)*0.25);
@@ -152,9 +152,11 @@ loadData = function(exprFile="@supplemental table 1_GEO expression data_sorted.t
 	list("expr"=expr, "clin"=clin);
 }
 
-mySurvplot = function(surv, gene_expr, xlab="Time (days)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA, use_survminer = TRUE, conf.int = FALSE) {
+mySurvplot = function(surv, gene_expr, xlab="Time (days)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA, use_survminer = TRUE) {
   if (use_survminer) {
-    res <- ggsurvplot(survfit(surv ~ gene_expr), risk.table = TRUE, pval = TRUE, conf.int = conf.int, xlab = "Time (days)", palette = c("#67A9CF", "#EF8A62"),
+    res <- fit <- NULL
+    fit <- survfit(surv ~ gene_expr)
+    res <- ggsurvplot(fit, risk.table = FALSE, pval = TRUE, conf.int = FALSE, xlab = "Time (days)", palette = c("#67A9CF", "#EF8A62"),
                legend = "top", legend.title = "Expression", legend.labs = c("Low", "High"))
     return(res)
   } else {
@@ -254,8 +256,7 @@ getParameter = function(c_args, id){
 
 }
 
-kmplot = function(expr, clin, event_index=2, time_index=3, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE, cancer_type = "BRCA", fileType = "png", use_survminer = TRUE, ...){
-
+kmplot = function(expr, clin, event_index=2, time_index=3, affyid="", auto_cutoff="true", quartile=50, transform_to_log2 = FALSE, cancer_type = "BRCA", fileType = "png", use_survminer = TRUE){
 # checks the input: if the expression data and clinical data don't match, the script will fail.
 checkData(expr, clin);
 
@@ -292,7 +293,8 @@ for(j in 1:length(index_arr)){
 	
 	# --------------------- CUTOFF ----------------------
 	if(auto_cutoff == "true"){
-		m = auto_cutoff(row, survival_data, 1, 2)
+	  m <- NULL
+		m = auto_cutoff_surv(row, survival_data, 1, 2)
 		print(paste0("Automatic cutoff at ", m))
 	}else{
 		# calculates lower quartile, median, or upper quartile
@@ -307,6 +309,7 @@ for(j in 1:length(index_arr)){
 
 	# gene_expr consists 1 if m smaller then the gene expression value,
 	# 0 if m bigger then the gene expression value
+	gene_expr <- NULL
 	gene_expr=vector(mode="numeric", length=length(row))
 	gene_expr[which(m < row)] = 1
 	
@@ -321,12 +324,13 @@ for(j in 1:length(index_arr)){
 	  }
 	  
 		# Surv(time, event)
+	  surv <- NULL
 		surv<-Surv(survival_data[,1], survival_data[,2]);
     if (use_survminer) {
       res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer)
       pvalue <- res$plot$plot_env$pval
       hr <- hr_left <- hr_right <- NA
-      print(res)
+      print(res$plot)
     } else {
       res = mySurvplot(surv, gene_expr, use_survminer = use_survminer)
       pvalue = res[[1]];

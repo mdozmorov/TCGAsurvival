@@ -25,8 +25,11 @@ selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = 
 selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
 selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
 selected_genes = "DYRK1A"
+selected_genes = "DCAF7"
 selected_genes = "MBD2" # AML
 selected_genes = c("FOXP3") # BRCA
+selected_genes = c("TNFRSF1B") # TNFR2, BRCA
+selected_genes = c("SDC1") # BRCA
 
 # View and subset by expression and quantiles of the selected genes
 library(ggplot2)
@@ -63,16 +66,19 @@ expr <- expr[group != 0, ] # Remove those that are not in quantiles
 group <- group[ group != 0 ]
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
-kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = TRUE)
-
-### All genes, selected cancers, no clinical annotations
-kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
+system("mkdir res") # Create results folder
+kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
+# Rename the results folder
+system("mv res res.genes.Analysis1")
+### Exploratory: All genes, selected cancers, no clinical annotations
+# kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
 
 
 ### Analysis 2: Selected genes, all (or selected) cancers, no clinical annotations
 # All cancers with RNASeq2 data
 cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
 data.type = "RNASeq2"; type = "" 
+system("mkdir res") # Create results folder
 for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
@@ -87,7 +93,7 @@ for (cancer_type in cancer_RNASeq2) {
   clin <- mtx$merged.dat[, 1:3]
   colnames(clin)[1] <- "AffyID"
   # Run survival analysis for selected genes
-  kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type)
+  kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type, fileType = "png", use_survminer = FALSE)
 }
 ### Plot the results of one gene across all cancers
 library(dplyr)
@@ -105,10 +111,13 @@ mtx %>% subset(Gene == selected_genes) %>%
   labs(x="Cancer", y="-log10(p-value)") +
   coord_flip()
 dev.off()
+# Rename the results folder
+system("mv res res.genes.Analysis2")
 
 
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
-cancer_RNASeq2 = c("LUAD")
+cancer_RNASeq2 = c("BRCA")
+system("mkdir res") # Create results folder
 for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
@@ -151,14 +160,17 @@ for (cancer_type in cancer_RNASeq2) {
         index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
         expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
         # Perform actual survival analysis
-        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "pdf", use_survminer = TRUE)
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "png", use_survminer = FALSE)
       }
     }
   }
 }
+# Rename the results folder
+system("mv res res.genes.Analysis3")
 
 
-### Selected genes, selected cancers, all combinations of clinical annotations
+### Analysis 4: Selected genes, selected cancers, all combinations of clinical annotations
+system("mkdir res") # Create results folder
 clin_full <- mtx$clinical # Full clinical information
 # For each clinical annotation
 for (annotation in clinical_annotations) { 
@@ -189,11 +201,13 @@ for (annotation in clinical_annotations) {
         index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
         expr_selected <- cbind(expr_selected$AffyID, select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
         # Perform actual survival analysis
-        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer, annotation, combination_of_categories[, combination]), collapse = "-"), fileType = "pdf")
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer, annotation, combination_of_categories[, combination]), collapse = "-"), fileType = "png", use_survminer = FALSE)
       }
     }
   }
 }
+# Rename the results folder
+system("mv res res.genes.Analysis4")
 
 ## Plot boxplot of gene expression split by high/low expression
 # Make sure correct mtx is loaded
@@ -207,18 +221,21 @@ clinical_category <- "radiationtherapy"
 table(clin.full[, clinical_category])
 clinical_subcategory <- "yes"
 # Cutoff value
-cutoff_value <- 10.4 # log2 expression value affecting the survival. from global_stats
+cutoff_value <- 10.65 # log2 expression value affecting the survival. from global_stats. DCAF7: BRCA, radiationtherapy-yes - 10.65; :UAD, radiationtherapy-yes - 10.4, 
 # Select subset of expression data
 selected_samples <- rownames(mtx$clinical)[mtx$clinical[, clinical_category] %in% clinical_subcategory] # Sample names from clinical annotations
 mtx_subset <- expr[ mtx$merged.dat$bcr %in% selected_samples, selected_genes] # Expression subset 
-mtx_subset <- data.frame(gene = log2(mtx_subset + 1), group = ifelse(log2(mtx_subset + 1) >= cutoff_value, "high", "low"), stringsAsFactors = FALSE)
+mtx_subset <- data.frame(gene = log2(mtx_subset + 1), group = ifelse(log2(mtx_subset + 1) >= cutoff_value, "High", "Low"), stringsAsFactors = FALSE)
 # Boxplots split by expression
 res <- ggplot(mtx_subset, aes(x = group, y = gene)) + 
   geom_boxplot(aes(fill = group)) +
   xlab("Group") +
-  ylab("log2-transformed expression")
+  ylab("log2-transformed expression") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 16), axis.title = element_text(size = 14, face = "bold"))
 # scale_fill_manual(name = "", values = c("red", "blue"))
-ggsave(filename = paste0("res/boxplot_", selected_genes, "_", cancer, "-", clinical_category, "-", clinical_subcategory, ".pdf"), plot = res, width = 7, height = 7)
+plot(res)
+ggsave(filename = paste0("res/boxplot_", selected_genes, "_", cancer, "-", clinical_category, "-", clinical_subcategory, ".pdf"), plot = res, width = 3.5, height = 4.5)
 
 
 
