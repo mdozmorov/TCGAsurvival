@@ -16,7 +16,7 @@
 - `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected.
 
 
-- `TCGA2SynTarget.R` - prepares TCGA data for SynTarget format. Now, general data processing script. Start there to load cancer-specific expression and clinical data using `load_data` and `summarize_data` functions.
+- `TCGA_preprocessing.R` - utilities for download and formatting of TCGA data. Use `load_data` and `summarize_data` functions to load cancer-specific expression and clinical data.
 
 - `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
 
@@ -28,7 +28,14 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
 - [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
 
+# TCPA data
 
+The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). 
+
+List of 224 proteins profiled by RPPA  technology: [TCPA_proteins.txt](TCPA_proteins.txt)
+
+
+<!--
 # [SynTarget](http://www.chemoprofiling.org/cgi-bin/GEO/cancertarget/web_run_CT.V0.S1.pl) tool
 
 SynTarget data format:
@@ -54,3 +61,4 @@ MB-0101,90.4,0, 2, WT, moderate, 0, HT/RT, 2,..
 MB-4832,141.7,1, 0, WT, moderate, 0, RT, 1, ..
 MB-5119,59.8,0, 0, NA, moderate, 0, NONE, 2,..
 MB-0117,8.2,0, 2, WT, moderate, 1, HT/RT, 2, ..
+-->
