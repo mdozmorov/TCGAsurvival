@@ -8,7 +8,7 @@
     - `Analysis 2` - Selected genes, all (or selected) cancers, no clinical annotations. Results are in `res.genes.Analysis2` folder.
     - `Analysis 3` - Selected genes, all (or, selected) cancers, all unique clinical (sub)groups. Results are in `res.genes.Analysis3` folder. Open file `global_stats.txt` in Excel, sort by p-value (Cox proportional hazard analysis) and explore in which clinical (sub)groups expression of the selected gene affects survival the most.
     - `Analysis 4` - Selected genes, selected cancers, all combinations of clinical annotations. Not run by default.
-    - `Analysis 5` - Clinical-centric analysis. Selected cancer, selected clinical category and two subcategories, survival difference between the two subcategories
+    - `Analysis 5` - Clinical-centric analysis. Selected cancer, selected clinical category and two subcategories, survival difference between the two subcategories. Also, saves a plot with boxplots of log2 expression in each clinical group. Not run by default.
 
 - `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders.
 

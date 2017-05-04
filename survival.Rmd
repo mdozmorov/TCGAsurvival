@@ -26,6 +26,8 @@ options(stringsAsFactors = FALSE)
 
 ```{r libraries}
 library(TCGA2STAT)
+library(ggplot2)
+library(reshape2)
 source("Supplemental_R_script_1.R")
 ```
 
@@ -347,6 +349,23 @@ group2 <- "m1"
 # KM analysis on subcategories
 kmplot.clin(clin = clin, event_index=2, time_index=3, clinical_annotations = clinical_annotations_selected, group1 = group1, group2 = group2, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
 
+# Plot expression boxplots for the selected gene in selected subcategories
+selected_genes = c("SDC1") # BRCA
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+# A matrix to plot
+mtx_to_plot <- data.frame(Gene = log2(expr[, selected_genes] + 1), Clinical = clin[, clinical_annotations_selected])
+# Plot and save
+p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value, fill = Clinical)) +
+  geom_boxplot() +
+  ylab("log2 expression")
+plot(p)
+ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".pdf"), p, width = 5, height = 5)
 ```
 
 
