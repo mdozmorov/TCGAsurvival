@@ -363,4 +363,62 @@ for(j in 1:length(index_arr)){
 
 
 
+clin_full   <- mtx$clinical # Full clinical data
+clin_merged <- inner_join(clin, data.frame(AffyID = rownames(clin_full), clin_full), by = c("AffyID"))
+clin <- clin_merged
+
+#' 
+#' @param clin full clinical data merged with survival time and outcome. 
+#' @param event_index column number to use as as outcome 
+#' @param time_index column number to use for time
+#' @param clinical_annotations name of the main clinical annotation category. Default: "pathologyMstage"
+#' @param group1 name of the first clinical subcategory in the main catefory. Corresponds to "low" on the KM plot. Default: "m0"
+#' @param group2 name of the second clinical subcategory in the main category. Corresponds to "high" on the KM plot. Default: "m1"
+
+kmplot.clin = function(clin, event_index=2, time_index=3, clinical_annotations = "pathologyMstage", group1 = "m0", group2 = "m1", cancer_type = "BRCA", fileType = "png", use_survminer = TRUE) {
+  # Full survival data
+  survival_data = cbind(as.numeric(clin[[time_index]]), as.numeric(clin[[event_index]]));
+  # Subset clinical annotations to the subcategories of interest
+  clinical_index  <- clin[, clinical_annotations] %in% c(group1, group2) # In the main category, select all subcategories
+  clinical_groups <- clin[, clinical_annotations][clinical_index] # Form a vector of labels of subcategories
+  #clinical_groups <- ifelse(clinical_groups == group1, 0, 1) # Convert it to 0/1 representation of subcategories
+  gene_expr <- clinical_groups # Assign to the variable traditionally used for survival analysis         
+  # Subset survival data to the subcategories of interest
+  survival_data <- survival_data[clinical_index, ]
+  
+  # Prepare output folder
+  toDir = createDirectory("res");
+  resTable=rbind();
+  # Prepare a file for global statistics
+  if (!file.exists(paste0(toDir, "/global_stats.txt"))) {
+    write.table( paste(c("Cancer", "Gene", "p-value", "HR", "HR_left", "HR_right", "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.", paste(group1, "counts"), paste(group2, "counts")), collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+  }
+  # draws the KM plot into a  file
+  if (fileType == "png") {
+    png(paste(toDir, "/", cancer_type, "_", clinical_annotations, "_", group1, "_", group2,  ".png", sep=""));
+  }
+  if (fileType == "pdf") {
+    pdf(paste(toDir, "/", cancer_type, "_", clinical_annotations, "_", group1, "_", group2, ".pdf", sep=""));
+  }
+  
+  # Surv(time, event)
+  surv <- NULL
+  surv<-Surv(survival_data[,1], survival_data[,2]);
+  if (use_survminer) {
+    res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer)
+    pvalue <- res$plot$plot_env$pval
+    hr <- hr_left <- hr_right <- NA
+    print(res$plot)
+  } else {
+    res = mySurvplot(surv, gene_expr, snames = c(group1, group2), use_survminer = use_survminer)
+    pvalue = res[[1]];
+    hr = res[[2]]
+    hr_left = res[[3]]
+    hr_right = res[[4]]
+    resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
+  }
+  dev.off();
+  # Save global statistics
+  write.table( paste(c(cancer_type, paste(clinical_annotations, group1, group2, sep = "-"), formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right), digits = 2), rep("", 6), sum(clinical_groups == group1), sum(clinical_groups == group2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
+}
 
