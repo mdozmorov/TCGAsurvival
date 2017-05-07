@@ -105,7 +105,7 @@ type = ""
 # Cancer type
 cancer = "BRCA" 
 # Gene(s) of interest
-selected_genes = c("SDC1") # Can be multiple
+selected_genes = c("MYBL2") # Can be multiple
 
 # Define quantile qutoffs
 quantile_up <- 0.75 # 0.75
@@ -276,12 +276,13 @@ res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr),
 DT::datatable(res)
 ```
 
-```{r eval = FALSE}
+# GSEA analysis
+
 ## KEGGUP
 
 # **Upregulated** pathways
 
-# GSEA analysis
+```{r}
 library(gage)
 data("kegg.gs")
 # Convert Symbols to EntrezIDs
@@ -297,18 +298,20 @@ kegg.p <- gage(expr,
                ref = which(group == 2, arr.ind = TRUE),
                samp = which(group == 1, arr.ind = TRUE),
                same.dir = TRUE,
+               rank.test = TRUE,
+               saaTest = gs.KSTest,
                compare = "unpairedd")
 ```
 
-```{r eval = FALSE}
+```{r}
 DT::datatable(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]))
 ```
 
-```{r eval = FALSE}
 ## KEGGDN
 
 # **Downregulated** pathways
 
+```{r}
 DT::datatable(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]))
 ```
 
