@@ -16,6 +16,9 @@
 
 - `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected.
 
+- `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
+
+
 
 - `TCGA_preprocessing.R` - utilities for download and formatting of TCGA data. Use `load_data` and `summarize_data` functions to load cancer-specific expression and clinical data.
 

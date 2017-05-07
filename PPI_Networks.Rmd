@@ -1,0 +1,148 @@
+---
+title: "PPI and network analysis"
+output:
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+---
+
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+## Libraries
+
+```{r}
+library(aracne.networks)
+library(networkD3)
+library(igraph)
+```
+
+## Settings
+
+```{r}
+selected_genes <- c("SDC1")
+max_to_plot <- 60 # Maximum number of PPI links to plot
+```
+
+## PPI databases 
+
+- The tables contain PPI interactions for the selected gene `r selected_genes`.
+- Search box in the tables to search for for interactions of interest. E.g., search for "cxcl8" to find an interaction of `r selected_genes` with IL-8
+- Two networks, if plotted, are the same. One is dynamic (drag nodes, zoom with mouse wheel), another is static.
+- If the selected gene `r selected_genes` has more than `r max_to_plot` connections, only the table is outputted, the networks are not plotted.
+
+### `STRING`, http://string-db.org/
+
+STRING v10: protein-protein interaction networks, integrated over the tree of life. https://www.ncbi.nlm.nih.gov/pubmed/25352553
+
+```{r eval = TRUE}
+# STRING data
+load(file = "/Users/mdozmorov/Documents/Work/VCU_work/Mark/disease-coherence/data/9606.protein.links.v10.rda")
+
+selected <- my_adj_list[ (my_adj_list$from %in% selected_genes) | (my_adj_list$to %in% selected_genes), , drop = FALSE ]
+selected <- selected[complete.cases(selected), ]
+print(paste0("Number of proteins interacting witn ", selected_genes, ": ", nrow(selected)))
+DT::datatable(selected)
+```
+```{r}
+if (nrow(selected) <= max_to_plot) {
+  # NetworkD3 plot
+  simpleNetwork(selected, Source = "from", Target = "to", fontSize = 10, linkColour = "black", nodeColour = "blue", opacity = 0.8, zoom = TRUE)
+}
+```
+```{r}
+if (nrow(selected) <= max_to_plot) {
+  # igraph plot
+  net <- graph_from_data_frame(d = selected, directed = TRUE)
+  plot(net, edge.arrow.size=.6, vertex.label.family = "Arial")
+}
+```
+
+### `I2D`, http://ophid.utoronto.ca/ophidv2.204/index.jsp
+
+I2D (Interologous Interaction Database) is an on-line database of known and predicted mammalian and eukaryotic protein-protein interactions
+
+```{r}
+load(file = "/Users/mdozmorov/Documents/Work/VCU_work/Mark/disease-coherence/data/i2d.2_9.Public.HUMAN.tab.rda")
+
+selected <- my_adj_list[ (my_adj_list$from %in% selected_genes) | (my_adj_list$to %in% selected_genes), , drop = FALSE ]
+selected <- selected[complete.cases(selected), ]
+print(paste0("Number of proteins interacting witn ", selected_genes, ": ", nrow(selected)))
+DT::datatable(selected)
+```
+```{r}
+if (nrow(selected) <= max_to_plot) {
+  # NetworkD3 plot
+  simpleNetwork(selected, Source = "from", Target = "to", fontSize = 10, linkColour = "black", nodeColour = "blue", opacity = 0.8, zoom = TRUE)
+}
+```
+```{r}
+if (nrow(selected) <= max_to_plot) {
+  # igraph plot
+  net <- graph_from_data_frame(d = selected, directed = TRUE)
+  plot(net, edge.arrow.size=.6, vertex.label.family = "Arial")
+}
+```
+
+### `Biogrid`, https://thebiogrid.org/
+
+BioGRID is an interaction repository with data compiled through comprehensive curation efforts.
+
+```{r eval = TRUE}
+load(file = "/Users/mdozmorov/Documents/Work/VCU_work/Mark/disease-coherence/data/biogrid.rda")
+
+selected <- my_adj_list[ (my_adj_list$from %in% selected_genes) | (my_adj_list$to %in% selected_genes), , drop = FALSE ]
+selected <- selected[complete.cases(selected), ]
+print(paste0("Number of proteins interacting witn ", selected_genes, ": ", nrow(selected)))
+DT::datatable(selected)
+```
+```{r}
+if (nrow(selected) <= max_to_plot) {
+  # NetworkD3 plot
+  simpleNetwork(selected, Source = "from", Target = "to", fontSize = 10, linkColour = "black", nodeColour = "blue", opacity = 0.8, zoom = TRUE)
+}
+```
+```{r}
+if (nrow(selected) <= max_to_plot) {
+  # igraph plot
+  net <- graph_from_data_frame(d = selected, directed = TRUE)
+  plot(net, edge.arrow.size=.6, vertex.label.family = "Arial")
+}
+```
+
+## Other resources
+
+### `BioPlex`, http://bioplex.hms.harvard.edu/index.php
+The BioPlex (biophysical interactions of ORFeome-based complexes) network is the result of creating thousands of cell lines with each expressing a tagged version of a protein from the ORFeome collection. Immunopurification of the tagged protein and detection of associated proteins by mass spectrometry are the building blocks of the network. 
+
+### `IntAct`, https://www.ebi.ac.uk/intact/
+IntAct Molecular Interaction Database. IntAct provides a freely available, open source database system and analysis tools for molecular interaction data. All interactions are derived from literature curation or direct user submissions and are freely available.
+
+### `InBio`, https://www.intomics.com/inbio/map/#home
+InBio Map is a high coverage, high quality, convenient and transparent platform for investigating and visualizing protein-protein interactions. Visualization: http://apps.broadinstitute.org/genets#InWeb_InBiomap
+
+### `HIPPIE`, http://cbdm-01.zdv.uni-mainz.de/~mschaefer/hippie/index.php
+Human Integrated Protein-Protein Interaction rEference
+
+### `HuRI`, http://interactome.baderlab.org/
+Human Reference Protein Interactome Project
+
+One of the long-term goals at the Center for Cancer Systems Biology (CCSB) is to generate a first reference map of the human protein-protein interactome network. To reach this target, we are identifying binary protein-protein interactions (PPIs) by systematically interrogating all pairwise combinations of predicted human protein-coding genes using proteome-scale technologies. Our approach to map high-quality PPIs is based on using yeast two-hybrid (Y2H) as the primary screening method followed by validation of subsets of PPIs in multiple orthogonal assays for binary PPI detection.
+
+### `PINA`, http://omics.bjcancer.org/pina/home.do
+Protein Interaction Network Analysis (PINA), which collected and annotated six other public PPI databases (MINT, IntAct, DIP, BioGRID, HPRD, and MIPS/MPact).
+
