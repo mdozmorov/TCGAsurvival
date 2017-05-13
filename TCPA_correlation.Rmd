@@ -1,0 +1,69 @@
+---
+title: "TCPA analysis"
+output:
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+```{r settings}
+
+selected_protein <- "MCL1"
+```
+
+
+# Data summary
+
+Data from http://tcpaportal.org/tcpa/download.html. Download pan-cancer data `TCGA-PANCAN19-L4`.
+
+```{r}
+annot <- readr::read_delim("/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/TCGA-PANCAN19-L4/TCGA-PANCAN19-L4-META.tsv", delim = "\t")
+DT::datatable(annot[ !is.na(annot$`TCGA-PANCAN19-L4`), ])
+```
+
+# Available proteins
+
+Search (case-insensitive) for a protein of interest, e.g., `r selected_protein`
+
+```{r}
+proteins <- readLines("TCPA_proteins.txt")
+# knitr::wrap_rmd(text = sort(proteins))
+# proteins[ grep(selected_protein, proteins, ignore.case = TRUE) ]
+DT::datatable(data.frame(Protein = sort(proteins)))
+```
+
+# Protein expression data
+
+First three columns of the data: "Sample_ID" (e.g., TCGA-FI-A2EY-01A-21-A23Z-20), "Cancer_Type" (e.g., COAD), "Sample_Type" (Metastatic - 178 samples, Primary - 4,979 samples), "SetID" (eight numerical IDs). Upper-left corner of the matrix is shown.
+
+```{r}
+mtx <- readr::read_csv("/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/TCGA-PANCAN19-L4/TCGA-PANCAN19-L4.csv.gz")
+DT::datatable(mtx[1:10, 1:10])
+```
+
+
+
+
+
+
+
+
+
+
+
