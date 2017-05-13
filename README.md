@@ -18,7 +18,7 @@
 
 - `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
 
-
+- `TCPA_proteins.txt` - list of proteins profiled at http://tcpaportal.org/tcpa/. 
 
 - `TCGA_preprocessing.R` - utilities for download and formatting of TCGA data. Use `load_data` and `summarize_data` functions to load cancer-specific expression and clinical data.
 
