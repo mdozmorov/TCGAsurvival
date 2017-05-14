@@ -40,7 +40,7 @@ library(plotly)
 - Import the downloaded data into R
 
 ```{r}
-gene <- "SDC1" # Change 
+gene <- "RORC" # Change 
 ```
 
 # Gene `r gene` analysis
@@ -167,7 +167,7 @@ rsem_int <- ggplot(expr2, aes(tissue, eval(parse(text = gene)), text = paste("p:
 
 ggplotly(rsem_int, tooltip = c("colour", "text"))
 ```    
-
+<!--
 # Cancer vs. normal expression~significance plot
 
 The figure below is an interactive plot that highlights the relationship between *`r names(expr)[3]`* expression in normal and cancerous tissues for each type of cancer, colored by the significance of the differences.
@@ -180,5 +180,5 @@ t.int <- ggplot(t.table[complete.cases(t.table), ], aes(Mean_expression_normal, 
 
 ggplotly(t.int)
 ```    
-
+-->
 
