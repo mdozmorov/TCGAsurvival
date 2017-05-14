@@ -103,9 +103,9 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 data.type = "RNASeq2"
 type = "" 
 # Cancer type
-cancer = "BRCA" 
+cancer = "PRAD" 
 # Gene(s) of interest
-selected_genes = c("MYBL2") # Can be multiple
+selected_genes = c("RORC") # Can be multiple
 
 # Define quantile qutoffs
 quantile_up <- 0.75 # 0.75
@@ -130,8 +130,8 @@ clinical_annotations <- summarize_data(mtx = mtx)
 expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
 # Filter out low expressed genes
 # Should be more than 90% of non-zero values
-ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
-expr <- expr[, apply(expr, 2, ff)] 
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
 expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 
 # Prepare clinical data
@@ -383,10 +383,10 @@ degs <- read.xlsx(fileNameRes, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "04510", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "03010", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-![](hsa04510.SDC1.png)
+![](hsa03010.RORC.png)
 
 ```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()

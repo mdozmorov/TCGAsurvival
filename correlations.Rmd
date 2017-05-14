@@ -95,7 +95,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 
 # Selected genes
-selected_genes <- c("SDC1")
+selected_genes <- c("RORC")
 data.type = "RNASeq2"; type = "" 
 # All cancers with RNASeq2 data
 # cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
@@ -135,8 +135,8 @@ if (!file.exists(fileNameIn)) {
   rownames(all_expression) <- all_expression$hgnc
   all_expression$hgnc <- NULL
   all_expression <- as.matrix(all_expression)
-  ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) # Should be more than 90% of non-zero values
-  all_expression <- all_expression[apply(all_expression, 1, ff), ] 
+  # ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) # Should be more than 90% of non-zero values
+  # all_expression <- all_expression[apply(all_expression, 1, ff), ] 
   # boxplot(all_expression[1:1000, 2:100])
   all_expression <- log2(all_expression + 1)
   all_expression <- limma::normalizeQuantiles(all_expression)
@@ -257,6 +257,6 @@ names(degs.genes) <- degs$symbol                   # Give this vector names
 
 # Adjust as needed
 pv.out <- pathview(gene.data = degs.genes, pathway.id = "hsa04510", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = "my_pathway")
+# ![](hsa04510.my_pathway.png)
 ```
 
-![](hsa04510.my_pathway.png)
