@@ -1,8 +1,8 @@
 # Scripts to extract TCGA data for survival analysis.
 
-- `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison.
+- `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. Output is the HTML file.
 
-- `survival.Rmd` - a pipeline to run survival analyses. Based on `survival.R`
+- `survival.Rmd` - a pipeline to run survival analyses. Based on `survival.R`. Change
     - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `res.genes.Analysis1` folder.
     - `Exploratory` - All genes, selected cancers, no clinical annotations. Not run by default.
     - `Analysis 2` - Selected genes, all (or selected) cancers, no clinical annotations. Results are in `res.genes.Analysis2` folder.
@@ -10,11 +10,11 @@
     - `Analysis 4` - Selected genes, selected cancers, all combinations of clinical annotations. Not run by default.
     - `Analysis 5` - Clinical-centric analysis. Selected cancer, selected clinical category and two subcategories, survival difference between the two subcategories. Also, saves a plot with boxplots of log2 expression in each clinical group. Not run by default.
 
-- `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders.
+- `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders.
 
-- `correlation.Rmd` - Co-expression analysis of selected gene vs. all others, in selected cancers. Genes best correlating with the selected gene may share common functions, described in the KEGG canonical pathway analysis section.
+- `correlation.Rmd` - Co-expression analysis of selected gene vs. all others, in selected cancers. Genes best correlating with the selected gene may share common functions, described in the KEGG canonical pathway analysis section. Change `selected_genes <- "XXXX"` and `cancer_RNASeq2 <- "YYYY"` variables. The run saves two RData objects, `res/YYYY_expression_RNASeq2_.Rda` and `results/YYYY_correlation_XXXX_RNASeq2_.Rda`. This speeds up re-runs with the same settings. The full output is saved in `results/YYYY_results_XXXX_RNASeq2_.xlsx`
 
-- `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected.
+- `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected. Change `selected_genes = "XXXX"` and `cancer = "YYYY"`. Manually run through line 254 to see which KEGG pathways are enriched. Then, run the code chunk on line 379 to generate a picture of the selected KEGG pathway, adjust the `![](hsa0YYYY.XXXX.png)` accordingly. Then, recompile the whole document.
 
 - `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
 
