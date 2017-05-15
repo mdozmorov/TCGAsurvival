@@ -1,0 +1,68 @@
+---
+title: "Projects"
+bibliography: TCGA.bib
+csl: styles.ref/genomebiology.csl
+author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+  word_document:
+    reference_docx: styles.doc/NIH_grant_style.docx
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+
+# Project Title:    **"Developing a methylation-based survival analysis"**
+
+### Provide a brief synopsis of the project:
+
+Efforts such as The Cancer Genome Atlas (TCGA) collected massive -omics datasets. Gene expression has been extensively used in survival analysis, with the goal to identify one or several genes with expression predictive of survival. Methylation data has been largely overlooked, partly because of its size and complexity - one gene has several methylation sites with different survival prediction ability. Furthermore, genes have different length, complicating summary of methylation signal per gene. The goal of this project is to develop a method for survival analysis utilizing methylation data.
+
+This project involves:
+
+- Working with methylation and gene expression data from TCGA
+- Performing survival analysis using methylation signal from individual CpG sites
+- Accounting for distance between methylation sites and the start of a gene
+- Developing a novel statistical model to summarize methylation signal within a gene, normalizing the signal per-unit-length of a gene
+- Comparing the performance of methylation and gene expression data, or a combination of both, in survival analysis
+
+### What outcomes/deliverables will the student produce for the Biostatistics research day?
+
+Overview of survival analysis. Presenting the performance of a newly developed method of summarizing methylation signal per gene and using it for survival analysis. 
+
+### Research plan
+
+- Data folder on Merlot; /home/sequencing/work/Methylation/TCGA_BRCA_methylation
+    - It contains methylation data for all BRCA samples, and 4 scripts to split it into 4 datasets corresponding to different types of BRCA
+    - The data format is: CpG sites (rows) X samples (columns)
+    - The datasets are large, ~450K rows
+
+- Samples have clinical annotations that include overall survival and/or disease-free survival and other covariates. See https://www.ncbi.nlm.nih.gov/pubmed/26704973 and other packages referenced therein how to obtain clinical data
+
+- **Aim 1:** Define the role of location of methylation sites on survival.
+    - Process each BRCA type separately.
+    - Find CpGs with methylation level associated with survival.  See `survival` package. Use Cox PH model to account for other covariates. 
+    - Try $\beta$-values and $M$-values.
+    - Given the location of each CpG site, both continuous (length, in bp) and categorical (promoter, 1st exon, etc.), find whether certain locations are more significantly associated with survival than can be expected by chance.
+
+- **Aim 2:** Define the role of location of a set of CpG sites with methylation level distinguishing four BRCA types.
+    - The goal is to define a classifier (a set of CpG sites) predicting BRCA type.
+    - Use random forest algorithm, and other classifiers in the `caret` package.
+    - Use the same location approach to find whether classifier CpGs have location preference.
+
+### References [@anaya2016oncolnc; @anaya2016oncorank; @anaya2016pan; @Colaprico:2016aa; @diez2013survival; @goel2010understanding; @Gyorffy:2015aa; @Ring:2016aa; @silva2016tcga]
