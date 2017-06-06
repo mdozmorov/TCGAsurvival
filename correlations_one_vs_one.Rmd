@@ -1,0 +1,155 @@
+---
+title: "Correlations between two genes across all cancers"
+output:
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+```{r libraries, include=FALSE}
+library(openxlsx)
+library(MDmisc)
+library(org.Hs.eg.db)
+library(KEGG.db)
+library(TCGA2STAT)
+library(dplyr)
+library(knitr)
+# library(clusterProfiler)
+library(pathview)
+library(enrichR)
+library(annotables)
+# Remove non-canonical chromosome names
+grch38 <- grch38[ !(grepl("_", grch38$chr) | grepl("GL", grch38$chr)), ]
+grch38 <- grch38[, c("symbol", "description")]
+grch38 <- grch38[ complete.cases(grch38) , ]
+grch38 <- grch38[ !duplicated(grch38), ]
+```
+
+```{r functions}
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+
+# A wrapper to save the results
+save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
+  print(paste("Running", databases, "analysis", sep = " "))
+  if (is.null(dn.genes)) {
+    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+  } else {
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+  }
+  
+  res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
+  res.kegg$qval <- formatC(res.kegg$qval, digits = 3, format = "e")
+  if (!is.null(fileNameOut)) {
+    if (nchar(databases) > 30) databases <- paste0(substr(databases, 1, 20), "_", substr(databases, nchar(databases) - 8, nchar(databases))) # If a database is longer that 30 characters, keep first 20 and last 10 characters
+    save_res(res.kegg, fileNameOut, wb = wb, sheetName = databases)
+  }
+  # Pause for a few seconds
+  pause_sec <- round(runif(1, min = 1, max = 10))
+  Sys.sleep(pause_sec)
+  return(res.kegg)
+}
+```
+
+```{r settings}
+system("mkdir -p data")
+system("mkdir -p results")
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+# data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
+
+# Selected genes
+selected_genes <- c("MCL1", "KDM6B")
+# Check if the names exist
+genes <- readLines("TCGA_genes.txt")
+setdiff(selected_genes, genes) # Should be 0, meaning selected genes are among the TCGA genes
+
+data.type = "RNASeq2"; type = "" 
+# All cancers with RNASeq2 data
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+# fileNameIn <- (paste0("data/All_expression_", data.type, "_", type, ".Rda")) # Save expression data
+# fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
+# fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
+# Or, one cancer
+# cancer_RNASeq2 = c("LUAD")
+fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))  # Save expression data
+fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
+fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
+
+# Correlation type
+corr_type    <- "pearson"
+# Correlation cutoffs
+corr_cutoff  <- 0.2
+pval_cutoff  <- 0.05
+# Enrichment cutoffs
+p.adj.cutoff <- 0.1
+fdr.cutoff   <- 0.3
+```
+
+```{r correlations}
+  all_corrs <- list() # List to store cancer-specific correlationa
+  all_pvals <- list() # List to store cancer-specific p-values
+  # Get correlation matrixes for the gene of interest in each cancer
+  for (cancer_type in cancer_RNASeq2) {
+    print(paste0("Processing cancer ", cancer_type))
+    # Prepare expression data
+    mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+    expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+    # Filter out low expressed genes
+    expr <- data.frame(hgnc = colnames(expr), t(expr))
+    cancer_rcorr <- Hmisc::rcorr(as.numeric(expr[selected_genes[1], 2:ncol(expr)]), 
+                                 as.numeric(expr[selected_genes[2], 2:ncol(expr)]), 
+                                 type = corr_type)
+    all_corrs <- c(all_corrs, list(cancer_rcorr$r[1, 2]))
+    all_pvals <- c(all_pvals, list(cancer_rcorr$P[1, 2]))
+    names(all_corrs)[length(all_corrs)] <- names(all_pvals)[length(all_pvals)] <- cancer_type
+  }
+```
+
+# Correlation between `r selected_genes[1]` and `r selected_genes[2]`
+
+```{r}
+res_corr <- data.frame(Acronym = cancer_RNASeq2, corr = unlist(all_corrs), pval = unlist(all_pvals))
+cancers  <- openxlsx::read.xlsx("TCGA_cancers.xlsx")
+res_corr <- left_join(res_corr, cancers, by = c("Acronym"))
+res_corr <- round_df(res_corr)
+res_corr <- res_corr[ order(res_corr$corr, decreasing = TRUE), ]
+DT::datatable(res_corr, options = list(pageLength = 50))
+```
+
