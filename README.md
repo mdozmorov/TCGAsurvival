@@ -34,12 +34,13 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)
 - [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
 - [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
+- [PAM50 classification](data.TCGA/PAM50_classification.txt)
 
 # TCPA data
 
 The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). 
 
-List of 224 proteins profiled by RPPA  technology: [TCPA_proteins.txt](TCPA_proteins.txt)
+List of 224 proteins profiled by RPPA  technology: [TCPA_proteins.txt](data.TCGA/TCPA_proteins.txt)
 
 
 <!--
