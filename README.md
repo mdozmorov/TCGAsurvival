@@ -31,10 +31,11 @@
 
 Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/).
 
-- [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)
+- [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf), also saved in [TCGA_cancers.xlsx](data.TCGA/TCGA_cancers.xlsx)
 - [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
 - [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
-- [PAM50 classification](data.TCGA/PAM50_classification.txt)
+- [TCGA_genes.txt](data.TCGA/TCGA_genes.txt) - genes measured in TCGA RNA-seq experiments
+- [PAM50 classification](data.TCGA/PAM50_classification.txt) - sample classification into PAM50 types
 - [CCR-13-0583tab1.xlsx](data.TCGA/CCR-13-0583tab1.xlsx) - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
 
 
