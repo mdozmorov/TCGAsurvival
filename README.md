@@ -42,6 +42,13 @@ The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/t
 
 List of 224 proteins profiled by RPPA  technology: [TCPA_proteins.txt](data.TCGA/TCPA_proteins.txt)
 
+# External tools
+
+- `TNBCtype` tool to classify triple negative breast cancer samples (microarray gene expression) into six subtypes, http://cbc.mc.vanderbilt.edu/tnbc/index.php
+
+- `genefu` R package for PAM50 classification and survival analysis. https://www.bioconductor.org/packages/release/bioc/html/genefu.html
+
+
 
 <!--
 # [SynTarget](http://www.chemoprofiling.org/cgi-bin/GEO/cancertarget/web_run_CT.V0.S1.pl) tool
