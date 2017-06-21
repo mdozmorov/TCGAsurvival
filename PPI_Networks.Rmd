@@ -9,6 +9,7 @@ output:
     # number_sections: true
 date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
+bibliography: networks.bib
 ---
 
 
@@ -48,6 +49,39 @@ max_to_plot <- 60 # Maximum number of PPI links to plot
 ### `STRING`, http://string-db.org/
 
 STRING v10: protein-protein interaction networks, integrated over the tree of life. https://www.ncbi.nlm.nih.gov/pubmed/25352553
+
+# 05/29/2017
+wget https://string-db.org/download/protein.links.v10.5/9606.protein.links.v10.5.txt.gz
+
+Total number of interactions: 7,083,920
+
+"protein1", "protein2", "combined_score"
+ 
+# 05/29/2017 # A subset of directional interactions
+wget https://string-db.org/download/protein.actions.v10.5/9606.protein.actions.v10.5.txt.gz
+
+Total number of interactions: 1,862,289 
+
+- Column 1: "item_id_a", e.g., 9606.ENSP00000000233
+- Column 2: "item_id_b", e.g., 9606.ENSP00000005257
+- Column 3: "mode"
+    - 107288 activation
+    - 326100 binding
+    - 506918 catalysis
+    - 23488 expression
+    - 23454 inhibition
+    - 29080 ptmod
+    - 845960 reaction
+- Column 4: "action"
+    - 107296 activation
+    - 35026 inhibition
+- Colum 5: "is_directional"
+    - 1260194 t
+- Column 6: "a_is_acting"
+    - 1232191 f
+    - 630097 t
+- Column 7: "score", from 150 to 900. Median 900.
+
 
 ```{r eval = TRUE}
 # STRING data
@@ -124,25 +158,101 @@ if (nrow(selected) <= max_to_plot) {
 }
 ```
 
-## Other resources
+# PPI databases
+
+## Online only
+
+## `GeNet`, http://apps.broadinstitute.org/genets
+
+GeNets: Broad Institute Web Platform for Genome Networks
+
+## `Prioritizer`, http://www.prioritizer.nl, http://129.125.135.180:8080/GeneNetwork/
+
+Predicting gene functions (GO, KEGG, Biocarta, Reactome), tissue-specific expression, network view. 
+
+Their algorithm ranks a set of candidate disease-causing genes in multiple susceptibility loci for further sequence or association analysis. To this end, they constructed a functional human gene network based on known molecular interactions as well as computationally predicted functional relations. The network was used to rank the candidate genes on the basis of their interactions, assuming that the causative genes for any one disorder will be involved in only a few distinct biological pathways. This assumption implies that genes from different susceptibility loci would cluster, resulting in shorter network distances between disease genes than the random expectation.
+
+
+## Online and download
 
 ### `BioPlex`, http://bioplex.hms.harvard.edu/index.php
-The BioPlex (biophysical interactions of ORFeome-based complexes) network is the result of creating thousands of cell lines with each expressing a tagged version of a protein from the ORFeome collection. Immunopurification of the tagged protein and detection of associated proteins by mass spectrometry are the building blocks of the network. 
+
+The largest currently available interaction map based on the affinity purification – mass spectrometry approach. ~5,000 proteins, ~50,000 interactions
+
+### `CORUM`, http://mips.helmholtz-muenchen.de/corum/#
+
+The comprehensive resource of mammalian protein complex. High-quality PPIs. Last updated: 2017. Reference: [@Ruepp:2010aa]
+
+### `MINT`, http://mint.bio.uniroma2.it/
+
+MINT, the Molecular INTeraction database. MINT focuses on experimentally verified protein-protein interactions mined from the scientific literature by expert curators. Starting September 2013, MINT uses the IntAct database. Data manually curated by the MINT curators can now also be accessed from the IntAct homepage at the EBI.
 
 ### `IntAct`, https://www.ebi.ac.uk/intact/
+
 IntAct Molecular Interaction Database. IntAct provides a freely available, open source database system and analysis tools for molecular interaction data. All interactions are derived from literature curation or direct user submissions and are freely available.
 
 ### `InBio`, https://www.intomics.com/inbio/map/#home
+
 InBio Map is a high coverage, high quality, convenient and transparent platform for investigating and visualizing protein-protein interactions. Visualization: http://apps.broadinstitute.org/genets#InWeb_InBiomap
 
 ### `HIPPIE`, http://cbdm-01.zdv.uni-mainz.de/~mschaefer/hippie/index.php
-Human Integrated Protein-Protein Interaction rEference
+
+Human Integrated Protein-Protein Interaction rEference. Scored interactions, score > 0.72 corresponds to the top 25% scoring interactions
 
 ### `HuRI`, http://interactome.baderlab.org/
+
 Human Reference Protein Interactome Project
 
 One of the long-term goals at the Center for Cancer Systems Biology (CCSB) is to generate a first reference map of the human protein-protein interactome network. To reach this target, we are identifying binary protein-protein interactions (PPIs) by systematically interrogating all pairwise combinations of predicted human protein-coding genes using proteome-scale technologies. Our approach to map high-quality PPIs is based on using yeast two-hybrid (Y2H) as the primary screening method followed by validation of subsets of PPIs in multiple orthogonal assays for binary PPI detection.
 
 ### `PINA`, http://omics.bjcancer.org/pina/home.do
+
 Protein Interaction Network Analysis (PINA), which collected and annotated six other public PPI databases (MINT, IntAct, DIP, BioGRID, HPRD, and MIPS/MPact).
+
+### `RegNetwork`, http://www.regnetworkweb.org/home.jsp
+
+RegNetwork is a data repository of five-type transcriptional and posttranscriptional regulatory relationships for human and mouse:
+
+1. TF→TF
+2. TF→gene
+3. TF→miRNA
+4. miRNA→TF
+5. miRNA→gene
+
+RegNetwork integrates the curated regulations in various databases and the potential regulations inferred based on the transcription factor binding sites (TFBSs). Transcription factor (TF) and microRNA (miRNA) are central regulators in gene regulations. They function in the transcriptional and posttranscriptional levels respectively. Recently, more and more regulatory relationships in databases and literatures are available. It will greatly valuable for studying gene regulatory systems by integrating the prior knowledge of the transcriptional regulations between TF and target genes, and the posttranscriptional regulations between miRNA and targets. The conservation knowledge of transcription factor binding site (TFBS) can also be implemented to couple the potential regulatory relationships between regulators and their targets.
+
+### `HumanNet`, http://www.functionalnet.org/humannet/
+
+HumanNet is a probabilistic functional gene network of 18,714 validated protein-encoding genes of Homo sapiens (by NCBI March 2007), constructed by a modified Bayesian integration of 21 types of 'omics' data from multiple organisms, with each data type weighted according to how well it links genes that are known to function together in H. sapiens. Each interaction in HumanNet has an associated log-likelihood score (LLS) that measures the probability of an interaction representing a true functional linkage between two genes.
+
+Find new members of a pathway, with or without graph. Infer GO functions of a network. EntrezIDs. ~500,000 interactions to download.
+
+
+## Download only
+
+### `HINT`, http://hint.yulab.org/download/
+
+The set of all protein-protein interactions for the organ- isms was downloaded from the public databases – Bio- Grid [9], DIP [10], HPRD [11], IntAct [12], iRefWeb [13], MINT [14], MIPS [15] and VisAnt [16].
+
+Homo Sapiens
+
+- Binary (59,128) 
+- Co-complex (122,571)
+- High-throughput binary (47,044) 
+- High-throughput co-complex (109,546)
+- Literature-curated binary (14,385) 
+- Literature-curated co-complex (19,746)
+
+### `PathLinker`, http://bioinformatics.cs.vt.edu/~murali/supplements/2016-sys-bio-applications-pathlinker/
+From "Pathways on Demand: Automated Reconstruction of Human Signaling Networks" https://www.nature.com/articles/npjsba20162
+
+Curated collection from http://www.netpath.org/, https://www.cs.tau.ac.il/~spike/, KEGG, http://www.ebi.ac.uk/Tools/webservices/psicquic/view/main.xhtml. 
+
+Data description: The human interactome is a directed graph constructed from a number of sources, as described in the paper. The interactome is a tab-delimited file with four columns: tail node id (UniProtKB), head node id (UniProtKB), edge weight, and evidence for the edge. If multiple evidence types or sources support an edge, a pipe (|) separates. Edges corresponding to physical interactions appear in both directions in the file.
+
+Data download: http://bioinformatics.cs.vt.edu/~murali/supplements/2016-sys-bio-applications-pathlinker/downloads/background-interactome-pathlinker-2015.txt
+
+### `phosphonetworks.org` - kinase-substrate interaction network
+- `data/phosphonetworks` - downloads data (raw/ref/comKSR.csv) from http://www.phosphonetworks.org/download.html, 03-26-2017
+    - `refKSI.csv` - 938 pairs
 
