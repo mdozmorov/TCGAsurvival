@@ -1,0 +1,203 @@
+---
+title: "Expression of selected genes across all TCGA cancers"
+output:
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+## Libraries
+
+```{r}
+library(openxlsx)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r functions}
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+
+# A wrapper to save the results
+save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
+  print(paste("Running", databases, "analysis", sep = " "))
+  if (is.null(dn.genes)) {
+    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+  } else {
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+  }
+  
+  res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
+  res.kegg$qval <- formatC(res.kegg$qval, digits = 3, format = "e")
+  if (!is.null(fileNameOut)) {
+    if (nchar(databases) > 30) databases <- paste0(substr(databases, 1, 20), "_", substr(databases, nchar(databases) - 8, nchar(databases))) # If a database is longer that 30 characters, keep first 20 and last 10 characters
+    save_res(res.kegg, fileNameOut, wb = wb, sheetName = databases)
+  }
+  # Pause for a few seconds
+  pause_sec <- round(runif(1, min = 1, max = 10))
+  Sys.sleep(pause_sec)
+  return(res.kegg)
+}
+
+## Gives count, mean, standard deviation, standard error of the mean, and confidence interval (default 95%).
+##   data: a data frame.
+##   measurevar: the name of a column that contains the variable to be summariezed
+##   groupvars: a vector containing names of columns that contain grouping variables
+##   na.rm: a boolean that indicates whether to ignore NA's
+##   conf.interval: the percent range of the confidence interval (default is 95%)
+summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
+                      conf.interval=.95, .drop=TRUE) {
+    library(plyr)
+
+    # New version of length which can handle NA's: if na.rm==T, don't count them
+    length2 <- function (x, na.rm=FALSE) {
+        if (na.rm) sum(!is.na(x))
+        else       length(x)
+    }
+
+    # This does the summary. For each group's data frame, return a vector with
+    # N, mean, and sd
+    datac <- ddply(data, groupvars, .drop=.drop,
+      .fun = function(xx, col) {
+        c(N    = length2(xx[[col]], na.rm=na.rm),
+          mean = mean   (xx[[col]], na.rm=na.rm),
+          sd   = sd     (xx[[col]], na.rm=na.rm)
+        )
+      },
+      measurevar
+    )
+
+    # Rename the "mean" column    
+    datac <- rename(datac, c("mean" = measurevar))
+
+    datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
+
+    # Confidence interval multiplier for standard error
+    # Calculate t-statistic for confidence interval: 
+    # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
+    ciMult <- qt(conf.interval/2 + .5, datac$N-1)
+    datac$ci <- datac$se * ciMult
+
+    return(datac)
+}
+```
+
+## Settings
+
+```{r}
+system("mkdir -p data")
+# system("mkdir -p results")
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+# data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
+
+# Selected genes
+selected_genes <- c("MYCN", "SSX2", "SSX1")
+data.type = "RNASeq2"; type = "" 
+# All cancers with RNASeq2 data
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+```
+
+## Expression of selected genes across all TCGA cancers
+
+Genes selected: `r paste(selected_genes, collapse = ", ")`
+
+```{r expression}
+# File name for pre-saved results
+fileNameIn <- (paste0("data/", paste(selected_genes, collapse = "_"), "_coexpression_", data.type, "_", type, ".Rda")) 
+
+if (!file.exists(fileNameIn)) {
+  selected_genes_expr <- rbind() # data frame to rbind cancer-specific expression of selected genes
+  for (cancer in cancer_RNASeq2) {
+    all_exprs <- list() # List to store cancer-specific expression matrixes
+    # print(paste0("Processing cancer ", cancer))
+    # Prepare expression data
+    mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+    expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix 
+    # Sanity check that genes are in the matrix
+    # colnames(expr)[(colnames(expr) %in% selected_genes)]
+    expr <- (expr + 1) %>% log2 %>% t
+    expr_selected <- expr[rownames(expr) %in% selected_genes, , drop = FALSE]
+    # The data in form of selected gene expression (columns), and a "cancer" label variable
+    selected_genes_expr <- rbind(selected_genes_expr, data.frame(t(expr_selected), cancer = rep(cancer, ncol(expr))))
+  }
+    save(selected_genes_expr, file = fileNameIn) # Select cancers
+} else {
+  load(file = fileNameIn)
+}
+```
+
+```{r plotting, fig.width=10, fig.height=3}
+# Reshape the data
+gdata <- reshape2::melt(selected_genes_expr)
+
+# ggplot(gdata, aes(x = cancer, y = value, fill = variable)) + geom_boxplot()
+# ggplot(gdata, aes(x = cancer, y = value, fill = variable)) + geom_bar(position=position_dodge(), stat = "summary", fun.y = "mean")
+
+# http://www.cookbook-r.com/Graphs/Plotting_means_and_error_bars_(ggplot2)/
+gdata_summary <- summarySE(gdata, measurevar="value", groupvars=c("cancer", "variable"))
+
+ggplot(gdata_summary, aes(x = cancer, y = value, fill = variable)) + 
+    geom_bar(position=position_dodge(), stat="identity",
+             colour="black", # Use black outlines,
+             size=.3) +      # Thinner lines
+    geom_errorbar(aes(ymin=value-se, ymax=value+se),
+                  size=.3,    # Thinner lines
+                  width=.2,
+                  position=position_dodge(.9)) +
+    xlab("Cancer type") +
+    ylab("log2 expression") +
+    scale_fill_hue(name="Gene", # Legend label, use darker colors
+                   breaks=selected_genes,
+                   labels=selected_genes) +
+    ggtitle("Expression of selected genes in all TCGA cancers") +
+    scale_y_continuous(breaks=0:20*4) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+Cancer abbreviations
+
+```{r}
+cancers <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
+pander(cancers)
+```
+
+

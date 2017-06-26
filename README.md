@@ -12,6 +12,8 @@
 
 - `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders.
 
+- `coexpression.Rmd` - Expression of selected genes across all TCGA cancers. Change `selected_genes <- "XXXX"`, can be multiple. Generates an HTML file with a barplot of log2-expression of selected genes across all cancers, with standard errors.
+
 - `correlations.Rmd` - Co-expression analysis of selected gene vs. all others, in selected cancers. Genes best correlating with the selected gene may share common functions, described in the KEGG canonical pathway analysis section. Change `selected_genes <- "XXXX"` and `cancer_RNASeq2 <- "YYYY"` variables. The run saves two RData objects, `res/YYYY_expression_RNASeq2_.Rda` and `results/YYYY_correlation_XXXX_RNASeq2_.Rda`. This speeds up re-runs with the same settings. The full output is saved in `results/YYYY_results_XXXX_RNASeq2_.xlsx`
 
 - `correlations_one_vs_one.Rmd` - Co-expression analysis of two genes across all cancers. The knitted HTML contains table with correlation coefficients and p-values.
