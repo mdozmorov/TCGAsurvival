@@ -238,6 +238,11 @@ Find new members of a pathway, with or without graph. Infer GO functions of a ne
 
 ## Download only
 
+### `iRefIndex`, http://irefindex.org/wiki/index.php?title=iRefIndex
+
+iRefIndex provides an index of protein interactions available in a number of primary interaction databases including BIND, BioGRID, CORUM, DIP, HPRD, InnateDB, IntAct, MatrixDB, MINT, MPact, MPIDB and MPPI. Download in tab-delimited format. `iRefR` package for R access, http://irefindex.org/wiki/index.php?title=iRefR
+
+
 ### `HINT`, http://hint.yulab.org/download/
 
 The set of all protein-protein interactions for the organ- isms was downloaded from the public databases – Bio- Grid [9], DIP [10], HPRD [11], IntAct [12], iRefWeb [13], MINT [14], MIPS [15] and VisAnt [16].
