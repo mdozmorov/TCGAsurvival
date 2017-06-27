@@ -162,6 +162,14 @@ if (nrow(selected) <= max_to_plot) {
 
 ## Online only
 
+## `UCSC gene interactions`, https://genome.ucsc.edu/cgi-bin/hgGeneGraph
+
+Gene interactions and pathways from curated databases and text-mining - search one gene and play with the network
+
+## `Literome` project, http://literome.azurewebsites.net/
+
+Pairwise gene-gene and gene-phenotype search via literature mining
+
 ## `GeNet`, http://apps.broadinstitute.org/genets
 
 GeNets: Broad Institute Web Platform for Genome Networks
