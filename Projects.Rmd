@@ -45,6 +45,25 @@ This project involves:
 
 Overview of survival analysis. Presenting the performance of a newly developed method of summarizing methylation signal per gene and using it for survival analysis. 
 
+### Current status and ToDo
+
+- Glioblastoma CpG sites predictive of survival using Cox PH model. DONE
+
+- Annotating CpGs with overlap with (categorical) and proximity to (continuous) genomic features  
+  - Using the original Illumina 450K annotations, from `FDb.InfiniumMethylation.hg19` package (??? which features). DONE  
+  - Gene-centric overlap/proximity annotation. ToDo.  
+    - Use hg19 genomic coordinates from https://github.com/stephenturner/annotables. `grch37` object.
+    - For overlap annotation (Yes/No), use the fact of CpG site being located within a gene.
+    - For proximity annotation (shortest distance to TSS), note strand. Transcription Start Sites (TSS) start at the leftmost coordinate for genes on positive strant, and on rightmost coordinate for genes on negative strand
+    - For proxomity annotation, if a CpG site is downstream/upstream of a TSS - use negative/positive sign for the distance
+
+- Predictive model that can predict CpG sites associated with survival vs. non-associated
+  - Use logistic regression. ToDo
+  - There are many more non-associated CpG sites. Explore SMOTE package for accounting for such disbalance. https://github.com/amunategui/SMOTE-Oversample-Rare-Events. ToDo
+
+- Add additional annotations (overlap/proximity) for CpG sites  
+  - Use LOLA data, Merlot, /home/sequencing/data/ExtData/LOLA
+
 ### Research plan
 
 - Data folder on Merlot; /home/sequencing/work/Methylation/TCGA_BRCA_methylation
@@ -65,4 +84,6 @@ Overview of survival analysis. Presenting the performance of a newly developed m
     - Use random forest algorithm, and other classifiers in the `caret` package.
     - Use the same location approach to find whether classifier CpGs have location preference.
 
-### References [@anaya2016oncolnc; @anaya2016oncorank; @anaya2016pan; @Colaprico:2016aa; @diez2013survival; @goel2010understanding; @Gyorffy:2015aa; @Ring:2016aa; @silva2016tcga]
+### References 
+
+[@anaya2016oncolnc; @anaya2016oncorank; @anaya2016pan; @Colaprico:2016aa; @diez2013survival; @goel2010understanding; @Gyorffy:2015aa; @Ring:2016aa; @silva2016tcga]
