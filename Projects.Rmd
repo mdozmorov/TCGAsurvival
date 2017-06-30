@@ -63,6 +63,7 @@ Overview of survival analysis. Presenting the performance of a newly developed m
   - There are many more non-associated CpG sites. Explore SMOTE package for accounting for such disbalance. https://github.com/amunategui/SMOTE-Oversample-Rare-Events. ToDo
 
 - Add additional annotations for CpG sites  
+
   - Use GenomeRunner data, Merlot
   
   - /home/sequencing/data/ExtData/db_5.00_07-22-2015/custom_data/gfs/hg19
