@@ -53,6 +53,7 @@ Overview of survival analysis. Presenting the performance of a newly developed m
   - Using the original Illumina 450K annotations, from `FDb.InfiniumMethylation.hg19` package (??? which features). DONE  
   - Gene-centric overlap/proximity annotation. ToDo.  
     - Check http://www.haowulab.org/teaching/bioc/genomicRanges.pdf, and vignettes for the corresponding packages, this is the right way of finding relationships among genomic regions.
+    - Check http://www.haowulab.org/teaching/bioc/GenomicRanges.R - it runs through the main functionality which is exactly what we need
     - Use hg19 genomic coordinates from https://github.com/stephenturner/annotables. `grch37` object.
     - For overlap annotation (Yes/No), use the fact of CpG site being located within a gene.
     - For proximity annotation (shortest distance to TSS), note strand. Transcription Start Sites (TSS) start at the leftmost coordinate for genes on positive strant, and on rightmost coordinate for genes on negative strand
