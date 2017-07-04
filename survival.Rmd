@@ -28,6 +28,9 @@ options(stringsAsFactors = FALSE)
 library(TCGA2STAT)
 library(ggplot2)
 library(reshape2)
+if (!require(survplot)) {
+  install.packages("survplot_0.0.7.tar.gz", repos = NULL, type="source")
+}
 source("Supplemental_R_script_1.R")
 ```
 
@@ -339,21 +342,21 @@ clin_full   <- mtx$clinical # Full clinical data
 clin_merged <- inner_join(clin, data.frame(AffyID = rownames(clin_full), clin_full), by = c("AffyID"))
 clin <- clin_merged
 # BRCA-specific
-clin_pam50 <- read.table("PAM50_classification.txt", sep = "\t", header = TRUE) # PAM50 classifier
-clin_pam50 <- clin_pam50[ !grepl("-01B", clin_pam50$Particpant.ID), ]
-clin_pam50$Particpant.ID <- gsub("-01A", "", clin_pam50$Particpant.ID)
-clin_merged <- inner_join(clin, clin_pam50, by = c( "AffyID" = "Particpant.ID"))
-clin <- clin_merged
+# clin_pam50 <- read.table("data.TCGA/PAM50_classification.txt", sep = "\t", header = TRUE) # PAM50 classifier
+# clin_pam50 <- clin_pam50[ !grepl("-01B", clin_pam50$Particpant.ID), ]
+# clin_pam50$Particpant.ID <- gsub("-01A", "", clin_pam50$Particpant.ID)
+# clin_merged <- inner_join(clin, clin_pam50, by = c( "AffyID" = "Particpant.ID"))
+# clin <- clin_merged
 
 # Select clinical category and subcategories
 clinical_annotations <- summarize_data(mtx = mtx)
 clinical_annotations_selected <- "pathologyMstage"
-clinical_annotations_selected <- "Subtype" # For PAM50 classifier
+#clinical_annotations_selected <- "Subtype" # For PAM50 classifier
 
 print(paste0("Number of patients in each subcategory, in the ", clinical_annotations_selected, " category"))
 table(clin[, clinical_annotations_selected]) 
 group1 <- "m0"   ; group2 <- "m1"
-group1 <- "LumA"; group2 <- "LumB" # For PAM50 classifier
+# group1 <- "LumA"; group2 <- "LumB" # For PAM50 classifier
 
 # KM analysis on subcategories
 kmplot.clin(clin = clin, event_index=2, time_index=3, clinical_annotations = clinical_annotations_selected, group1 = group1, group2 = group2, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
@@ -364,8 +367,8 @@ selected_genes = c("SDC1") # BRCA
 expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
 # Filter out low expressed genes
 # Should be more than 90% of non-zero values
-ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
-expr <- expr[, apply(expr, 2, ff)] 
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
 expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 expr <- expr[ expr$AffyID %in% clin$AffyID, ]
 expr <- expr[match(clin$AffyID, expr$AffyID), ]
@@ -378,6 +381,21 @@ p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value
 plot(p)
 ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".pdf"), p, width = 5, height = 5)
 system("mv res res.genes.Analysis5")
+
+## ANOVA and Tukey's test
+mtx_to_plot$Clinical <- factor(mtx_to_plot$Clinical)
+# What are the mean log2-expression per clinical group
+tapply(mtx_to_plot$Gene, mtx_to_plot$Clinical, mean)
+# ANOVA
+groupdiff <- lm(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
+# summary(groupdiff)
+anova(groupdiff)
+# Tukey HSD
+a1 <- aov(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
+summary(a1)
+posthoc <- TukeyHSD(x=a1, 'mtx_to_plot$Clinical', conf.level=0.95)
+posthoc
+plot(posthoc)
 ```
 
 
