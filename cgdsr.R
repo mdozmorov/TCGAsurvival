@@ -11,9 +11,6 @@ mycgds = CGDS("http://www.cbioportal.org/")
 
 test(mycgds)
 
-# Get list of cancer studies at server
-studies <- getCancerStudies(mycgds)
-
 # Get available case lists (collection of samples) for a given cancer study
 mycancerstudy = getCancerStudies(mycgds)
 # Sneak peak into the full list
@@ -21,8 +18,10 @@ mycancerstudy[1:5, 1:3]
 View(mycancerstudy)
 # Targeted search for studies of interest
 mycancerstudy[grepl("brca", mycancerstudy$cancer_study_id, ignore.case = TRUE), c(1, 2)]
+mycancerstudy[grepl("brca", mycancerstudy$cancer_study_id, ignore.case = TRUE), c(3)]
+
 # Select one study
-mycancerstudy <- "brca_tcga"
+mycancerstudy <- "brca_tcga_pub2015"
 
 # Get all substudies (cases) within a selected study
 mycaselist = getCaseLists(mycgds, mycancerstudy)
@@ -30,20 +29,43 @@ mycaselist = getCaseLists(mycgds, mycancerstudy)
 mycaselist[1:5, 1:4]
 View(mycaselist)
 # Select one substudy
-mycaselist <- "brca_tcga_rna_seq_v2_mrna"
+mycaselist <- "brca_tcga_pub2015_rna_seq_v2_mrna"
 
 # Get available genetic profiles
 mygeneticprofile = getGeneticProfiles(mycgds, mycancerstudy)
 View(mygeneticprofile)
 # Select one data type
-mygeneticprofile <- "brca_tcga_rna_seq_v2_mrna"
+mygeneticprofile <- "brca_tcga_pub2015_rna_seq_v2_mrna"
 
 # Get data slices for a specified list of genes, genetic profile and case list
-myprofiledata <- getProfileData(mycgds, c('BRCA1','BRCA2'), mygeneticprofile, mycaselist)
+selected_genes = c("SDC1") # BRCA
+myprofiledata <- getProfileData(mycgds, c(selected_genes), mygeneticprofile, mycaselist)
 View(myprofiledata)
 
 # Get clinical data for the case list
 myclinicaldata = getClinicalData(mycgds, mycaselist)
+View(myclinicaldata)
+colnames(myclinicaldata)
+# DataExplorer::GenerateReport(myclinicaldata, output_dir = paste0("EDA_", mycaselist, "_", mygeneticprofile))
+
+## Plot barplot of the selected gene in different subcategories
+# Align expression and clinical data
+clin <- data.frame(ID = rownames(myclinicaldata), myclinicaldata)
+expr <- data.frame(ID = rownames(myprofiledata), myprofiledata)
+expr <- expr[ match(clin$ID, expr$ID), ]
+all.equal(clin$ID, expr$ID)
+# Select clinical category and subcategories
+clinical_annotations_selected <- "AJCC_METASTASIS_PATHOLOGIC_PM" # "pathologyMstage"
+print(paste0("Number of patients in each subcategory, in the ", clinical_annotations_selected, " category"))
+table(clin[, clinical_annotations_selected]) 
+# A matrix to plot
+mtx_to_plot <- data.frame(Gene = log2(expr[, selected_genes] + 1), Clinical = clin[, clinical_annotations_selected])
+# Plot and save
+p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value, fill = Clinical)) +
+  geom_boxplot() +
+  ylab("log2 expression")
+plot(p)
+ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".pdf"), p, width = 5, height = 5)
 
 
 # Example 1: Association of NF1 copy number alteration and mRNA expression in glioblastoma
