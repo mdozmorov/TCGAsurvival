@@ -383,7 +383,6 @@ ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_anno
 system("mv res res.genes.Analysis5")
 
 ## ANOVA and Tukey's test
-mtx_to_plot$Clinical <- factor(mtx_to_plot$Clinical)
 # What are the mean log2-expression per clinical group
 tapply(mtx_to_plot$Gene, mtx_to_plot$Clinical, mean)
 # ANOVA
