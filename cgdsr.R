@@ -18,10 +18,21 @@ mycancerstudy[1:5, 1:3]
 View(mycancerstudy)
 # Targeted search for studies of interest
 mycancerstudy[grepl("brca", mycancerstudy$cancer_study_id, ignore.case = TRUE), c(1, 2)]
-mycancerstudy[grepl("brca", mycancerstudy$cancer_study_id, ignore.case = TRUE), c(3)]
+mycancerstudy[grepl("brca", mycancerstudy$cancer_study_id, ignore.case = TRUE), c(1)]
+View(mycancerstudy[grepl("brca", mycancerstudy$cancer_study_id, ignore.case = TRUE), ])
+
+# "brca_metabric" - 2509 samples, microarray data, with clinical annotations
+# "brca_bccrc" - CNV, 65 samples               
+# "brca_broad" - SNPs, 103 samples             
+# "brca_sanger" - SNPs, 100 samples              
+# "brca_tcga_pub2015"         
+# "brca_tcga_pub"            
+# "brca_tcga"                 
+# "brca_bccrc_xenograft_2014" - CNV, 160 samples
+# "brca_igr_2015" 
 
 # Select one study
-mycancerstudy <- "brca_tcga_pub2015"
+mycancerstudy <- "lihc_tcga" #  "brca_tcga"
 
 # Get all substudies (cases) within a selected study
 mycaselist = getCaseLists(mycgds, mycancerstudy)
@@ -29,16 +40,16 @@ mycaselist = getCaseLists(mycgds, mycancerstudy)
 mycaselist[1:5, 1:4]
 View(mycaselist)
 # Select one substudy
-mycaselist <- "brca_tcga_pub2015_rna_seq_v2_mrna"
+mycaselist <- "lihc_tcga_all" # "brca_tcga_rna_seq_v2_mrna"
 
 # Get available genetic profiles
 mygeneticprofile = getGeneticProfiles(mycgds, mycancerstudy)
 View(mygeneticprofile)
 # Select one data type
-mygeneticprofile <- "brca_tcga_pub2015_rna_seq_v2_mrna"
+mygeneticprofile <- "lihc_tcga_mutations" # "brca_tcga_rna_seq_v2_mrna"
 
 # Get data slices for a specified list of genes, genetic profile and case list
-selected_genes = c("SDC1") # BRCA
+selected_genes = c("NF1") # BRCA
 myprofiledata <- getProfileData(mycgds, c(selected_genes), mygeneticprofile, mycaselist)
 View(myprofiledata)
 
@@ -47,6 +58,8 @@ myclinicaldata = getClinicalData(mycgds, mycaselist)
 View(myclinicaldata)
 colnames(myclinicaldata)
 # DataExplorer::GenerateReport(myclinicaldata, output_dir = paste0("EDA_", mycaselist, "_", mygeneticprofile))
+
+write.csv(merge(myprofiledata, myclinicaldata, by = "row.names"), "lihc_tcga_mutations_NF1.csv")
 
 ## Plot barplot of the selected gene in different subcategories
 # Align expression and clinical data
