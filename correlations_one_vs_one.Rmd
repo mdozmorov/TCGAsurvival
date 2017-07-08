@@ -29,10 +29,10 @@ library(org.Hs.eg.db)
 library(KEGG.db)
 library(TCGA2STAT)
 library(dplyr)
+library(ggplot2)
 library(knitr)
 # library(clusterProfiler)
 library(pathview)
-library(enrichR)
 library(annotables)
 # Remove non-canonical chromosome names
 grch38 <- grch38[ !(grepl("_", grch38$chr) | grepl("GL", grch38$chr)), ]
@@ -97,7 +97,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # Selected genes
 selected_genes <- c("MCL1", "KDM6B")
 # Check if the names exist
-genes <- readLines("TCGA_genes.txt")
+genes <- readLines("data.TCGA/TCGA_genes.txt")
 setdiff(selected_genes, genes) # Should be 0, meaning selected genes are among the TCGA genes
 
 data.type = "RNASeq2"; type = "" 
@@ -122,7 +122,7 @@ p.adj.cutoff <- 0.1
 fdr.cutoff   <- 0.3
 ```
 
-```{r correlations}
+```{r correlations, fig.height=3, fig.width=3}
   all_corrs <- list() # List to store cancer-specific correlationa
   all_pvals <- list() # List to store cancer-specific p-values
   # Get correlation matrixes for the gene of interest in each cancer
@@ -136,6 +136,25 @@ fdr.cutoff   <- 0.3
     cancer_rcorr <- Hmisc::rcorr(as.numeric(expr[selected_genes[1], 2:ncol(expr)]), 
                                  as.numeric(expr[selected_genes[2], 2:ncol(expr)]), 
                                  type = corr_type)
+    # Matrix to plot correlations
+    mtx_to_plot <- data.frame(gene1 = log2(as.numeric(expr[selected_genes[1], 2:ncol(expr)]) + 1),
+                              gene2 = log2(as.numeric(expr[selected_genes[2], 2:ncol(expr)]) + 1))
+    colnames(mtx_to_plot) <- c(selected_genes[1], selected_genes[2]) # Assign column names
+    # Quick regression
+    fit <- lm(mtx_to_plot[, 1] ~ mtx_to_plot[, 2])
+    # Plot graph
+    p <- ggplot(mtx_to_plot, aes(x = eval(parse(text = selected_genes[1])), y = eval(parse(text = selected_genes[2])))) +
+      geom_point(shape = 1) +
+      geom_smooth(method = lm) +
+      xlab(selected_genes[1]) +
+      ylab(selected_genes[2])
+    # Fit statistics
+    print(paste("Adj R2 = ",   signif(summary(fit)$adj.r.squared, 5),
+                "Intercept =", signif(fit$coef[[1]],5 ),
+                " Slope =",    signif(fit$coef[[2]], 5),
+                " P =",        signif(summary(fit)$coef[2,4], 5)))
+    plot(p)
+    # Store the results
     all_corrs <- c(all_corrs, list(cancer_rcorr$r[1, 2]))
     all_pvals <- c(all_pvals, list(cancer_rcorr$P[1, 2]))
     names(all_corrs)[length(all_corrs)] <- names(all_pvals)[length(all_pvals)] <- cancer_type
@@ -146,7 +165,7 @@ fdr.cutoff   <- 0.3
 
 ```{r}
 res_corr <- data.frame(Acronym = cancer_RNASeq2, corr = unlist(all_corrs), pval = unlist(all_pvals))
-cancers  <- openxlsx::read.xlsx("TCGA_cancers.xlsx")
+cancers  <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
 res_corr <- left_join(res_corr, cancers, by = c("Acronym"))
 res_corr <- round_df(res_corr)
 res_corr <- res_corr[ order(res_corr$corr, decreasing = TRUE), ]
