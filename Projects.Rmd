@@ -82,6 +82,14 @@ Overview of survival analysis. Presenting the performance of a newly developed m
     - Use `BroadHmm` and `Combined` folders. `Gm12878` and `K562` subfolders. 
     - Use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See https://github.com/mdozmorov/genomerunner_web/wiki/ENCODE-chromStates
 
+From Karagod, Vinay Vittal, and Kaushik Sinha. “A Novel Machine Learning Framework for Phenotype Prediction Based on Genome-Wide DNA Methylation Data.” In Neural Networks (IJCNN), 2017 International Joint Conference on, 1657–64. IEEE, 2017. http://ieeexplore.ieee.org/document/7966050/. 
+
+- Methylation for predicting stages of cervical cancer. Three-stage method: 1) Reduce dimensionality of CpG sites - many sub-datasets; 2) Applying a classifier (SVM) to each of the sub-datasets. 3) Using ensemble method to obtain a single model.
+- CpG attributes: average methylation (difference), methylation variation (difference), methylation-phenotype correlation.
+- Teschendorff, A.E., Widschwendter, M., “Differential variability improves the identification of cancer risk markers in DNA methylation studies profiling precursor cancer lesions”. Bioinformatics 2012 https://academic.oup.com/bioinformatics/article-lookup/doi/10.1093/bioinformatics/bts170
+- Wilhelm, “Phenotype prediction based on genome-wide DNA methylation data”. BMC Bioinformatics https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-15-193
+- Eric, Bair., Trevor, Hastie., Debashis, Paul., and Robert, Tibshirani., “Prediction by supervised principal components”. [47] September 15, 2004 http://www.tandfonline.com/doi/abs/10.1198/016214505000000628
+
 ### Research plan
 
 - Data folder on Merlot; /home/sequencing/work/Methylation/TCGA_BRCA_methylation
