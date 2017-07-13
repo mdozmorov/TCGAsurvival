@@ -69,18 +69,18 @@ Overview of survival analysis. Presenting the performance of a newly developed m
   
   - /home/sequencing/data/ExtData/db_5.00_07-22-2015/custom_data/gfs/hg19
     - 3D_subcompartments - use overlap annotation only. Two types of overlap:
-      - A-B - two-level annotation. Whether CpG sites overlap GSE63525_GM12878_subcompartments_A.bed or GSE63525_GM12878_subcompartments_B.bed. Are there CpG sites that overlap none?
-      -A12-B1234 - four-level annotation. Whether CpG sites overlap A1/A2/B1/B2/B3/B4
-    - DGV - use overlap annotation only. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See http://dgv.tcag.ca/v104_20141022/app/faq?ref=#q12
-    - GERP - use overlap annotation, Yes/No. Also, the file contains "score" - 5th column. Use it for continuous annotation, a CpG overlapping a GERP region is annotated with that numerical score, non-overlapping - 0.
-    - nestedRepeats - use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See https://en.wikipedia.org/wiki/Repeated_sequence_(DNA)#Main_types
-    - super_enhancers - use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. We need Gm12878 and K562.
-    - UCNE - use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See http://ccg.vital-it.ch/UCNEbase/
-    - VMR - use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. These are Variably Methylated Regions
+      - A-B - two-level annotation. Whether CpG sites overlap GSE63525_GM12878_subcompartments_A.bed or GSE63525_GM12878_subcompartments_B.bed. Are there CpG sites that overlap none? _One categorical variable, two levels_  
+      -A12-B1234 - four-level annotation. Whether CpG sites overlap A1/A2/B1/B2/B3/B4. _One categorical variable, four levels_  
+    - DGV - use overlap annotation only. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See http://dgv.tcag.ca/v104_20141022/app/faq?ref=#q12 _Each track is its ovn categorical variable, overlap Yes/No_  
+    - GERP - use overlap annotation, Yes/No. Also, the file contains "score" - 5th column (4th is likely coloring or thickness, should perfectly correlate with 5th). Use it for continuous annotation, a CpG overlapping a GERP region is annotated with that numerical score, non-overlapping - 0. _One continuous variable, as described_  
+    - nestedRepeats - use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See https://en.wikipedia.org/wiki/Repeated_sequence_(DNA)#Main_types. _Sixteen categorical variables, overlap Yes/No_  
+    - super_enhancers - use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. We need Gm12878 and K562. _Two categorical variables, overlap Yes/No_  
+    - UCNE - use overlap and score annotation. See http://ccg.vital-it.ch/UCNEbase/. _One categorical variables, overlap Yes/No. One continuous variable, use 5th column as a score, as in GERP_  
+    - VMR - use overlap annotation, Yes/No. These are Variably Methylated Regions _One categorical variable, overlap Yes/No_  
 
   - /home/sequencing/data/ExtData/db_5.00_07-22-2015/grsnp_db/hg19/ENCODE/chromStates
     - Use `BroadHmm` and `Combined` folders. `Gm12878` and `K562` subfolders. 
-    - Use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See https://github.com/mdozmorov/genomerunner_web/wiki/ENCODE-chromStates
+    - Use overlap annotation, Yes/No. Each track there is its own annotation with two levels - Yes/No - a CpG overlaps or not with it. See https://github.com/mdozmorov/genomerunner_web/wiki/ENCODE-chromStates _Seven for Gm12878 and seven for K562 categorical variables, overlap Yes/No_  
 
 From Karagod, Vinay Vittal, and Kaushik Sinha. “A Novel Machine Learning Framework for Phenotype Prediction Based on Genome-Wide DNA Methylation Data.” In Neural Networks (IJCNN), 2017 International Joint Conference on, 1657–64. IEEE, 2017. http://ieeexplore.ieee.org/document/7966050/. 
 
