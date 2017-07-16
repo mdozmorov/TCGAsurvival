@@ -187,6 +187,12 @@ Their algorithm ranks a set of candidate disease-causing genes in multiple susce
 
 The largest currently available interaction map based on the affinity purification – mass spectrometry approach. ~5,000 proteins, ~50,000 interactions
 
+### `ConsesusPathDb`, http://cpdb.molgen.mpg.de/CPDB
+
+The database integrating pathways and PPIs from multiple databases. Several analyses: "interactions of molecules/pathways" - search for pathways containing a gene; "shortest interaction paths" - find all evidences supporting shortest connection between two genes; "over-representation analysis" and "enrichment analysis" - gene set analysis using any or all databases; "induced network modules" - build a network from a list of genes
+
+Ralf Herwig et al., “Analyzing and Interpreting Genome Data at the Network Level with ConsensusPathDB,” Nature Protocols 11, no. 10 (September 8, 2016): 1889–1907, doi:10.1038/nprot.2016.117. http://www.nature.com.proxy.library.vcu.edu/nprot/journal/v11/n10/full/nprot.2016.117.html
+
 ### `CORUM`, http://mips.helmholtz-muenchen.de/corum/#
 
 The comprehensive resource of mammalian protein complex. High-quality PPIs. Last updated: 2017. Reference: [@Ruepp:2010aa]
