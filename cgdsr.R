@@ -32,7 +32,7 @@ View(mycancerstudy[grepl("brca", mycancerstudy$cancer_study_id, ignore.case = TR
 # "brca_igr_2015" 
 
 # Select one study
-mycancerstudy <- "lihc_tcga" #  "brca_tcga"
+mycancerstudy <- "brca_tcga" #  "brca_tcga"
 
 # Get all substudies (cases) within a selected study
 mycaselist = getCaseLists(mycgds, mycancerstudy)
@@ -40,18 +40,26 @@ mycaselist = getCaseLists(mycgds, mycancerstudy)
 mycaselist[1:5, 1:4]
 View(mycaselist)
 # Select one substudy
-mycaselist <- "lihc_tcga_all" # "brca_tcga_rna_seq_v2_mrna"
+mycaselist <- "brca_tcga_all" # "brca_tcga_rna_seq_v2_mrna"
 
 # Get available genetic profiles
 mygeneticprofile = getGeneticProfiles(mycgds, mycancerstudy)
 View(mygeneticprofile)
 # Select one data type
-mygeneticprofile <- "lihc_tcga_mutations" # "brca_tcga_rna_seq_v2_mrna"
+mygeneticprofile <- "brca_tcga_rna_seq_v2_mrna"
 
 # Get data slices for a specified list of genes, genetic profile and case list
 selected_genes = c("NF1") # BRCA
+selected_genes = c("PSMA1", "PSMA2", "PSMA3", "PSMA4", "PSMA5", "PSMA6", "PSMA7", "PSMB1", "PSMB2", "PSMB3", "PSMB4", "PSMB5", "PSMB6", "PSMB7", "PSMC1", "PSMC2", "PSMC3", "PSMC4", "PSMC5", "PSMC6", "PSMD1", "PSMD2", "PSMD3", "PSMD4", "PSMD5", "PSMD6", "PSMD7", "PSMD8", "PSMD9", "PSMD10", "PSMD11", "PSMD12", "PSMD13", "PSMD14")
 myprofiledata <- getProfileData(mycgds, c(selected_genes), mygeneticprofile, mycaselist)
 View(myprofiledata)
+
+col2 <- colorRampPalette(c("blue", "white", "yellow"))
+col3 <- colorRampPalette(c("blue", "white", "red"))
+
+h <- pheatmap::pheatmap(t( log2(myprofiledata[complete.cases(myprofiledata), ] + 1) ), color = col3(50), scale = "none", cluster_rows = TRUE, cluster_cols = TRUE, clustering_distance_rows = "correlation", clustering_distance_cols = "correlation", clustering_method = "ward.D2",
+                   legend = TRUE, show_colnames = FALSE, treeheight_row = 0, cutree_cols = 8)
+
 
 # Get clinical data for the case list
 myclinicaldata = getClinicalData(mycgds, mycaselist)
@@ -59,7 +67,7 @@ View(myclinicaldata)
 colnames(myclinicaldata)
 # DataExplorer::GenerateReport(myclinicaldata, output_dir = paste0("EDA_", mycaselist, "_", mygeneticprofile))
 
-write.csv(merge(myprofiledata, myclinicaldata, by = "row.names"), "lihc_tcga_mutations_NF1.csv")
+write.csv(cbind(log2(myprofiledata[ h$tree_col$labels, ] + 1), myclinicaldata[h$tree_col$labels, ]), "brca_tcga_mutations_PSM.csv")
 
 ## Plot barplot of the selected gene in different subcategories
 # Align expression and clinical data
