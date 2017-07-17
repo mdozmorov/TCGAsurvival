@@ -363,10 +363,6 @@ for(j in 1:length(index_arr)){
 
 
 
-clin_full   <- mtx$clinical # Full clinical data
-clin_merged <- inner_join(clin, data.frame(AffyID = rownames(clin_full), clin_full), by = c("AffyID"))
-clin <- clin_merged
-
 #' 
 #' @param clin full clinical data merged with survival time and outcome. 
 #' @param event_index column number to use as as outcome 
