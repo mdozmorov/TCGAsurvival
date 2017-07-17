@@ -43,7 +43,7 @@ The same data in table format. Legend:
 - `Cutoff_type`, `Cutoff_value` - gene expression cutoff best discriminating survival
 
 ```{r}
-cancers <- openxlsx::read.xlsx("TCGA_cancers.xlsx")
+cancers <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
 mtx <- read.table("res.genes.Analysis2/global_stats.txt", sep = "\t", header = TRUE)
 mtx <- mtx[order(mtx$p.value), ]
 mtx <- left_join(mtx, cancers, by = c("Cancer" = "Acronym"))

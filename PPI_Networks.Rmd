@@ -9,7 +9,7 @@ output:
     # number_sections: true
 date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
-bibliography: networks.bib
+bibliography: /Users/mdozmorov/Documents/Work/VCU_work/Mark/disease-coherence/manuscript/networks.bib
 ---
 
 
@@ -35,7 +35,7 @@ library(igraph)
 ## Settings
 
 ```{r}
-selected_genes <- c("SDC1")
+selected_genes <- c("MYBL2")
 max_to_plot <- 60 # Maximum number of PPI links to plot
 ```
 
@@ -50,15 +50,13 @@ max_to_plot <- 60 # Maximum number of PPI links to plot
 
 STRING v10: protein-protein interaction networks, integrated over the tree of life. https://www.ncbi.nlm.nih.gov/pubmed/25352553
 
-# 05/29/2017
-wget https://string-db.org/download/protein.links.v10.5/9606.protein.links.v10.5.txt.gz
+wget https://string-db.org/download/protein.links.v10.5/9606.protein.links.v10.5.txt.gz # 05/29/2017
 
 Total number of interactions: 7,083,920
 
 "protein1", "protein2", "combined_score"
  
-# 05/29/2017 # A subset of directional interactions
-wget https://string-db.org/download/protein.actions.v10.5/9606.protein.actions.v10.5.txt.gz
+wget https://string-db.org/download/protein.actions.v10.5/9606.protein.actions.v10.5.txt.gz # 05/29/2017 # A subset of directional interactions
 
 Total number of interactions: 1,862,289 
 
@@ -85,7 +83,7 @@ Total number of interactions: 1,862,289
 
 ```{r eval = TRUE}
 # STRING data
-load(file = "/Users/mdozmorov/Documents/Work/VCU_work/Mark/disease-coherence/data/9606.protein.links.v10.rda")
+load(file = "/Users/mdozmorov/Documents/Work/VCU_work/Mark/disease-coherence/data/9606.protein.links.v10.5.rda")
 
 selected <- my_adj_list[ (my_adj_list$from %in% selected_genes) | (my_adj_list$to %in% selected_genes), , drop = FALSE ]
 selected <- selected[complete.cases(selected), ]
@@ -162,19 +160,19 @@ if (nrow(selected) <= max_to_plot) {
 
 ## Online only
 
-## `UCSC gene interactions`, https://genome.ucsc.edu/cgi-bin/hgGeneGraph
+### `UCSC gene interactions`, https://genome.ucsc.edu/cgi-bin/hgGeneGraph
 
 Gene interactions and pathways from curated databases and text-mining - search one gene and play with the network
 
-## `Literome` project, http://literome.azurewebsites.net/
+### `Literome` project, http://literome.azurewebsites.net/
 
 Pairwise gene-gene and gene-phenotype search via literature mining
 
-## `GeNet`, http://apps.broadinstitute.org/genets
+### `GeNet`, http://apps.broadinstitute.org/genets
 
 GeNets: Broad Institute Web Platform for Genome Networks
 
-## `Prioritizer`, http://www.prioritizer.nl, http://129.125.135.180:8080/GeneNetwork/
+### `Prioritizer`, http://www.prioritizer.nl, http://129.125.135.180:8080/GeneNetwork/
 
 Predicting gene functions (GO, KEGG, Biocarta, Reactome), tissue-specific expression, network view. 
 
