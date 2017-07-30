@@ -397,4 +397,55 @@ posthoc
 plot(posthoc)
 ```
 
+```{r eval = FALSE}
+## Analysis 6: Dimensionality reduction of a gene signature across all cancers using NMF, PCA, or FA
+# For each cancer, extracts gene expression of a signature, reduces its dimensionality,
+# plots a heatmap sorted by the first component, biplots, saves eigenvectors in files
+# named after cancer, signature, method. They are used in `correlations.Rmd`
+system("rm -r res")
+system("mkdir res") # Create results folder
+library(NMF)
+library(ggfortify)
+library(pheatmap)
+signature      <- readLines("data.TCGA/EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt") # Interferon signature
+selected_genes <- "interferon_signature" 
+
+pdf(file = paste0("res/dimreduction_", selected_genes, ".pdf"))
+# All cancers with RNASeq2 data
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+data.type = "RNASeq2"; type = "" 
+# Process each cancer
+for (cancer_type in cancer_RNASeq2) {
+  print(paste0("Processing cancer ", cancer_type))
+  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  # Prepare subset of expression data for a given signature
+  mtx_selected <- t(log2(mtx$merged.dat[, signature]))
+  colnames(mtx_selected) <- mtx$merged.dat$bcr
+  # NMF 
+  method <- "NMF"
+  mtx_nmf <- nmf(t(mtx_selected), 3) # with three components
+  pheatmap(mtx_selected[, order(mtx_nmf@fit@W[, 1])], cluster_cols = FALSE, treeheight_row = FALSE,   treeheight_col = FALSE, scale = "row", main = paste0(cancer_type, "_", method))
+  mtx_reduced <- mtx_nmf@fit@W
+  save(mtx_reduced, file = paste0("res/", cancer_type, "_", selected_genes, "_", method, ".Rda"))
+  # PCA
+  # https://cran.r-project.org/web/packages/ggfortify/vignettes/plot_pca.html
+  method <- "PCA"
+  mtx_pca <- prcomp(t(mtx_selected), scale. = TRUE, center = TRUE)
+  pheatmap(mtx_selected[, order(mtx_pca$x[, 1])], cluster_cols = FALSE, treeheight_row = FALSE, treeheight_col = FALSE, scale = "row", main = paste0(cancer_type, "_", method))
+  p <- autoplot(prcomp(t(mtx_selected), scale. = TRUE, center = TRUE), loadings = TRUE, loadings.label = TRUE) + ggtitle(paste0(cancer_type, "_", method))
+  print(p)
+  mtx_reduced <- mtx_pca$x
+  save(mtx_reduced, file = paste0("res/", cancer_type, "_", selected_genes, "_", method, ".Rda"))
+  # Factor analysis
+  method <- "FA"
+  mtx_fa <- factanal(t(mtx_selected), factors = 3, scores = "regression")
+  pheatmap(mtx_selected[, order(mtx_fa$scores[, 1])], cluster_cols = FALSE, treeheight_row = FALSE, treeheight_col = FALSE, scale = "row", main = paste0(cancer_type, "_", method))
+  p <- autoplot(mtx_fa,  loadings = TRUE, loadings.label = TRUE) + ggtitle(paste0(cancer_type, "_", method))
+  print(p)
+  mtx_reduced <- mtx_fa$scores
+  save(mtx_reduced, file = paste0("res/", cancer_type, "_", selected_genes, "_", method, ".Rda"))
+}
+dev.off()
+system("mv res res.genes.Analysis6")
+```
 

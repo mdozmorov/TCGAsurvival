@@ -11,6 +11,7 @@
     - `Analysis 3` - Selected genes, all (or, selected) cancers, all unique clinical (sub)groups. Results are in `res.genes.Analysis3` folder. Open file `global_stats.txt` in Excel, sort by p-value (Cox proportional hazard analysis) and explore in which clinical (sub)groups expression of the selected gene affects survival the most.
     - `Analysis 4` - Selected genes, selected cancers, all combinations of clinical annotations. Not run by default.
     - `Analysis 5` - Clinical-centric analysis. Selected cancer, selected clinical category and two subcategories, survival difference between the two subcategories. Also, saves a plot with boxplots of log2 expression in each clinical group. Not run by default.
+    - `Analysis 6` - Dimensionality reduction of a gene signature across all cancers using NMF, PCA, or FA For each cancer, extracts gene expression of a signature, reduces its dimensionality, plots a heatmap sorted by the first component, biplots, saves eigenvectors in files named after cancer, signature, method. They are used in `correlations.Rmd`
 
 - `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders.
 
@@ -23,6 +24,8 @@
 - `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected. Change `selected_genes = "XXXX"` and `cancer = "YYYY"`. Manually run through line 254 to see which KEGG pathways are enriched. Then, run the code chunk on line 379 to generate a picture of the selected KEGG pathway, adjust the `![](hsa0YYYY.XXXX.png)` accordingly. Then, recompile the whole document.
 
 - `overlap_significance.R` - simple example of Fisher's exact test
+
+- `PCA.R` - exercises on dimensionality reduction of gene signatures
 
 - `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
 
@@ -43,7 +46,7 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - [TCGA_genes.txt](data.TCGA/TCGA_genes.txt) - genes measured in TCGA RNA-seq experiments
 - [PAM50 classification](data.TCGA/PAM50_classification.txt) - sample classification into PAM50 types
 - [CCR-13-0583tab1.xlsx](data.TCGA/CCR-13-0583tab1.xlsx) - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
-
+- `EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt` - A gene expression signature found in a subset of cancer patients suggestive of a deregulated immune or inflammatory response. http://software.broadinstitute.org/gsea/msigdb/geneset_page.jsp?geneSetName=EINAV_INTERFERON_SIGNATURE_IN_CANCER
 
 # TCPA data
 

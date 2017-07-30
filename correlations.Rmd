@@ -95,15 +95,21 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 
 # Selected genes
-selected_genes <- c("MCL1")
-data.type = "RNASeq2"; type = "" 
+selected_genes <- c("MCL1") # If nothing precalculated - use one of the genes
+method         <- "" # If correlation with the selected_gene is measured, method is empty
+# If precalculated, use precalculated values
+precalculated  <- TRUE 
+selected_genes <- "interferon_signature" 
+method         <- "NMF" # Which dimensionaliry reduction results to use, from NMF, PCA, FA
+
+data.type = "RNASeq2" ; type = "" 
 # All cancers with RNASeq2 data
 # cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
 # fileNameIn <- (paste0("data/All_expression_", data.type, "_", type, ".Rda")) # Save expression data
 # fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
-cancer_RNASeq2 = c("LUAD")
+cancer_RNASeq2 = c("BRCA")
 fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))  # Save expression data
 fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
@@ -153,8 +159,12 @@ if (!file.exists(fileNameIn)) {
 if (!file.exists(fileNameOut)) {
   all_corrs <- vector(mode = "numeric", length = nrow(all_expression))
   all_pvals <- vector(mode = "numeric", length = nrow(all_expression))
+  if (precalculated) {
+    load(paste0("data/", cancer_RNASeq2, "_", selected_genes, "_", method, ".Rda"))
+  }
   for (i in 1:nrow(all_expression)) {
-    cors <- Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes],
+    # Depending on the existence of precalculated value, calculate the correlation
+    cors <- Hmisc::rcorr(if(precalculated) {mtx_reduced[, 1]} else {all_expression[ rownames(all_expression) == selected_genes]},
                          all_expression[ i, ], type = corr_type)
     all_corrs[i] <- cors[[1]][1, 2]
     all_pvals[i] <- cors[[3]][1, 2]
@@ -163,7 +173,7 @@ if (!file.exists(fileNameOut)) {
   # all_corrs <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[1]][1, 2])
   # all_pvals <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[3]][1, 2])
   correlations <- data_frame(hgnc = rownames(all_expression), corr = all_corrs, pval = all_pvals)
-  correlations <- inner_join(grch38, correlations, by = c("symbol" = "hgnc"))
+  correlations <- right_join(annotables::grch38, correlations, by = c("symbol" = "hgnc"))
   save(correlations, file = fileNameOut)
 } else {
   load(file = fileNameOut)
