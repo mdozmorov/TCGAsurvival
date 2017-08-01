@@ -2,11 +2,17 @@
 signature <- readLines("/Users/mdozmorov/Documents/Work/VCU_work/Paula_Bos/Interferon/EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt") # Interferon signature
 cancer_RNASeq2 <- cancer <- "BRCA"
 selected_genes <- "interferon_signature"
+signature1 <- signature[ !(signature %in% c("MORC3", "BRD3", "RXRA")) ]
 ## PSM signature
 signature <- openxlsx::read.xlsx("/Users/mdozmorov/Documents/Work/VCU_work/misc/Senthil/PSM_list.xlsx", colNames = FALSE)
 signature <- toupper(unlist(signature))
 cancer_RNASeq2 <- cancer <- "BRCA"
 selected_genes <- "psm_signature"
+## FOXP3 signature
+signature <- readLines("/Users/mdozmorov/Documents/Work/VCU_work/Paula_Bos/Interferon/FOXP3_signature.txt") # Interferon signature
+cancer_RNASeq2 <- cancer <- "BRCA"
+selected_genes <- "FOXP3_signature"
+signature2 <- signature[ !(signature %in% c("AREG", "HAVCR1", "LAG3")) ]
 
 
 # Pre-load a matrix with BRCA gene expression in `survival.Rmd`
@@ -111,3 +117,22 @@ pam50$Particpant.ID <- sapply(pam50$Particpant.ID, substr, start = 1, stop = 12)
 selected_patients <- intersect(pam50$Particpant.ID, names(selected_data))
 pam50 <- pam50[ pam50$Particpant.ID %in% selected_patients, ]
 mtx_to_plot <- data.frame(Clinical = pam50[ match(selected_patients, pam50$Particpant.ID), "Subtype"], PC1 = selected_data[selected_patients])
+
+
+## How two signatures relate?
+library(FactoMineR)
+# Get expression for the first signature
+mtx_selected1 <- t(log2(mtx$merged.dat[, signature1] + 1))
+colnames(mtx_selected1) <- mtx$merged.dat$bcr
+# Get expression for the second signature
+mtx_selected2 <- t(log2(mtx$merged.dat[, signature2] + 1))
+colnames(mtx_selected2) <- mtx$merged.dat$bcr
+# Join them
+mtx_selected <- rbind(mtx_selected1, mtx_selected2)
+sd_cutoff <- quantile(apply(mtx_selected, 2, sd), p = 0.95) # Select the most variable genes
+mtx_selected <- mtx_selected[, apply(mtx_selected, 2, sd) > sd_cutoff] # here
+# Append qualitative column
+mtx_selected <- data.frame(mtx_selected, signature = c(rep("IFN", length(signature1)), rep("FOXP3", length(signature2))), stringsAsFactors = FALSE)
+# Perform PCA
+res=PCA(mtx_selected, quali.sup = ncol(mtx_selected), graph=T)
+plot(res)
