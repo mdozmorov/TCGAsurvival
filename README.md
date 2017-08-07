@@ -36,6 +36,8 @@
 
 - `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
 
+- `OvarianCancerSubtypes` - Classification of ovarian cancer subtypes, https://github.com/aedin/OvarianCancerSubtypes
+
 # TCGA data
 
 Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/).
