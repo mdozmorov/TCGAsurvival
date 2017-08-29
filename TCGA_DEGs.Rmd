@@ -103,13 +103,13 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 data.type = "RNASeq2"
 type = "" 
 # Cancer type
-cancer = "PRAD" 
+cancer = "LUAD" 
 # Gene(s) of interest
-selected_genes = c("RORC") # Can be multiple
+selected_genes = c("TET2") # Can be multiple
 
 # Define quantile qutoffs
-quantile_up <- 0.75 # 0.75
-quantile_lo <- 0.25 # 0.25
+quantile_up <- 0.80 # 0.75
+quantile_lo <- 0.20 # 0.25
 
 # Differential expression cutoff
 pval_cutoff <- 0.01 # P-value cutoff
@@ -117,7 +117,7 @@ pval_cutoff <- 0.01 # P-value cutoff
 fdr.cutoff   <- 0.3
 
 # Filename to same the results
-fileNameRes <- paste(cancer, paste(selected_genes, collapse = "-"), paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "DEGs", pval_cutoff, ".xlsx", sep = "_")
+fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_", paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "_DEGs_", pval_cutoff, ".xlsx")
 ```
 
 ```{r results='hide'}
