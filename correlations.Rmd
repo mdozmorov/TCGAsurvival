@@ -95,12 +95,13 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 
 # Selected genes
-selected_genes <- c("MCL1") # If nothing precalculated - use one of the genes
+precalculated  <- FALSE
+selected_genes <- c("TET2") # If nothing precalculated - use one of the genes
 method         <- "" # If correlation with the selected_gene is measured, method is empty
 # If precalculated, use precalculated values
-precalculated  <- TRUE 
-selected_genes <- "interferon_signature" 
-method         <- "NMF" # Which dimensionaliry reduction results to use, from NMF, PCA, FA
+# precalculated  <- TRUE 
+# selected_genes <- "interferon_signature" 
+# method         <- "NMF" # Which dimensionaliry reduction results to use, from NMF, PCA, FA
 
 data.type = "RNASeq2" ; type = "" 
 # All cancers with RNASeq2 data
@@ -109,7 +110,7 @@ data.type = "RNASeq2" ; type = ""
 # fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
-cancer_RNASeq2 = c("BRCA")
+cancer_RNASeq2 = c("LUAD")
 fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))  # Save expression data
 fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
@@ -164,7 +165,7 @@ if (!file.exists(fileNameOut)) {
   }
   for (i in 1:nrow(all_expression)) {
     # Depending on the existence of precalculated value, calculate the correlation
-    cors <- Hmisc::rcorr(if(precalculated) {mtx_reduced[, 1]} else {all_expression[ rownames(all_expression) == selected_genes]},
+    cors <- Hmisc::rcorr(if(precalculated) {mtx_reduced[, 1]} else {all_expression[ rownames(all_expression) == selected_genes, ]},
                          all_expression[ i, ], type = corr_type)
     all_corrs[i] <- cors[[1]][1, 2]
     all_pvals[i] <- cors[[3]][1, 2]
