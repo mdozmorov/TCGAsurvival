@@ -103,7 +103,12 @@ method         <- "" # If correlation with the selected_gene is measured, method
 # selected_genes <- "interferon_signature" 
 # method         <- "NMF" # Which dimensionaliry reduction results to use, from NMF, PCA, FA
 
+# Data type
 data.type = "RNASeq2" ; type = "" 
+# Expression cutoffs. To use all expression, use "0" expression cutoff and "TRUE" top_expression
+expression_cutoff <- 0.2   # From 0 to 1, percent cutoff of expression of the selected gene
+top_expression    <- FALSE # Whether to take top (TRUE) of bottom (FALSE) expression 
+
 # All cancers with RNASeq2 data
 # cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
 # fileNameIn <- (paste0("data/All_expression_", data.type, "_", type, ".Rda")) # Save expression data
@@ -111,9 +116,9 @@ data.type = "RNASeq2" ; type = ""
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
 cancer_RNASeq2 = c("LUAD")
-fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))  # Save expression data
-fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
-fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
+fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
+fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
+fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".xlsx") # Save results
 
 # Correlation type
 corr_type    <- "pearson"
@@ -134,8 +139,13 @@ if (!file.exists(fileNameIn)) {
     # Prepare expression data
     mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
     expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+    # Filter by percentile of expression of the selected gene
+    selected_expression <- expr[, selected_genes]
+    index_to_keep <- if (top_expression) {selected_expression >= quantile(selected_expression, p = expression_cutoff)} else {selected_expression <= quantile(selected_expression, p = expression_cutoff)}
+    expr <- expr[index_to_keep, ] # Subset expression
     # Filter out low expressed genes
     expr <- data.frame(hgnc = colnames(expr), t(expr))
+    
     all_exprs[length(all_exprs) + 1] <- list(expr)
   }
   all_expression <- Reduce(function(...) inner_join(..., by = "hgnc"), all_exprs) # Combine all expression matrixes
