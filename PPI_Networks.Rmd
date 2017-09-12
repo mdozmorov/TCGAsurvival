@@ -35,7 +35,7 @@ library(igraph)
 ## Settings
 
 ```{r}
-selected_genes <- c("MYBL2")
+selected_genes <- c("TRAF3")
 max_to_plot <- 60 # Maximum number of PPI links to plot
 ```
 
@@ -180,6 +180,10 @@ Their algorithm ranks a set of candidate disease-causing genes in multiple susce
 
 
 ## Online and download
+
+### `CDT`, http://ctdbase.org/
+
+Comparative Toxicogenomics Database. Disease-associated genes, chemicals, their interactions. Downloadable data
 
 ### `BioPlex`, http://bioplex.hms.harvard.edu/index.php
 
