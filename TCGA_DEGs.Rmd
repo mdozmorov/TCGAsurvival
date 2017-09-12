@@ -103,9 +103,9 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 data.type = "RNASeq2"
 type = "" 
 # Cancer type
-cancer = "LUAD" 
+cancer = "GBMLGG" 
 # Gene(s) of interest
-selected_genes = c("TET2") # Can be multiple
+selected_genes = c("OLIG2") # Can be multiple
 
 # Define quantile qutoffs
 quantile_up <- 0.80 # 0.75
@@ -384,9 +384,9 @@ degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
 pv.out <- pathview(gene.data = degs.genes, pathway.id = "03010", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+# ![](hsa03010.RORC.png)
 ```
 
-![](hsa03010.RORC.png)
 
 ```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()
