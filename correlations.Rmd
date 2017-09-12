@@ -96,7 +96,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 
 # Selected genes
 precalculated  <- FALSE
-selected_genes <- c("TET2") # If nothing precalculated - use one of the genes
+selected_genes <- c("OLIG2") # If nothing precalculated - use one of the genes
 method         <- "" # If correlation with the selected_gene is measured, method is empty
 # If precalculated, use precalculated values
 # precalculated  <- TRUE 
@@ -115,7 +115,7 @@ top_expression    <- FALSE # Whether to take top (TRUE) of bottom (FALSE) expres
 # fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
-cancer_RNASeq2 = c("LUAD")
+cancer_RNASeq2 = c("GBMLGG")
 fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
 fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
 fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".xlsx") # Save results
