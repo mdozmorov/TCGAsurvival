@@ -118,7 +118,7 @@ top_expression    <- FALSE # Whether to take top (TRUE) of bottom (FALSE) expres
 cancer_RNASeq2 = c("GBMLGG")
 fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
 fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
-fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".xlsx") # Save results
+fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), ".xlsx") # Save results
 
 # Correlation type
 corr_type    <- "pearson"
