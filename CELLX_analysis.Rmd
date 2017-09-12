@@ -133,7 +133,7 @@ for (i in 1:length(cancer)) {
         res$method)
 }
 
-cancers <- openxlsx::read.xlsx("/Users/mdozmorov/Documents/Work/GenomeRunner/TCGAsurvival/TCGA_cancers.xlsx")
+cancers <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
 
 t.table <- t.table[ !is.na(t.table$t_statistic), ]
 t.table <- left_join(cancers, t.table, by = c("Acronym" = "Cancer_name"))
