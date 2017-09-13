@@ -1,5 +1,7 @@
 # Scripts to extract TCGA data for survival analysis.
 
+- `Cancer_DB.Rmd` - a list of cancer-related databases
+
 - `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. Output is the HTML file.
 
 - `cgdsr.R` - exploring the Cancer Genomic Data Server, http://www.cbioportal.org/study?id=msk_impact_2017, http://www.cbioportal.org/cgds_r.jsp, https://cran.r-project.org/web/packages/cgdsr/vignettes/cgdsr.pdf
