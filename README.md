@@ -54,8 +54,14 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 Sample annotations by ovarian cancer subtypes. https://github.com/aedin/OvarianCancerSubtypes
 
+### `ProteinAtlas`
 
+Uhlen, Mathias, Cheng Zhang, Sunjae Lee, Evelina Sjöstedt, Linn Fagerberg, Gholamreza Bidkhori, Rui Benfeitas, et al. “A Pathology Atlas of the Human Cancer Transcriptome.” Science (New York, N.Y.) 357, no. 6352 (August 18, 2017). doi:10.1126/science.aan2507. http://science.sciencemag.org/content/357/6352/eaan2507
 
+Supplementary material http://science.sciencemag.org/content/suppl/2017/08/16/357.6352.eaan2507.DC1  
+- `Table S2` - summary of tissue specific expression for each gene, in normal and cancer tissues.  
+- `Table S6` - summary of survival prognostic value, with a simple "favorable/unfavorable" label for each gene. Each worksheet corresponds to a different cancer.  
+- `Table S8` - per-gene summary, in which cancers it is prognostic of survival.  
 
 ## Files
 
