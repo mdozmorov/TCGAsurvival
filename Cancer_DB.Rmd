@@ -35,8 +35,8 @@ Uhlen, Mathias, Cheng Zhang, Sunjae Lee, Evelina Sjöstedt, Linn Fagerberg, Ghol
 Gene- and protein expression data in multiple cancer tissues, cell lines. Easy one-gene search, summary of tissue-specific expression, survival significance.
 
 Supplementary material http://science.sciencemag.org/content/suppl/2017/08/16/357.6352.eaan2507.DC1  
-- Table S2 - summary of tissue specific expression for each gene, in normal and cancer tissues.  
-- Table S6 - summary of survival prognostic value, with a simple "favorable/unfavorable" label for each gene. Each worksheet corresponds to a different cancer.  
-- Table S8 - per-gene summary, in which cancers it is prognostic of survival.  
+- `Table S2` - summary of tissue specific expression for each gene, in normal and cancer tissues.  
+- `Table S6` - summary of survival prognostic value, with a simple "favorable/unfavorable" label for each gene. Each worksheet corresponds to a different cancer.  
+- `Table S8` - per-gene summary, in which cancers it is prognostic of survival.  
 
 Rich downloadable data - tissue-specific gene expression in cancer and normal, isoform expression, protein expression. http://www.proteinatlas.org/about/download
