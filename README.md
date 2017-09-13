@@ -50,6 +50,13 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 ## Folders
 
+### `ESTIMATE`
+
+Yoshihara, Kosuke, Maria Shahmoradgoli, Emmanuel Martínez, Rahulsimham Vegesna, Hoon Kim, Wandaliz Torres-Garcia, Victor Treviño, et al. “Inferring Tumour Purity and Stromal and Immune Cell Admixture from Expression Data.” Nature Communications 4 (2013): 2612. doi:10.1038/ncomms3612. https://www.nature.com/articles/ncomms3612#supplementary-information
+
+- `ncomms3612-s2.xlsx` - A gene list of stromal and immune signatures
+- `ncomms3612-s3.xlsx` - A list of stromal, immune, and ESTIMATE scores in TCGA data sets. All cancers, all gene expression plaforms.
+
 ### `OvarianCancerSubtypes`
 
 Sample annotations by ovarian cancer subtypes. https://github.com/aedin/OvarianCancerSubtypes
