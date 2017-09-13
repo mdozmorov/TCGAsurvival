@@ -47,16 +47,15 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf), also saved in [TCGA_cancers.xlsx](data.TCGA/TCGA_cancers.xlsx)
 - [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
 - [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
-- [TCGA_genes.txt](data.TCGA/TCGA_genes.txt) - genes measured in TCGA RNA-seq experiments
-- [PAM50 classification](data.TCGA/PAM50_classification.txt) - sample classification into PAM50 types
+
+## Files
+
 - [CCR-13-0583tab1.xlsx](data.TCGA/CCR-13-0583tab1.xlsx) - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
 - `EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt` - A gene expression signature found in a subset of cancer patients suggestive of a deregulated immune or inflammatory response. http://software.broadinstitute.org/gsea/msigdb/geneset_page.jsp?geneSetName=EINAV_INTERFERON_SIGNATURE_IN_CANCER
+- [PAM50_classification.txt](data.TCGA/PAM50_classification.txt) - sample classification into PAM50 types
+- [TCGA_genes.txt](data.TCGA/TCGA_genes.txt) - genes measured in TCGA RNA-seq experiments
+- [TCPA_proteins.txt](data.TCGA/TCPA_proteins.txt) - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). 
 
-# TCPA data
-
-The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). 
-
-List of 224 proteins profiled by RPPA  technology: [TCPA_proteins.txt](data.TCGA/TCPA_proteins.txt)
 
 # External tools
 
