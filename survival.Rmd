@@ -22,6 +22,15 @@ library(dplyr)
 options(stringsAsFactors = FALSE)
 ```
 
+# Methods
+
+## Survival analysis of gene expression data from TCGA
+
+Level 3 gene expression data summarized as RSEM values was obtained using the TCGA2STAT R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meyer curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
+
+We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
+
+
 # Libraries
 
 ```{r libraries}
