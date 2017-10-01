@@ -4,6 +4,10 @@ library(aracne.networks)
 library(dplyr)
 library(networkD3)
 library(igraph)
+library(biomaRt)
+library(MDmisc)
+library(enrichR)
+library(openxlsx)
 
 # All available cancers
 data(package="aracne.networks")$results[, "Item"]
@@ -13,10 +17,34 @@ data(regulonbrca)
 tmp <- write.regulon(regulonblca, n = 10) %>% data.frame
 
 # Network for a specific regulator. Entrez IDs
-write.regulon(regulonbrca, regulator="6382", file = "aracne.txt") # SDC1 - 6382
+write.regulon(regulonbrca, regulator="6478", file = "aracne.txt") # SIAH2 - 6478
+# Read it back in
+relations <- readr::read_tsv("aracne.txt")
+# Convert EntrezIDs to gene symbols
+mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
+genes<-getBM(attributes=c("entrezgene", 'hgnc_symbol'), filters='entrezgene', values = unique(c(relations$Regulator, relations$Target)), mart=mart, uniqueRows=T)
+relations <- left_join(relations, genes, by = c("Regulator" = "entrezgene"))
+relations <- left_join(relations, genes, by = c("Target" = "entrezgene"))
+relations <- relations[complete.cases(relations), ]
+# igraph
+g <- graph_from_data_frame(data.frame(from = relations$hgnc_symbol.x, to = relations$hgnc_symbol.y), directed = FALSE )
+plot(g)
+# Save as PDF
+pdf("aracne.pdf")
+plot(g)
+dev.off()
+# Do KEGG enrichment
+fileName <- "aracne.xlsx"
+unlink(fileName) # Delete previous file
+wb <- openxlsx::createWorkbook(fileName) # openxlsx::loadWorkbook(fileName) # Or, load existing
+# Enrichment analysis of up/downregulated genes. Saves results directly into Excel file, and returns as a data frame
+res <- save_enrichr(up.genes = unique(c(relations$hgnc_symbol.x, relations$hgnc_symbol.y)), databases = "KEGG_2016", fdr.cutoff = 0.3, fileNameOut = fileName, wb = wb)
+DT::datatable(res) # Visualize
 
-gene <- "4605"
-networkData <- data.frame(regulonbrca$`4605`)
+
+
+gene <- "6478"
+networkData <- data.frame(regulonbrca$`6478`)
 networkData <- data.frame(Source = gene, Target = rownames(networkData), MoA = networkData$tfmode, likelihood = networkData$likelihood)
 simpleNetwork(networkData, zoom = TRUE)
 
