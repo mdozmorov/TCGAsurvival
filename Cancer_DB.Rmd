@@ -24,11 +24,44 @@ library(dplyr)
 options(stringsAsFactors = FALSE)
 ```
 
-# Online and download
+# Survival
 
-## The Human Protein Atlas
+## KM plotter, http://kmplot.com/
 
-http://www.proteinatlas.org/
+Gene-centric, customizable survival analysis for breast, ovarian, lung, gastric cancers
+
+
+## PRECOG, https://precog.stanford.edu
+
+PRECOG - PREdiction of Clinical Outcomes from Genomic Profiles
+
+Gene-centric, quick overview of survival effect of a gene across all cancers, KM plots
+
+
+## PrognoScan, http://www.abren.net/PrognoScan/
+
+Gene-centric, survival effect of a gene in cancer studies from GEO
+
+
+## UALCAN, http://ualcan.path.uab.edu/
+
+Gene-centric, tumor-normal expression, survival analusis, TCGA cancers
+
+
+## R2, http://hgserver1.amc.nl/
+
+R2: Genomics Analysis and Visualization Platform. Gene-centric, survival analysis, collection of microarray studies
+
+
+## Project Betastasis, http://www.betastasis.com/
+
+Gene-centric, survival analysis, gene expression, select cancer studies
+
+## OncoLnc, http://www.oncolnc.org/
+
+Gene-centric, survival analysis in any TCGA cancer
+
+## The Human Protein Atlas, http://www.proteinatlas.org/
 
 Uhlen, Mathias, Cheng Zhang, Sunjae Lee, Evelina Sjöstedt, Linn Fagerberg, Gholamreza Bidkhori, Rui Benfeitas, et al. “A Pathology Atlas of the Human Cancer Transcriptome.” Science (New York, N.Y.) 357, no. 6352 (August 18, 2017). doi:10.1126/science.aan2507. http://science.sciencemag.org/content/357/6352/eaan2507
 
@@ -40,3 +73,38 @@ Supplementary material http://science.sciencemag.org/content/suppl/2017/08/16/35
 - `Table S8` - per-gene summary, in which cancers it is prognostic of survival.  
 
 Rich downloadable data - tissue-specific gene expression in cancer and normal, isoform expression, protein expression. http://www.proteinatlas.org/about/download
+
+
+# Misc
+
+## cBioPortal, http://www.cbioportal.org/
+
+The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets.
+
+
+## CancerRxGene, http://www.cancerrxgene.org/
+
+Drug-gene targets
+
+
+## OncoScape, http://oncoscape.nki.nl/
+
+Gene-centric, oncogenic scores, tumor-normal expression plots
+
+
+## MDP, http://mdp.unimore.it/
+
+MDP: Mutations and Drugs Portal. Gene-to-drug and reverse analysis
+
+
+## CTRP, https://portals.broadinstitute.org/ctrp/
+
+The Cancer Therapeutics Response Portal (CTRP) links genetic, lineage, and other cellular features of cancer cell lines to small-molecule sensitivity with the goal of accelerating discovery of patient-matched cancer therapeutics.
+
+
+## MEXPRESS, http://mexpress.be/
+
+Gene-centric methylation and correlation with clinical parameters
+
+
+
