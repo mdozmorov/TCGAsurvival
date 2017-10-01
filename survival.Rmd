@@ -30,6 +30,10 @@ Level 3 gene expression data summarized as RSEM values was obtained using the TC
 
 We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
 
+## Differential expression analysis
+
+Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package. P-values were corrected for multiple testing using False Discovery Rate (FDR) method. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
+
 
 # Libraries
 
