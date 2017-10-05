@@ -103,9 +103,9 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 data.type = "RNASeq2"
 type = "" 
 # Cancer type
-cancer = "GBMLGG" 
+cancer = "BRCA" 
 # Gene(s) of interest
-selected_genes = c("OLIG2") # Can be multiple
+selected_genes = c("TRIP6") # Can be multiple
 
 # Define quantile qutoffs
 quantile_up <- 0.80 # 0.75
@@ -276,13 +276,13 @@ res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr),
 DT::datatable(res)
 ```
 
+```{r eval=FALSE}
 # GSEA analysis
 
 ## KEGGUP
 
 # **Upregulated** pathways
 
-```{r}
 library(gage)
 data("kegg.gs")
 # Convert Symbols to EntrezIDs
@@ -303,15 +303,15 @@ kegg.p <- gage(expr,
                compare = "unpairedd")
 ```
 
-```{r}
+```{r eval = FALSE}
 DT::datatable(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]))
 ```
 
+```{r eval = FALSE}
 ## KEGGDN
 
 # **Downregulated** pathways
 
-```{r}
 DT::datatable(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]))
 ```
 
@@ -374,9 +374,9 @@ if (rownames(kegg.summary) > 0) {
 
 ```
 
+```{r eval=FALSE}
 ## Selected pathway
 
-```{r eval=FALSE}
 library(pathview)
 library(openxlsx)
 degs <- read.xlsx(fileNameRes, cols = c(1, 2))
