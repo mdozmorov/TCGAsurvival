@@ -103,16 +103,17 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 data.type = "RNASeq2"
 type = "" 
 # Cancer type
-cancer = "GBMLGG" 
+cancer = "BRCA" 
 # Gene(s) of interest
-selected_genes = c("OLIG2") # Can be multiple
+selected_genes = c("CTBP2") # Can be multiple
 
 # Define quantile qutoffs
 quantile_up <- 0.80 # 0.75
 quantile_lo <- 0.20 # 0.25
 
 # Differential expression cutoff
-pval_cutoff <- 0.01 # P-value cutoff
+pval_cutoff   <- 0.01 # P-value cutoff
+max_num_genes <- 1000 # Maximum number of genes to feed into KEGG enrichment
 # Enrichment cutoffs
 fdr.cutoff   <- 0.3
 
@@ -200,9 +201,6 @@ fit2 <- contrasts.fit(fit, contrast.matrix)
 fit2 <- eBayes(fit2)
 
 degs <- topTable(fit2, coef = 1, number = Inf, p.value = pval_cutoff)
-
-up.genes <- sort(unique(rownames(degs)[ degs$t > 0 ]))
-dn.genes <- sort(unique(rownames(degs)[ degs$t < 0 ]))
 ```
 
 We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having `r paste(selected_genes, collapse = ", ") ` in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value 0.01. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
@@ -250,6 +248,16 @@ DT::datatable(degs)
 **Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category,  "direction" - UP/DN, an indicator whether genes are up- or downregulated.
 
 ```{r}
+# Subset the number of DEGs for KEGG analysis to the maximum
+if (nrow(degs) > max_num_genes) {
+  degs_subset <- degs[1:max_num_genes, ]
+} else {
+  degs_subset <- degs
+}
+# Get list of up- and downregulated genes
+up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
+dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
+# Run KEGG
 res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileNameOut = fileNameRes, wb = wb)
 DT::datatable(res.kegg)
 ```
