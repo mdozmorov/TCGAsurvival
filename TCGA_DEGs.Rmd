@@ -113,7 +113,7 @@ quantile_lo <- 0.20 # 0.25
 
 # Differential expression cutoff
 pval_cutoff   <- 0.01 # P-value cutoff
-max_num_genes <- 1000 # Maximum number of genes to feed into KEGG enrichment
+max_num_genes <- 6000 # Maximum number of genes to feed into KEGG enrichment
 # Enrichment cutoffs
 fdr.cutoff     <- 0.3
 up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
@@ -238,15 +238,13 @@ DT::datatable(degs)
 
 ## KEGG canonical pathway enrichment analysis 
 
-- Up- and downregulated genes are tested for pathway enrichment separately. 
+- Up- and downregulated genes are tested for pathway enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))` 
 
-- Each table has enrichment results for both up-/downregulated genes. The "direction" column indicate which pathways are enriched in "UP"- or "DN"-regulated genes.
-
-- Use the "Search" box for each table, to filter the results for "UP" or "DN" only. Search is global within the table, case insensitive.
+- Use the "Search" box for each table. Search is global within the table, case insensitive.
 
 - FDR cutoff of the significant enrichments - `r fdr.cutoff`.
 
-**Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category,  "direction" - UP/DN, an indicator whether genes are up- or downregulated.
+**Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category. `r paste(ifelse(up_dn_separate, "\"direction\" - UP/DN, an indicator whether genes are up- or downregulated.", ""))` 
 
 ```{r}
 # Subset the number of DEGs for KEGG analysis to the maximum
@@ -261,14 +259,31 @@ dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
 # Run KEGG
 if (up_dn_separate) {
   # Analyze up- and downregulated genes separately
+  print(paste0("KEGG pathway run on ", length(up.gene), " upregulated and ", length(dn.genes), " downregulated genes."))
   res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
 } else {
   # Analyze up- and downregulated genes together
+  print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
   res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
 }
 # Display the results
 DT::datatable(res.kegg)
 ```
+
+## Selected pathway
+
+```{r eval=FALSE}
+library(pathview)
+library(openxlsx)
+degs <- read.xlsx(fileNameRes, cols = c(1, 2))
+degs.genes <- degs$logFC
+names(degs.genes) <- degs$Gene
+# Adjust as needed
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04210", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+# ![](hsa03010.RORC.png)
+```
+
+# ![](hsa04210.CTBP2.png)
 
 
 ```{r eval = FALSE}
@@ -389,20 +404,6 @@ if (rownames(kegg.summary) > 0) {
 }
 
 ```
-
-## Selected pathway
-
-```{r eval=FALSE}
-library(pathview)
-library(openxlsx)
-degs <- read.xlsx(fileNameRes, cols = c(1, 2))
-degs.genes <- degs$logFC
-names(degs.genes) <- degs$Gene
-# Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "03010", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
-# ![](hsa03010.RORC.png)
-```
-
 
 ```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()
