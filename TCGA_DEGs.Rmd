@@ -266,6 +266,7 @@ if (up_dn_separate) {
   # Analyze up- and downregulated genes together
   res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
 }
+# Display the results
 DT::datatable(res.kegg)
 ```
 
@@ -291,13 +292,13 @@ res <- gene_enrichment(selected = rownames(degs), all.universe = rownames(expr),
 DT::datatable(res)
 ```
 
+```{r eval=FALSE}
 # GSEA analysis
 
 ## KEGGUP
 
 # **Upregulated** pathways
 
-```{r}
 library(gage)
 data("kegg.gs")
 # Convert Symbols to EntrezIDs
@@ -318,15 +319,15 @@ kegg.p <- gage(expr,
                compare = "unpairedd")
 ```
 
-```{r}
+```{r eval=FALSE}
 DT::datatable(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]))
 ```
 
+```{r eval=FALSE}
 ## KEGGDN
 
 # **Downregulated** pathways
 
-```{r}
 DT::datatable(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]))
 ```
 
