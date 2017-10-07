@@ -115,7 +115,8 @@ quantile_lo <- 0.20 # 0.25
 pval_cutoff   <- 0.01 # P-value cutoff
 max_num_genes <- 1000 # Maximum number of genes to feed into KEGG enrichment
 # Enrichment cutoffs
-fdr.cutoff   <- 0.3
+fdr.cutoff     <- 0.3
+up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
 
 # Filename to same the results
 fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_", paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "_DEGs_", pval_cutoff, ".xlsx")
@@ -258,7 +259,13 @@ if (nrow(degs) > max_num_genes) {
 up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
 dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
 # Run KEGG
-res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileNameOut = fileNameRes, wb = wb)
+if (up_dn_separate) {
+  # Analyze up- and downregulated genes separately
+  res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+} else {
+  # Analyze up- and downregulated genes together
+  res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+}
 DT::datatable(res.kegg)
 ```
 
