@@ -35,7 +35,7 @@ library(igraph)
 ## Settings
 
 ```{r}
-selected_genes <- c("TRAF3")
+selected_genes <- c("SIAH1")
 max_to_plot <- 60 # Maximum number of PPI links to plot
 ```
 
@@ -180,6 +180,12 @@ Their algorithm ranks a set of candidate disease-causing genes in multiple susce
 
 
 ## Online and download
+
+### `SIGNOR`, http://signor.uniroma2.it/
+
+The SIGnaling Network Open Resource, causal interactions. Every interaction in SIGNOR is annotated with details about: (i) the sign of the interaction: a regulator might up- or down-regulate the target by modu- lating its activity or quantity; (ii) the mechanism underlying the regulatory interaction (e.g. phosphorylation, ubiquiti- nation, etc.) and (iii) a reference (usually the PubMedID) and a sentence (extracted from the cited article) supporting the interaction. 
+
+Also, `metha`, browser of PPIs, http://mentha.uniroma2.it/index.php
 
 ### `CDT`, http://ctdbase.org/
 
