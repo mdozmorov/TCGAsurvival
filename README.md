@@ -31,10 +31,12 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 - `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
 
+- `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
+
 - `TCPA_correlation.Rmd` - experimenting with TCPA data.
 
 
-## Misc scripts
+## `misc` - Misc scripts
 
 - `aracne._networks.R` - experimenting with `aracne.networks` R package, https://www.bioconductor.org/packages/release/data/experiment/html/aracne.networks.html
 
@@ -51,8 +53,6 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - `RTCGA.R` - experimenting with `RTCGA` package, https://bioconductor.org/packages/release/bioc/html/RTCGA.html
 
 - `TCGA_preprocessing.R` - utilities for download and formatting of TCGA data. Use `load_data` and `summarize_data` functions to load cancer-specific expression and clinical data.
-
-- `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
 
 - `survplot_0.0.7.tar.gz` - package needed for survival plots
 
