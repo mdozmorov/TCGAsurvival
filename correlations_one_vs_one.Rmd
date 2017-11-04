@@ -28,9 +28,8 @@ library(MDmisc)
 library(org.Hs.eg.db)
 library(KEGG.db)
 library(TCGA2STAT)
-library(dplyr)
 library(ggplot2)
-library(knitr)
+library(reshape2)
 # library(clusterProfiler)
 library(pathview)
 library(annotables)
@@ -94,8 +93,8 @@ system("mkdir -p results")
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
 # data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 
-# Selected genes
-selected_genes <- c("MCL1", "KDM6B")
+# Selected genes, TWO genes only
+selected_genes <- c("ANLN", "VIM")
 # Check if the names exist
 genes <- readLines("data.TCGA/TCGA_genes.txt")
 setdiff(selected_genes, genes) # Should be 0, meaning selected genes are among the TCGA genes
@@ -122,17 +121,23 @@ p.adj.cutoff <- 0.1
 fdr.cutoff   <- 0.3
 ```
 
+- Each cancer is processed separately. Headers "Processing cancer XXX" start results section for a given cancer.
+- Linear regression results between expression of two genes are outputted. "Adj R2" and "P" - percent variability explained by regression model (higher the better) and its p-value (smaller the better).
+- Correlation graph shows expression of one gene plotted vs. the other gene in a given cancer, with linear regression line and confidence intervals around it.
+- Expression graph shows boxplots of expression of two genes in a given cancer. If one, or both, genes are low expressed, any correlation/regression results should be interpreted with caution.
+
 ```{r correlations, fig.height=3, fig.width=3}
   all_corrs <- list() # List to store cancer-specific correlationa
   all_pvals <- list() # List to store cancer-specific p-values
   # Get correlation matrixes for the gene of interest in each cancer
   for (cancer_type in cancer_RNASeq2) {
-    print(paste0("Processing cancer ", cancer_type))
+    pandoc.header(paste0("Processing cancer ", cancer_type))
     # Prepare expression data
     mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
     expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
-    # Filter out low expressed genes
+    # Attach column with gene symbols
     expr <- data.frame(hgnc = colnames(expr), t(expr))
+    # Correlation for a pair of genes
     cancer_rcorr <- Hmisc::rcorr(as.numeric(expr[selected_genes[1], 2:ncol(expr)]), 
                                  as.numeric(expr[selected_genes[2], 2:ncol(expr)]), 
                                  type = corr_type)
@@ -142,17 +147,25 @@ fdr.cutoff   <- 0.3
     colnames(mtx_to_plot) <- c(selected_genes[1], selected_genes[2]) # Assign column names
     # Quick regression
     fit <- lm(mtx_to_plot[, 1] ~ mtx_to_plot[, 2])
-    # Plot graph
+    # Plot correlation graph
     p <- ggplot(mtx_to_plot, aes(x = eval(parse(text = selected_genes[1])), y = eval(parse(text = selected_genes[2])))) +
       geom_point(shape = 1) +
       geom_smooth(method = lm) +
       xlab(selected_genes[1]) +
-      ylab(selected_genes[2])
+      ylab(selected_genes[2]) + 
+      ggtitle("Correlation graph")
     # Fit statistics
     print(paste("Adj R2 = ",   signif(summary(fit)$adj.r.squared, 5),
                 "Intercept =", signif(fit$coef[[1]],5 ),
                 " Slope =",    signif(fit$coef[[2]], 5),
                 " P =",        signif(summary(fit)$coef[2,4], 5)))
+    plot(p)
+    # Plot expression graph
+    mtx_to_plot <- melt(mtx_to_plot)
+    p <- ggplot(mtx_to_plot, aes(x = variable, y = value, fill = variable)) +
+      geom_boxplot() +
+      ggtitle("Expression plot") +
+      xlab("Gene") + ylab("log2 expression")
     plot(p)
     # Store the results
     all_corrs <- c(all_corrs, list(cancer_rcorr$r[1, 2]))
@@ -161,7 +174,10 @@ fdr.cutoff   <- 0.3
   }
 ```
 
-# Correlation between `r selected_genes[1]` and `r selected_genes[2]`
+# Correlation (`r corr_type`) between `r selected_genes[1]` and `r selected_genes[2]`
+
+- "corr", "pval" - `r corr_type` correlation coefficient and the p-value of correlations
+- Sort the table by "corr", "pval" columns
 
 ```{r}
 res_corr <- data.frame(Acronym = cancer_RNASeq2, corr = unlist(all_corrs), pval = unlist(all_pvals))
