@@ -1,12 +1,64 @@
 %% This BibTeX bibliography file was created using BibDesk.
 %% http://bibdesk.sourceforge.net/
 
-%% Created for mdozmorov at 2017-09-30 12:25:39 -0400 
+%% Created for mdozmorov at 2017-11-04 15:41:55 -0400 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@article{Benjamini:1995aa,
+	Abstract = {The common approach to the multiplicity problem calls for controlling the familywise error rate (FWER). This approach, though, has faults, and we point out a few. A different approach to problems of multiple significance testing is presented. It calls for controlling the expected proportion of falsely rejected hypotheses-the false discovery rate. This error rate is equivalent to the FWER when all hypotheses are true but is smaller otherwise. Therefore, in problems where the control of the false discovery rate rather than that of the FWER is desired, there is potential for a gain in power. A simple sequential Bonferroni-type procedure is proved to control the false discovery rate for independent test statistics, and a simulation study shows that the gain in power is substantial. The use of the new procedure and the appropriateness of the criterion are illustrated with examples.},
+	Author = {Yoav Benjamini and Yosef Hochberg},
+	Date-Added = {2017-11-04 19:28:12 +0000},
+	Date-Modified = {2017-11-04 19:28:50 +0000},
+	Issn = {00359246},
+	Journal = {Journal of the Royal Statistical Society. Series B (Methodological)},
+	Number = {1},
+	Pages = {289-300},
+	Publisher = {[Royal Statistical Society, Wiley]},
+	Title = {Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing},
+	Url = {http://www.jstor.org/stable/2346101},
+	Volume = {57},
+	Year = {1995},
+	Bdsk-Url-1 = {http://www.jstor.org/stable/2346101}}
+
+@article{Smyth:2004aa,
+	Abstract = {The problem of identifying differentially expressed genes in designed microarray experiments is considered. Lonnstedt and Speed (2002) derived an expression for the posterior odds of differential expression in a replicated two-color experiment using a simple hierarchical parametric model. The purpose of this paper is to develop the hierarchical model of Lonnstedt and Speed (2002) into a practical approach for general microarray experiments with arbitrary numbers of treatments and RNA samples. The model is reset in the context of general linear models with arbitrary coefficients and contrasts of interest. The approach applies equally well to both single channel and two color microarray experiments. Consistent, closed form estimators are derived for the hyperparameters in the model. The estimators proposed have robust behavior even for small numbers of arrays and allow for incomplete data arising from spot filtering or spot quality weights. The posterior odds statistic is reformulated in terms of a moderated t-statistic in which posterior residual standard deviations are used in place of ordinary standard deviations. The empirical Bayes approach is equivalent to shrinkage of the estimated sample variances towards a pooled estimate, resulting in far more stable inference when the number of arrays is small. The use of moderated t-statistics has the advantage over the posterior odds that the number of hyperparameters which need to estimated is reduced; in particular, knowledge of the non-null prior for the fold changes are not required. The moderated t-statistic is shown to follow a t-distribution with augmented degrees of freedom. The moderated t inferential approach extends to accommodate tests of composite null hypotheses through the use of moderated F-statistics. The performance of the methods is demonstrated in a simulation study. Results are presented for two publicly available data sets.},
+	Author = {Smyth, Gordon K},
+	Date-Added = {2017-11-04 19:26:26 +0000},
+	Date-Modified = {2017-11-04 19:26:26 +0000},
+	Doi = {10.2202/1544-6115.1027},
+	Journal = {Stat Appl Genet Mol Biol},
+	Journal-Full = {Statistical applications in genetics and molecular biology},
+	Pages = {Article3},
+	Pmid = {16646809},
+	Pst = {ppublish},
+	Title = {Linear models and empirical bayes methods for assessing differential expression in microarray experiments},
+	Volume = {3},
+	Year = {2004},
+	Bdsk-Url-1 = {http://dx.doi.org/10.2202/1544-6115.1027}}
+
+@article{Ritchie:2015aa,
+	Abstract = {limma is an R/Bioconductor software package that provides an integrated solution for analysing data from gene expression experiments. It contains rich features for handling complex experimental designs and for information borrowing to overcome the problem of small sample sizes. Over the past decade, limma has been a popular choice for gene discovery through differential expression analyses of microarray and high-throughput PCR data. The package contains particularly strong facilities for reading, normalizing and exploring such data. Recently, the capabilities of limma have been significantly expanded in two important directions. First, the package can now perform both differential expression and differential splicing analyses of RNA sequencing (RNA-seq) data. All the downstream analysis tools previously restricted to microarray data are now available for RNA-seq as well. These capabilities allow users to analyse both RNA-seq and microarray data with very similar pipelines. Second, the package is now able to go past the traditional gene-wise expression analyses in a variety of ways, analysing expression profiles in terms of co-regulated sets of genes or in terms of higher-order expression signatures. This provides enhanced possibilities for biological interpretation of gene expression differences. This article reviews the philosophy and design of the limma package, summarizing both new and historical features, with an emphasis on recent enhancements and features that have not been previously described.},
+	Author = {Ritchie, Matthew E and Phipson, Belinda and Wu, Di and Hu, Yifang and Law, Charity W and Shi, Wei and Smyth, Gordon K},
+	Date-Added = {2017-11-04 19:25:47 +0000},
+	Date-Modified = {2017-11-04 19:25:47 +0000},
+	Doi = {10.1093/nar/gkv007},
+	Journal = {Nucleic Acids Res},
+	Journal-Full = {Nucleic acids research},
+	Mesh = {Gene Expression Regulation; Oligonucleotide Array Sequence Analysis; Sequence Analysis, RNA; Software},
+	Month = {Apr},
+	Number = {7},
+	Pages = {e47},
+	Pmc = {PMC4402510},
+	Pmid = {25605792},
+	Pst = {ppublish},
+	Title = {limma powers differential expression analyses for RNA-sequencing and microarray studies},
+	Volume = {43},
+	Year = {2015},
+	Bdsk-Url-1 = {http://dx.doi.org/10.1093/nar/gkv007}}
 
 @article{Mihaly:2013aa,
 	Abstract = {To date, three molecular markers (ER, PR, and CYP2D6) have been used in clinical setting to predict the benefit of the anti-estrogen tamoxifen therapy. Our aim was to validate new biomarker candidates predicting response to tamoxifen treatment in breast cancer by evaluating these in a meta-analysis of available transcriptomic datasets with known treatment and follow-up. Biomarker candidates were identified in Pubmed and in the 2007-2012 ASCO and 2011-2012 SABCS abstracts. Breast cancer microarray datasets of endocrine therapy-treated patients were downloaded from GEO and EGA and RNAseq datasets from TCGA. Of the biomarker candidates, only those identified or already validated in a clinical cohort were included. Relapse-free survival (RFS) up to 5 years was used as endpoint in a ROC analysis in the GEO and RNAseq datasets. In the EGA dataset, Kaplan-Meier analysis was performed for overall survival. Statistical significance was set at p < 0.005. The transcriptomic datasets included 665 GEO-based and 1,208 EGA-based patient samples. All together 68 biomarker candidates were identified. Of these, the best performing genes were PGR (AUC = 0.64, p = 2.3E-07), MAPT (AUC = 0.62, p = 7.8E-05), and SLC7A5 (AUC = 0.62, p = 9.2E-05). Further genes significantly correlated to RFS include FOS, TP53, BTG2, HOXB7, DRG1, CXCL10, and TPM4. In the RNAseq dataset, only ERBB2, EDF1, and MAPK1 reached statistical significance. We evaluated tamoxifen-resistance genes in three independent platforms and identified PGR, MAPT, and SLC7A5 as the most promising prognostic biomarkers in tamoxifen treated patients.},
