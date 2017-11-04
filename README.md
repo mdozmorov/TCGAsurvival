@@ -1,10 +1,14 @@
 # Scripts to extract TCGA data for survival analysis.
 
+Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/).
+
+- [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)
+- [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
+- [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
+
 - `Cancer_DB.Rmd` - a list of cancer-related databases
 
 - `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. Output is the HTML file.
-
-- `cgdsr.R` - exploring the Cancer Genomic Data Server, http://www.cbioportal.org/study?id=msk_impact_2017, http://www.cbioportal.org/cgds_r.jsp, https://cran.r-project.org/web/packages/cgdsr/vignettes/cgdsr.pdf
 
 - `survival.Rmd` - a pipeline to run survival analyses. Based on `survival.R`. Change
     - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `res.genes.Analysis1` folder.
@@ -25,43 +29,56 @@
 
 - `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected. Change `selected_genes = "XXXX"` and `cancer = "YYYY"`. Manually run through line 254 to see which KEGG pathways are enriched. Then, run the code chunk on line 379 to generate a picture of the selected KEGG pathway, adjust the `![](hsa0YYYY.XXXX.png)` accordingly. Then, recompile the whole document.
 
+- `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
+
+- `TCPA_correlation.Rmd` - experimenting with TCPA data.
+
+
+## Misc scripts
+
+- `aracne._networks.R` - experimenting with `aracne.networks` R package, https://www.bioconductor.org/packages/release/data/experiment/html/aracne.networks.html
+
+- `calc_feature_length.R` - get length for gene symbols, resolving aliases
+
+- `calcTPM.R` - function to calculate TPMs from gene counts, from https://github.com/AmyOlex/RNASeqBits/tree/master/R
+
+- `cgdsr.R` - exploring the Cancer Genomic Data Server, http://www.cbioportal.org/study?id=msk_impact_2017, http://www.cbioportal.org/cgds_r.jsp, https://cran.r-project.org/web/packages/cgdsr/vignettes/cgdsr.pdf
+
 - `overlap_significance.R` - simple example of Fisher's exact test
 
 - `PCA.R` - exercises on dimensionality reduction of gene signatures
 
-- `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
-
-- `TCPA_correlation.Rmd` - experimenting with TCPA data.
-- `TCPA_proteins.txt` - list of proteins profiled at http://tcpaportal.org/tcpa/. 
+- `RTCGA.R` - experimenting with `RTCGA` package, https://bioconductor.org/packages/release/bioc/html/RTCGA.html
 
 - `TCGA_preprocessing.R` - utilities for download and formatting of TCGA data. Use `load_data` and `summarize_data` functions to load cancer-specific expression and clinical data.
 
 - `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
 
-- `OvarianCancerSubtypes` - Classification of ovarian cancer subtypes, https://github.com/aedin/OvarianCancerSubtypes
+- `survplot_0.0.7.tar.gz` - package needed for survival plots
 
-# TCGA data
 
-Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/).
+# `data.TCGA` - TCGA data
 
-- [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf), also saved in [TCGA_cancers.xlsx](data.TCGA/TCGA_cancers.xlsx)
-- [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
-- [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
+- `CCR-13-0583tab1.xlsx` - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
+- `EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt` - A gene expression signature found in a subset of cancer patients suggestive of a deregulated immune or inflammatory response. http://software.broadinstitute.org/gsea/msigdb/geneset_page.jsp?geneSetName=EINAV_INTERFERON_SIGNATURE_IN_CANCER
+- `PAM50_classification.txt` - sample classification into PAM50 types
+- `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
+- `TCGA_genes.txt` - genes measured in TCGA RNA-seq experiments
+- `TCGA.bib` - BibTex of TCGA-related references
+- `TCPA_proteins.txt` - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). 
 
-## Folders
-
-### `ESTIMATE`
+## `ESTIMATE`
 
 Yoshihara, Kosuke, Maria Shahmoradgoli, Emmanuel Martínez, Rahulsimham Vegesna, Hoon Kim, Wandaliz Torres-Garcia, Victor Treviño, et al. “Inferring Tumour Purity and Stromal and Immune Cell Admixture from Expression Data.” Nature Communications 4 (2013): 2612. doi:10.1038/ncomms3612. https://www.nature.com/articles/ncomms3612#supplementary-information
 
 - `ncomms3612-s2.xlsx` - A gene list of stromal and immune signatures
 - `ncomms3612-s3.xlsx` - A list of stromal, immune, and ESTIMATE scores in TCGA data sets. All cancers, all gene expression plaforms.
 
-### `OvarianCancerSubtypes`
+## `OvarianCancerSubtypes`
 
 Sample annotations by ovarian cancer subtypes. https://github.com/aedin/OvarianCancerSubtypes
 
-### `ProteinAtlas`
+## `ProteinAtlas`
 
 Uhlen, Mathias, Cheng Zhang, Sunjae Lee, Evelina Sjöstedt, Linn Fagerberg, Gholamreza Bidkhori, Rui Benfeitas, et al. “A Pathology Atlas of the Human Cancer Transcriptome.” Science (New York, N.Y.) 357, no. 6352 (August 18, 2017). doi:10.1126/science.aan2507. http://science.sciencemag.org/content/357/6352/eaan2507
 
@@ -69,14 +86,6 @@ Supplementary material http://science.sciencemag.org/content/suppl/2017/08/16/35
 - `Table S2` - summary of tissue specific expression for each gene, in normal and cancer tissues.  
 - `Table S6` - summary of survival prognostic value, with a simple "favorable/unfavorable" label for each gene. Each worksheet corresponds to a different cancer.  
 - `Table S8` - per-gene summary, in which cancers it is prognostic of survival.  
-
-## Files
-
-- [CCR-13-0583tab1.xlsx](data.TCGA/CCR-13-0583tab1.xlsx) - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
-- `EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt` - A gene expression signature found in a subset of cancer patients suggestive of a deregulated immune or inflammatory response. http://software.broadinstitute.org/gsea/msigdb/geneset_page.jsp?geneSetName=EINAV_INTERFERON_SIGNATURE_IN_CANCER
-- [PAM50_classification.txt](data.TCGA/PAM50_classification.txt) - sample classification into PAM50 types
-- [TCGA_genes.txt](data.TCGA/TCGA_genes.txt) - genes measured in TCGA RNA-seq experiments
-- [TCPA_proteins.txt](data.TCGA/TCPA_proteins.txt) - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). 
 
 
 # External tools
