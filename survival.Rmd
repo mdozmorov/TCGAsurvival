@@ -9,6 +9,8 @@ output:
     # number_sections: true
 date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
+bibliography: data.TCGA/TCGA.bib
+csl: styles.ref/genomebiology.csl
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -32,7 +34,7 @@ We took the advantage of the availability of clinical annotations. To identify i
 
 ## Differential expression analysis
 
-Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package. P-values were corrected for multiple testing using False Discovery Rate (FDR) method. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
+Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
 
 
 # Libraries
@@ -462,3 +464,4 @@ dev.off()
 system("mv res res.genes.Analysis6")
 ```
 
+# References

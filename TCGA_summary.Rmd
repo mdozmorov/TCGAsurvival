@@ -9,6 +9,9 @@ output:
     # number_sections: true
 date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
+bibliography: data.TCGA/TCGA.bib
+csl: styles.ref/genomebiology.csl
+# reference_docx: styles.doc/NIH_grant_style.docx
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -22,7 +25,17 @@ library(dplyr)
 options(stringsAsFactors = FALSE)
 ```
 
-```{r }
+# Methods
+
+## Survival analysis of gene expression data from TCGA
+
+Level 3 gene expression data summarized as RSEM values was obtained using the TCGA2STAT R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meyer curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
+
+We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
+
+# Settings
+
+```{r echo=TRUE}
 gene <- "RORC" # Search and replace the name of the gene
 cancer <- "BRCA"
 ```
@@ -69,3 +82,6 @@ DT::datatable(global_stats[order(global_stats$p.value), ])
 BRCA-histologicaltype-infiltrating lobular carcinoma
 
 ![](res.genes.Analysis3/RORC_BRCA-histologicaltype-infiltrating lobular carcinoma.png)
+
+# References
+

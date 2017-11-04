@@ -6,6 +6,8 @@ output:
     theme: united
 date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
+bibliography: TCGA.bib
+csl: styles.ref/genomebiology.csl
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -95,15 +97,23 @@ save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG
 }
 ```
 
+# Methods
+
+## Differential expression analysis
+
+Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
+
+
 ```{r}
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
 
 # General settings
+useTPM    = FALSE # Whether or not to convert expression counts to TPM
 data.type = "RNASeq2"
 type = "" 
 # Cancer type
-cancer = "GBMLGG" 
+cancer = "BRCA" 
 # Gene(s) of interest
 selected_genes = c("DLL3") # Can be multiple
 
@@ -139,6 +149,29 @@ expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 # Prepare clinical data
 clin <- mtx$merged.dat[, 1:3]
 colnames(clin)[1] <- "AffyID"
+```
+
+```{r}
+# Do TPM conversion, if needed
+if (useTPM) {
+  # Check if the TPMs have already been precalculated for a given cancer
+  fileNameTPM <- paste0(data_dir, "/", cancer, "_TPM.Rda")
+  if (!file.exists(fileNameTPM)) {
+    source("calcTPM.R")
+    load(file = "data/feature_length.Rda")
+    common_genes <- intersect(colnames(expr), feature_length$Symbol) # Common gene symbols
+    expr         <- expr[, c("AffyID", common_genes)] # Subset expression matrix
+    feature_length <- feature_length[feature_length$Symbol %in% common_genes, ] # Subset feature length
+    feature_length <- feature_length[match(colnames(expr)[ -1 ], feature_length$Symbol), ] # Match order
+    all.equal(colnames(expr), c("AffyID", feature_length$Symbol)) # Should be true
+    expr_tpm <- calcTPM(t(expr[, -1]), feature_length = feature_length) # Convert to TPM, takes time
+    expr_tpm <- data.frame(AffyID = expr[, "AffyID"], t(expr_tpm), stringsAsFactors = FALSE)
+    expr <- expr_tpm
+    save(list = c("expr"), file = fileNameTPM) # Save the object
+  } else {
+    load(file = fileNameTPM)
+  }
+}
 ```
 
 # Expression distribution for `r selected_genes` gene
