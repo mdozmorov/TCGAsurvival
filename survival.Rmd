@@ -169,23 +169,23 @@ colnames(clin)[1] <- "AffyID"
 
 ```{r selectedGenes}
 # Select genes of interest
-selected_genes = c("TMEM219", "IGFBP3") # BRCA
-selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
-selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
-selected_genes = c("MTDH", "SND1", "TAF2") # LIHC
-selected_genes = c("NF1") # LIHC
-selected_genes = c("ANLN") # PAN
-selected_genes = c("TAF2") # LIHC
-selected_genes = c("CPEB2") # BRCA
-selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
-selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
+# selected_genes = c("TMEM219", "IGFBP3") # BRCA
+# selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
+# selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
+# selected_genes = c("MTDH", "SND1", "TAF2") # LIHC
+# selected_genes = c("NF1") # LIHC
+# selected_genes = c("ANLN") # PAN
+# selected_genes = c("TAF2") # LIHC
+# selected_genes = c("CPEB2") # BRCA
+# selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
+# selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
 selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
-selected_genes = "DYRK1A"
-selected_genes = "DCAF7"
-selected_genes = "MBD2" # AML
-selected_genes = c("FOXP3") # BRCA
-selected_genes = c("TNFRSF1B") # TNFR2, BRCA
-selected_genes = c("RORC") # BRCA
+# selected_genes = "DYRK1A"
+# selected_genes = "DCAF7"
+# selected_genes = "MBD2" # AML
+# selected_genes = c("FOXP3") # BRCA
+# selected_genes = c("TNFRSF1B") # TNFR2, BRCA
+# selected_genes = c("RORC") # BRCA
 ```
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
@@ -344,7 +344,7 @@ system("mv res res.genes.Analysis4")
 ```
 
 ```{r, eval = FALSE}
-# Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical category and two subcategories, survival difference between the two subcategories
+# Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories
 system("mkdir -p res")
 # Select cancer and load expression data
 cancer <- "BRCA"
@@ -357,27 +357,31 @@ clin_full   <- mtx$clinical # Full clinical data
 clin_merged <- inner_join(clin, data.frame(AffyID = rownames(clin_full), clin_full), by = c("AffyID"))
 clin <- clin_merged
 # BRCA-specific
-# clin_pam50 <- read.table("data.TCGA/PAM50_classification.txt", sep = "\t", header = TRUE) # PAM50 classifier
-# clin_pam50 <- clin_pam50[ !grepl("-01B", clin_pam50$Particpant.ID), ]
-# clin_pam50$Particpant.ID <- gsub("-01A", "", clin_pam50$Particpant.ID)
-# clin_merged <- inner_join(clin, clin_pam50, by = c( "AffyID" = "Particpant.ID"))
-# clin <- clin_merged
+clin_pam50 <- read.table("data.TCGA/PAM50_classification.txt", sep = "\t", header = TRUE) # PAM50 classifier
+clin_pam50 <- clin_pam50[ !grepl("-01B", clin_pam50$Particpant.ID), ]
+clin_pam50$Particpant.ID <- gsub("-01A", "", clin_pam50$Particpant.ID)
+clin_merged <- inner_join(clin, clin_pam50, by = c( "AffyID" = "Particpant.ID"))
+clin <- clin_merged
 
 # Select clinical category and subcategories
 clinical_annotations <- summarize_data(mtx = mtx)
-clinical_annotations_selected <- "pathologyMstage"
-#clinical_annotations_selected <- "Subtype" # For PAM50 classifier
+# clinical_annotations_selected <- "pathologyMstage"
+clinical_annotations_selected <- "Subtype" # For PAM50 classifier
 
 print(paste0("Number of patients in each subcategory, in the ", clinical_annotations_selected, " category"))
 table(clin[, clinical_annotations_selected]) 
-group1 <- "m0"   ; group2 <- "m1"
-# group1 <- "LumA"; group2 <- "LumB" # For PAM50 classifier
+# group1 <- "m0"   ; group2 <- "m1"
+group1 <- "LumA"; group2 <- "Basal" # For PAM50 classifier
+group_combinations <- combn(unique(clin[, clinical_annotations_selected]), 2) # All pairs for the groups
+# Survival analysis for all group combinations
+for (pair in 1:ncol(group_combinations)) {
+  # KM analysis on subcategories
+  kmplot.clin(clin = clin, event_index=2, time_index=3, clinical_annotations = clinical_annotations_selected, group1 = group_combinations[1, pair], group2 = group_combinations[2, pair], cancer_type = cancer, fileType = "png", use_survminer = FALSE)
+}
 
-# KM analysis on subcategories
-kmplot.clin(clin = clin, event_index=2, time_index=3, clinical_annotations = clinical_annotations_selected, group1 = group1, group2 = group2, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
 
 # Plot expression boxplots for the selected gene in selected subcategories
-selected_genes = c("SDC1") # BRCA
+selected_genes = c("MIA") # BRCA
 # Prepare expression data
 expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
 # Filter out low expressed genes
