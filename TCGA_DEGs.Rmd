@@ -1,13 +1,16 @@
 ---
-title: "Differential expression analysis of TCGA data between groups with high/low expression of selected genes"
-output:
-  html_document:
-    toc: true
-    theme: united
-date: "`r Sys.Date()`"
+title: Differential expression analysis of TCGA data between groups with high/low
+  expression of selected genes
 author: "Mikhail Dozmorov"
-bibliography: TCGA.bib
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    theme: united
+    toc: no
 csl: styles.ref/genomebiology.csl
+bibliography: data.TCGA/TCGA.bib
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -99,9 +102,19 @@ save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG
 
 # Methods
 
+```{r echo=TRUE}
+# Cancer type
+cancer = "BRCA" 
+# Gene(s) of interest
+selected_genes = c("MIA") # Can be multiple
+# Define quantile qutoffs
+quantile_up <- 0.75 # 0.75
+quantile_lo <- 0.25 # 0.25
+```
+
 ## Differential expression analysis
 
-Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
+Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper `r quantile_up` percentile of the expression gradient and samples in the lower `r quantile_lo` percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
 
 
 ```{r}
@@ -112,14 +125,6 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 useTPM    = FALSE # Whether or not to convert expression counts to TPM
 data.type = "RNASeq2"
 type = "" 
-# Cancer type
-cancer = "BRCA" 
-# Gene(s) of interest
-selected_genes = c("DLL3") # Can be multiple
-
-# Define quantile qutoffs
-quantile_up <- 0.80 # 0.75
-quantile_lo <- 0.20 # 0.25
 
 # Differential expression cutoff
 pval_cutoff   <- 0.01 # P-value cutoff
@@ -127,6 +132,7 @@ max_num_genes <- 6000 # Maximum number of genes to feed into KEGG enrichment
 # Enrichment cutoffs
 fdr.cutoff     <- 0.3
 up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
+top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
 fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_", paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "_DEGs_", pval_cutoff, ".xlsx")
@@ -176,6 +182,8 @@ if (useTPM) {
 
 # Expression distribution for `r selected_genes` gene
 
+Informational plot only. Expected log2-transformed RSEM expression range distribution: $\sim 0 - 16$. Median close to $0$ indicate overall low expression, should be avoided.
+
 ```{r fig.height=3}
 selected_genes_expression <- melt(expr[, colnames(expr) %in% selected_genes, drop = FALSE])
 p1 <- ggplot(selected_genes_expression, aes(x = variable, y = log2(value))) + geom_boxplot()
@@ -183,11 +191,8 @@ p2 <- ggplot(selected_genes_expression, aes(x = log2(value))) + geom_density()
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-
 ```{r}
 # View and subset by expression and quantiles of the selected genes
-
-
 selected_genes_quantiles_up <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_up)) # Select upper quantile!
 selected_genes_quantiles_lo <- with(selected_genes_expression, tapply(value, variable, quantile, probs = quantile_lo)) # Select lower quantile!
 # Subset exprs by top expression
@@ -206,7 +211,7 @@ ind_lo <- apply(as.data.frame(selected_index_lo), 1, all) # Collapse indexes fro
 group <- vector(mode = "numeric", length = nrow(expr)) # Empty bector
 group[ind_up] <- 1 # Assign numeric groups
 group[ind_lo] <- 2
-table(group) # How many patients we have
+# table(group) # How many patients we have
 expr <- expr[group != 0, ] # Remove those that are not in quantiles
 group <- group[ group != 0 ]
 ```
@@ -241,7 +246,7 @@ We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[
 
 Top 50 the most differentially expressed genes are shown
 
-```{r fig.height=10}
+```{r fig.height=8.5}
 index.to.plot <- order(group)
 matrix.to.plot <- expr[rownames(degs)[1:50], index.to.plot]
 genes.to.plot <- rownames(degs)[1:50]
@@ -264,18 +269,15 @@ Results are stored in the Excel file `r fileNameRes`
 - Legend for gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
 
 ```{r}
-DT::datatable(degs)
+# DT::datatable(degs)
+pander(degs[1:min(top_X, nrow(degs)), ])
 ```
 
 # Functional enrichment analysis
 
 ## KEGG canonical pathway enrichment analysis 
 
-- Up- and downregulated genes are tested for pathway enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))` 
-
-- Use the "Search" box for each table. Search is global within the table, case insensitive.
-
-- FDR cutoff of the significant enrichments - `r fdr.cutoff`.
+Up- and downregulated genes are tested for pathway enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))`. FDR cutoff of the significant enrichments - `r fdr.cutoff`. Top `r top_X` genes shown.
 
 **Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category. `r paste(ifelse(up_dn_separate, "\"direction\" - UP/DN, an indicator whether genes are up- or downregulated.", ""))` 
 
@@ -299,11 +301,21 @@ if (up_dn_separate) {
   print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
   res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
 }
+```
+
+A total of `r nrow(res.kegg)` KEGG pathways were detected as significantly affected at FDR `r fdr.cutoff`. Top `r top_X` shown.
+
+```{r}
 # Display the results
-DT::datatable(res.kegg)
+# DT::datatable(res.kegg)
+if (nrow(res.kegg) > 0 ) {
+  kable(res.kegg[1:min(top_X, nrow(res.kegg)), ])
+}
 ```
 
 ## Selected pathway
+
+Red/Green - up/downregulated genes in upper vs. lower `r selected_genes` expressing samples. Gray - marginal fold change, yet significant. White - gene is not differentially expressed
 
 ```{r eval=FALSE}
 library(pathview)
@@ -312,8 +324,11 @@ degs <- read.xlsx(fileNameRes, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "04210", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
-# ![](hsa03010.RORC.png)
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04060", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+```
+
+```{r echo=FALSE, out.height='400px'}
+knitr::include_graphics('hsa04060.MIA.png')
 ```
 
 
