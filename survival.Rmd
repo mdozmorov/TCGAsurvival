@@ -398,7 +398,7 @@ p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value
   geom_boxplot() +
   ylab("log2 expression")
 plot(p)
-ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".pdf"), p, width = 5, height = 5)
+ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".png"), p, width = 5, height = 4, device = "png")
 system("mv res res.genes.Analysis5")
 
 ## ANOVA and Tukey's test
