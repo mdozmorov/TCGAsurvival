@@ -77,6 +77,12 @@ Rich downloadable data - tissue-specific gene expression in cancer and normal, i
 
 # Misc
 
+## TIMER, https://cistrome.shinyapps.io/timer/
+
+- Li, Taiwen, Jingyu Fan, Binbin Wang, Nicole Traugh, Qianming Chen, Jun S. Liu, Bo Li, and X. Shirley Liu. “TIMER: A Web Server for Comprehensive Analysis of Tumor-Infiltrating Immune Cells.” Cancer Research 77, no. 21 (November 1, 2017): e108–10. https://doi.org/10.1158/0008-5472.CAN-17-0307.
+
+TIMER is a comprehensive resource for systematical analysis of immune infiltrates across diverse cancer types. Exploring the abundances of six immune infiltrates (B cells, CD4+ T cells, CD8+ T cells, Neutrphils, Macrophages and Dendritic cells) with gene expression, survival, mutations, copy number variants and more. Six modules. Video tutorial at https://youtu.be/94v8XboCrXU
+
 ## cBioPortal, http://www.cbioportal.org/
 
 The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets.
