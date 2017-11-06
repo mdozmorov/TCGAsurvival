@@ -56,6 +56,8 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 - `survplot_0.0.7.tar.gz` - package needed for survival plots
 
+- `XENA_BRCA.R` - Exploring data from Xena UCSC genome browser, https://xenabrowser.net/datapages/?cohort=TCGA%20Breast%20Cancer%20(BRCA)
+
 
 # `data.TCGA` - TCGA data
 
@@ -66,6 +68,7 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - `TCGA_genes.txt` - genes measured in TCGA RNA-seq experiments
 - `TCGA.bib` - BibTex of TCGA-related references
 - `TCPA_proteins.txt` - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). Paper: [http://cancerres.aacrjournals.org/content/77/21/e51](http://cancerres.aacrjournals.org/content/77/21/e51)
+- `XENA_classification.csv` - PAM50 and other clinical data from https://xenabrowser.net/datapages/?dataset=TCGA.BRCA.sampleMap/BRCA_clinicalMatrix&host=https://tcga.xenahubs.net
 
 ## `ESTIMATE`
 
