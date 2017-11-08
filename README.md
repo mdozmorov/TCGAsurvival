@@ -61,6 +61,7 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 # `data.TCGA` - TCGA data
 
+- `BRCA_with_TP53_mutation.tsv` - 355 TCGA samples with TP53 mutations, obtained from https://portal.gdc.cancer.gov/exploration?cases_offset=300&cases_size=100&facetTab=mutations&filters=~%28op~%27and~content~%28~%28op~%27in~content~%28field~%27cases.project.project_id~value~%28~%27TCGA-BRCA%29%29%29~%28op~%27in~content~%28field~%27genes.gene_id~value~%28~%27ENSG00000141510%29%29%29%29%29&searchTableTab=cases
 - `CCR-13-0583tab1.xlsx` - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
 - `EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt` - A gene expression signature found in a subset of cancer patients suggestive of a deregulated immune or inflammatory response. http://software.broadinstitute.org/gsea/msigdb/geneset_page.jsp?geneSetName=EINAV_INTERFERON_SIGNATURE_IN_CANCER
 - `PAM50_classification.txt` - sample classification into PAM50 types
