@@ -96,7 +96,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 
 # Selected genes
 precalculated  <- FALSE
-selected_genes <- c("OLIG2") # If nothing precalculated - use one of the genes
+selected_genes <- c("DLL3") # If nothing precalculated - use one of the genes
 method         <- "" # If correlation with the selected_gene is measured, method is empty
 # If precalculated, use precalculated values
 # precalculated  <- TRUE 
@@ -115,7 +115,7 @@ top_expression    <- FALSE # Whether to take top (TRUE) of bottom (FALSE) expres
 # fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
-cancer_RNASeq2 = c("GBMLGG")
+cancer_RNASeq2 = c("LUAD")
 fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
 fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
 fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), ".xlsx") # Save results
@@ -156,7 +156,7 @@ if (!file.exists(fileNameIn)) {
   # all_expression <- all_expression[apply(all_expression, 1, ff), ] 
   # boxplot(all_expression[1:1000, 2:100])
   all_expression <- log2(all_expression + 1)
-  all_expression <- limma::normalizeQuantiles(all_expression)
+  # all_expression <- limma::normalizeQuantiles(all_expression)
   # sd_cutoff <- quantile(apply(all_expression, 1, sd), 0.10)
   # all_expression <- all_expression[ apply(all_expression, 1, sd) > sd_cutoff, ]
   # save(all_expression, file = (paste0("data/all_expression_", data.type, "_", type, ".Rda"))) # All cancers
@@ -184,7 +184,8 @@ if (!file.exists(fileNameOut)) {
   # all_corrs <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[1]][1, 2])
   # all_pvals <- apply(all_expression, 1, function(x) Hmisc::rcorr(all_expression[ rownames(all_expression) == selected_genes], x)[[3]][1, 2])
   correlations <- data_frame(hgnc = rownames(all_expression), corr = all_corrs, pval = all_pvals)
-  correlations <- right_join(annotables::grch38, correlations, by = c("symbol" = "hgnc"))
+  correlations <- right_join(grch38, correlations, by = c("symbol" = "hgnc"))
+  correlations <- correlations[ !(is.na(correlations$description) | correlations$description == ""), ]
   save(correlations, file = fileNameOut)
 } else {
   load(file = fileNameOut)
