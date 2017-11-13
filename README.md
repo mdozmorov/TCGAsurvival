@@ -63,7 +63,6 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 - `BRCA_with_TP53_mutation.tsv` - 355 TCGA samples with TP53 mutations, obtained from https://portal.gdc.cancer.gov/exploration?cases_offset=300&cases_size=100&facetTab=mutations&filters=~%28op~%27and~content~%28~%28op~%27in~content~%28field~%27cases.project.project_id~value~%28~%27TCGA-BRCA%29%29%29~%28op~%27in~content~%28field~%27genes.gene_id~value~%28~%27ENSG00000141510%29%29%29%29%29&searchTableTab=cases
 - `CCR-13-0583tab1.xlsx` - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
-- `EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt` - A gene expression signature found in a subset of cancer patients suggestive of a deregulated immune or inflammatory response. http://software.broadinstitute.org/gsea/msigdb/geneset_page.jsp?geneSetName=EINAV_INTERFERON_SIGNATURE_IN_CANCER
 - `PAM50_classification.txt` - sample classification into PAM50 types
 - `patientsAll.tsv` - TCGA sample clinical information, including PAM50, from https://tcia.at/home
 - `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
@@ -72,12 +71,6 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - `TCPA_proteins.txt` - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). Paper: [http://cancerres.aacrjournals.org/content/77/21/e51](http://cancerres.aacrjournals.org/content/77/21/e51)
 - `XENA_classification.csv` - PAM50 and other clinical data from https://xenabrowser.net/datapages/?dataset=TCGA.BRCA.sampleMap/BRCA_clinicalMatrix&host=https://tcga.xenahubs.net
 
-## `ESTIMATE`
-
-Yoshihara, Kosuke, Maria Shahmoradgoli, Emmanuel Martínez, Rahulsimham Vegesna, Hoon Kim, Wandaliz Torres-Garcia, Victor Treviño, et al. “Inferring Tumour Purity and Stromal and Immune Cell Admixture from Expression Data.” Nature Communications 4 (2013): 2612. doi:10.1038/ncomms3612. https://www.nature.com/articles/ncomms3612#supplementary-information
-
-- `ncomms3612-s2.xlsx` - A gene list of stromal and immune signatures
-- `ncomms3612-s3.xlsx` - A list of stromal, immune, and ESTIMATE scores in TCGA data sets. All cancers, all gene expression plaforms.
 
 ## `OvarianCancerSubtypes`
 
