@@ -87,38 +87,69 @@ pander(global_stats)
 
 ## Survival effect in the selected subtype
 
-### MIA_BRCA-race-white.png
+### MIA_BRCA-breast_carcinoma_estrogen_receptor_status-Positive.png
 
 ```{r echo=FALSE, out.height='240px'}
-knitr::include_graphics('res.genes.Analysis3/MIA_BRCA-race-white.png')
+knitr::include_graphics('res.genes.Analysis3/MIA_BRCA-breast_carcinoma_estrogen_receptor_status-Positive.png')
 ```
 
-### MIA_BRCA-radiationtherapy-no.png
+### MIA_BRCA-TP53_mut_status-p53wt
 
 ```{r echo=FALSE, out.height='240px'}
-knitr::include_graphics('res.genes.Analysis3/MIA_BRCA-radiationtherapy-no.png')
+knitr::include_graphics('res.genes.Analysis3/MIA_BRCA-TP53_mut_status-p53wt.png')
 ```
 
-# Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories
+
+# Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, gene expression differences across categories
+
+Expression of `r gene` in selected clinical subcategories
 
 ```{r echo=FALSE, out.height='200px'}
-knitr::include_graphics('res.genes.Analysis5/BRCA_MIA_Subtype.png')
+knitr::include_graphics('res.genes.Analysis5/BRCA_MIA_PAM50Call_RNAseq.png')
 ```
 
-```{r}
+```{r eval=FALSE}
 global_stats <- read.table("res.genes.Analysis5/global_stats.txt", sep = "\t", header = TRUE, fill = TRUE)
 global_stats <- global_stats[order(global_stats$p.value), c("Cancer", "Gene", "p.value", "HR")]
 rownames(global_stats) <- NULL
 pander(global_stats)
 ```
 
-## Survival effect in the selected subtype
+## ANOVA and Tukey's test
 
-### Subtype-LumA-Her2
+What are the means of log2-expression per clinical subgroup""
 
-```{r echo=FALSE, out.height='240px'}
-knitr::include_graphics('res.genes.Analysis5/BRCA_Subtype_LumA_Her2.png')
+```{r}
+load(file = "res.genes.Analysis5/mtx_to_plot.rda")
+tapply(mtx_to_plot$Gene, mtx_to_plot$Clinical, mean)
 ```
+
+### ANOVA
+
+Is the expression of gene `r gene` significantly different across clinical subgroups? Significant "Pr(>F)" suggests "Yes"
+
+```{r}
+# ANOVA
+groupdiff <- lm(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
+# summary(groupdiff)
+anova(groupdiff)
+```
+
+### Tukey HSD (Honest Significant Difference) test
+
+Which pair of clinical categories has significant differences? "p.adj" and confidence intervals that do not cross 0 suggest significant differences in gene expression between the subgroups in the corresponding pairwise comparison.
+
+```{r}
+# Tukey HSD
+a1 <- aov(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
+# summary(a1)
+posthoc <- TukeyHSD(x=a1, 'mtx_to_plot$Clinical', conf.level=0.95)
+posthoc %>% pander()
+par(las = 2)
+par(mar = c(5, 8, 5, 8))
+plot(posthoc)
+```
+
 
 # References
 

@@ -18,6 +18,7 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
     - `Analysis 4` - Selected genes, selected cancers, all combinations of clinical annotations. Not run by default.
     - `Analysis 5` - Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories. Not run by default.
     - `Analysis 6` - Dimensionality reduction of a gene signature across all cancers using NMF, PCA, or FA For each cancer, extracts gene expression of a signature, reduces its dimensionality, plots a heatmap sorted by the first component, biplots, saves eigenvectors in files named after cancer, signature, method. They are used in `correlations.Rmd`
+- `survival_BRCA.Rmd` - survival analyses adjusted for BRCA
 
 - `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders.
 
@@ -43,6 +44,8 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - `calc_feature_length.R` - get length for gene symbols, resolving aliases
 
 - `calcTPM.R` - function to calculate TPMs from gene counts, from https://github.com/AmyOlex/RNASeqBits/tree/master/R
+
+- `clinical_annotation_merge_BRCA.R` - merging `XENA_classification.csv` and `BRCA_with_TP53_mutation.tsv` into `BRCA_XENA_clinical.csv`
 
 - `cgdsr.R` - exploring the Cancer Genomic Data Server, http://www.cbioportal.org/study?id=msk_impact_2017, http://www.cbioportal.org/cgds_r.jsp, https://cran.r-project.org/web/packages/cgdsr/vignettes/cgdsr.pdf
 
