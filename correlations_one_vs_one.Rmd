@@ -1,14 +1,14 @@
 ---
 title: "Correlations between two genes across all cancers"
-output:
-  html_document:
-    toc: true
-    # toc_float: true
-    theme: united
-    # theme: cerulean
-    # number_sections: true
-date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    theme: united
+    toc: yes
+always_allow_html: yes
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -25,19 +25,19 @@ options(stringsAsFactors = FALSE)
 ```{r libraries, include=FALSE}
 library(openxlsx)
 library(MDmisc)
-library(org.Hs.eg.db)
-library(KEGG.db)
-library(TCGA2STAT)
+# library(org.Hs.eg.db)
+# library(KEGG.db)
+# library(TCGA2STAT)
 library(ggplot2)
 library(reshape2)
 # library(clusterProfiler)
-library(pathview)
-library(annotables)
+# library(pathview)
+# library(annotables)
 # Remove non-canonical chromosome names
-grch38 <- grch38[ !(grepl("_", grch38$chr) | grepl("GL", grch38$chr)), ]
-grch38 <- grch38[, c("symbol", "description")]
-grch38 <- grch38[ complete.cases(grch38) , ]
-grch38 <- grch38[ !duplicated(grch38), ]
+# grch38 <- grch38[ !(grepl("_", grch38$chr) | grepl("GL", grch38$chr)), ]
+# grch38 <- grch38[, c("symbol", "description")]
+# grch38 <- grch38[ complete.cases(grch38) , ]
+# grch38 <- grch38[ !duplicated(grch38), ]
 ```
 
 ```{r functions}
@@ -94,7 +94,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 
 # Selected genes, TWO genes only
-selected_genes <- c("ANLN", "VIM")
+selected_genes <- c("DYRK1A", "RNF169")
 # Check if the names exist
 genes <- readLines("data.TCGA/TCGA_genes.txt")
 setdiff(selected_genes, genes) # Should be 0, meaning selected genes are among the TCGA genes
@@ -185,6 +185,7 @@ cancers  <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
 res_corr <- left_join(res_corr, cancers, by = c("Acronym"))
 res_corr <- round_df(res_corr)
 res_corr <- res_corr[ order(res_corr$corr, decreasing = TRUE), ]
-DT::datatable(res_corr, options = list(pageLength = 50))
+# DT::datatable(res_corr, options = list(pageLength = 50))
+pander(res_corr)
 ```
 
