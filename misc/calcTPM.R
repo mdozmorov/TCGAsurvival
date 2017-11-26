@@ -1,6 +1,11 @@
 ## Amy Olex
 ## 1/20/17
 ## Function to calculate the TPM values for RNA-seq data.
+#' @param data a data frame with gene IDs rownames and sample IDs colnames.
+#' Each cell contains counts
+#' @param feature_length a data.frame with "Geneid" and "Length" columns. "Geneid" should correspond to
+#' and be the same length and order as rownames(data) 
+
   
 calcTPM <- function(data, feature_length){
   
