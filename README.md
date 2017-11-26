@@ -47,6 +47,8 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 - `clinical_annotation_merge_BRCA.R` - merging `XENA_classification.csv` and `BRCA_with_TP53_mutation.tsv` into `BRCA_XENA_clinical.csv`
 
+- `featureCounts2TPM.Rmd` - convert featureCounts output to gene symbol-annotated TPMs
+
 - `cgdsr.R` - exploring the Cancer Genomic Data Server, http://www.cbioportal.org/study?id=msk_impact_2017, http://www.cbioportal.org/cgds_r.jsp, https://cran.r-project.org/web/packages/cgdsr/vignettes/cgdsr.pdf
 
 - `overlap_significance.R` - simple example of Fisher's exact test
@@ -87,6 +89,15 @@ Supplementary material http://science.sciencemag.org/content/suppl/2017/08/16/35
 - `Table S2` - summary of tissue specific expression for each gene, in normal and cancer tissues.  
 - `Table S6` - summary of survival prognostic value, with a simple "favorable/unfavorable" label for each gene. Each worksheet corresponds to a different cancer.  
 - `Table S8` - per-gene summary, in which cancers it is prognostic of survival.  
+
+## `brca_mbcproject_wagle_2017`
+
+https://www.mbcproject.org/
+
+The Metastatic Breast Cancer Project is a patient-driven initiative. This study includes genomic data, patient-reported data (pre-pended as PRD), medical record data (MedR), and pathology report data (PATH). All of the titles and descriptive text for the clinical data elements have been finalized in partnership with numerous patients in the project. As these data were generated in a research, not a clinical, laboratory, they are for research purposes only and cannot be used to inform clinical decision-making. All annotations have been de-identified. More information is available at www.mbcproject.org.
+
+Data download: http://www.cbioportal.org/study?id=brca_mbcproject_wagle_2017#summary. Data includes 78 patients, 103 samples, sample-specific clinical annotations, Putative copy-number from GISTIC, MutSig regions
+
 
 
 # External tools

@@ -1,0 +1,108 @@
+---
+title: "Convert featureCounts to TPMs"
+author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: united
+    toc: yes
+  pdf_document:
+    toc: no
+# csl: styles.ref/genomebiology.csl
+# bibliography: data.TCGA/TCGA.bib
+always_allow_html: yes
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+```{r libraries}
+library(ggplot2)
+library(reshape2)
+library(plotly)
+library(biomaRt)
+library(openxlsx)
+library(MDmisc)
+source("/Users/mdozmorov/Documents/Work/GenomeRunner/TCGAsurvival/misc/calcTPM.R")
+```
+
+```{r settings}
+fileName <- "/Users/mdozmorov/Documents/Work/VCU_work/Tony/DIPG/data/TPM.xlsx"
+```
+
+
+# QC
+
+The final QC metrics for the aligned BAM files are shown.
+
+```{r}
+# featureCount summary output
+qc_counts <- read.table("/Users/mdozmorov/Documents/Work/VCU_work/Tony/DIPG/data/counts.txt.summary", sep = "\t", header = TRUE)
+# Clean column names
+colnames(qc_counts) <- sub("X02_subread.align.", "", colnames(qc_counts))
+colnames(qc_counts) <- sub(".bam", "", colnames(qc_counts))
+```
+
+```{r}
+p <- ggplot(data = melt(qc_counts), aes(x = variable, y = value)) +
+  geom_bar(stat = "identity", aes(fill = Status)) + 
+  guides(fill=FALSE) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("Sample") + ylab("Counts") +
+  ggtitle("Counts of aligned/unaligned reads per sample")
+ggplotly(p)
+```
+
+# TPM conversion
+
+```{r}
+# Get full featureCounts matrix
+mtx <- read.table("/Users/mdozmorov/Documents/Work/VCU_work/Tony/DIPG/data/counts.txt.gz", sep = "\t", header = TRUE)
+# Extract feature_length
+feature_length <- mtx[, c("Geneid", "Length")]
+# Extract counts only
+data <- mtx[, grepl("bam", colnames(mtx))] # Assuming sample names have "bam" suffix
+colnames(data) <- sub("X02_subread.align.", "", colnames(data)) # Make colnames pretty
+colnames(data) <- sub(".bam", "", colnames(data))
+rownames(data) <- mtx$Geneid
+# Convert to TPM
+TPM <- calcTPM(data = data, feature_length = feature_length)
+```
+
+# biomaRt Geneid conversion
+
+```{r}
+mart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
+# Get gene names from Ensembl IDs
+id <- sapply(rownames(TPM), function(x) {base::strsplit(x, split = ".", fixed = TRUE) %>% unlist %>% .[1]}) %>% unname
+genes <- getBM(attributes=c("ensembl_gene_id", 'hgnc_symbol', "description"), filters='ensembl_gene_id', values=unique(id), mart=mart, uniqueRows=T)
+```
+
+```{r}
+# Attach to TPM object
+TPM_df <- data.frame(Geneid = id, TPM)
+TPM_df <- inner_join(TPM_df, genes, by = c("Geneid" = "ensembl_gene_id"))
+# Reorder columns 
+TPM_df <- TPM_df[, c("Geneid", "hgnc_symbol", "description", colnames(TPM_df)[grepl("SRR", colnames(TPM_df))])]
+# Remove Ensembl IDs without gene names
+TPM_df <- TPM_df[ TPM_df$hgnc_symbol != "", ]
+```
+
+# Save to file
+
+File: `r fileName`
+
+```{r}
+unlink(fileName) # Delete previous file
+wb <- openxlsx::createWorkbook(fileName) # openxlsx::loadWorkbook(fileName) # Or, load existing
+save_res(TPM_df, fileName = fileName, wb = wb, sheetName = "TPM")
+```
+
