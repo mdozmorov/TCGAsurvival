@@ -1,5 +1,5 @@
 ---
-title: "PPI and network analysis"
+title: "Gene-centric, Protein-Protein Interaction, and network analysis"
 output:
   html_document:
     toc: true
@@ -156,7 +156,7 @@ if (nrow(selected) <= max_to_plot) {
 }
 ```
 
-# PPI databases
+# Gene- and PPI databases
 
 ## Online only
 
@@ -180,6 +180,16 @@ Their algorithm ranks a set of candidate disease-causing genes in multiple susce
 
 
 ## Online and download
+
+### `ARCHS4`, http://amp.pharm.mssm.edu/archs4/index.html
+
+ARCHS4: Massive Mining of Publicly Available RNA-seq Data from Human and Mouse. ARCHS4 provides access to gene counts from HiSeq 2000 and HiSeq 2500 platforms for human and mouse experiments from GEO and SRA. The website enables downloading of the data in H5 format for programmatic access as well as a 3-dimensional view of the sample and gene spaces. 
+
+Gene expression, Pearson correlations, HDF5 files download, http://amp.pharm.mssm.edu/archs4/download.html
+
+- Lachmann, Alexander, Denis Torre, Alexandra B. Keenan, Kathleen M. Jagodnik, Hyojin J. Lee, Moshe C. Silverstein, Lily Wang, and Avi Ma’ayan. “Massive Mining of Publicly Available RNA-Seq Data from Human and Mouse,” September 15, 2017. https://doi.org/10.1101/189092. https://www.biorxiv.org/content/early/2017/09/15/189092
+
+
 
 ### `SIGNOR`, http://signor.uniroma2.it/
 
