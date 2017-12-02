@@ -181,6 +181,13 @@ Their algorithm ranks a set of candidate disease-causing genes in multiple susce
 
 ## Online and download
 
+### `RegNetwork`, Regulatory Network Repository, http://www.regnetworkweb.org
+
+RegNetwork is a database of transcriptional and posttranscriptional regulatory networks in human and mouse. TF and miRNA are two major regulators controlling gene expression. RegNetwork collects the knowledge-based regulatory relationships, as well as some potentially regulatory relationships between the two regulators and targets. It provides a platform of depositing the known and predicted gene regulations in the transcriptional and posttranscriptional levels simultaneously. The knowledge-derived regulatory networks is expected to be greatly beneficial for identifying critical regulatory programs in various context-specific conditions.
+
+Gene-centric interpretation of regulator-gene relationships. Rich selection of databases, http://www.regnetworkweb.org/source.jsp
+
+
 ### `ARCHS4`, http://amp.pharm.mssm.edu/archs4/index.html
 
 ARCHS4: Massive Mining of Publicly Available RNA-seq Data from Human and Mouse. ARCHS4 provides access to gene counts from HiSeq 2000 and HiSeq 2500 platforms for human and mouse experiments from GEO and SRA. The website enables downloading of the data in H5 format for programmatic access as well as a 3-dimensional view of the sample and gene spaces. 
