@@ -105,7 +105,7 @@ kable(global_stats[1:min(nrow(global_stats), n_max), ])
 Expression of `r gene` in selected clinical subcategories
 
 ```{r echo=FALSE, out.height='250px'}
-knitr::include_graphics('res.genes.Analysis5/BRCA_SIAH1_PAM50Call_RNAseq.png')
+knitr::include_graphics('res.genes.Analysis5/BRCA_SIAH1_PAM50Call_RNAseq.png')  # 'PAM50Call_RNAseq' for BRCA, 'subtype' for OV
 ```
 
 ```{r eval=FALSE}
