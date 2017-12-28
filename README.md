@@ -18,7 +18,8 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
     - `Analysis 4` - Selected genes, selected cancers, all combinations of clinical annotations. Not run by default.
     - `Analysis 5` - Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories. Not run by default.
     - `Analysis 6` - Dimensionality reduction of a gene signature across all cancers using NMF, PCA, or FA For each cancer, extracts gene expression of a signature, reduces its dimensionality, plots a heatmap sorted by the first component, biplots, saves eigenvectors in files named after cancer, signature, method. They are used in `correlations.Rmd`
-- `survival_BRCA.Rmd` - survival analyses adjusted for BRCA
+- `survival_BRCA.Rmd` - survival analyses adjusted for BRCA (Analysis 3)
+- `survival_OVCA.Rmd` - survival analyses adjusted for OV (Analysis 3)
 
 - `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders.
 

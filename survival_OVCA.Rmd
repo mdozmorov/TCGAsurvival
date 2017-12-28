@@ -1,0 +1,507 @@
+---
+title: "TCGA BRCA survival analysis"
+output:
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+bibliography: data.TCGA/TCGA.bib
+csl: styles.ref/genomebiology.csl
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+# Methods
+
+## Survival analysis of gene expression data from TCGA
+
+Level 3 gene expression data summarized as RSEM values was obtained using the `TCGA2STAT` R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meier curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
+
+We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
+
+## Differential expression analysis
+
+Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
+
+
+# Libraries
+
+```{r libraries}
+# library(TCGA2STAT)
+library(ggplot2)
+library(reshape2)
+if (!require(survplot)) {
+  install.packages("misc/survplot_0.0.7.tar.gz", repos = NULL, type="source")
+}
+source("Supplemental_R_script_1.R")
+```
+
+# Helper functions
+
+```{r functions}
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+
+# A function to get data overview
+summarize_data <- function(mtx = mtx) {
+  print(paste0("Dimensions of expression matrix, genex X patients: ", paste(dim(mtx$dat), collapse = " ")))
+  print(paste0("Dimensions of clinical matrix, patients X parameters: ", paste(dim(mtx$clinical), collapse = " ")))
+  print(paste0("Dimensions of merged matrix, patients X parameters + genes: ", paste(dim(mtx$merged.dat), collapse = " ")))
+  print("Head of the merged matrix")
+  print(mtx$merged.dat[1:5, 1:10])
+  print("Head of the clinical matrix")
+  print(mtx$clinical[1:5, 1:7])
+  print("List of clinical values, and frequency of each variable: ")
+  clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
+  # Filter clinical variables to have at least 2, but no more than 10 categories,
+  # And they are not dates
+  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital|OS|RFS|TIME|sample_type", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
+  print(kable(clin_vars))
+  return(rownames(clin_vars))
+}
+
+# A function to create expression matrix
+make_expression_matrix <- function(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir) {
+  # transposed expression matrix (genes start at column 4) 
+  mtx.expression <- mtx$merged.dat[, 4:ncol(mtx$merged.dat) ] %>% t 
+  # Set column names as patient IDs
+  colnames(mtx.expression) <- mtx$merged.dat$bcr 
+  # Set row names as probe IDs
+  rownames(mtx.expression) <- colnames(mtx$merged.dat)[ 4:ncol(mtx$merged.dat) ] 
+  # Save gzipped matrix
+  fileName.gz <- gzfile(paste0(results_dir, "/mtx_", disease, "_", data.type, "_", type, "_1expression.txt.gz"), "w")
+  write.table(mtx.expression, fileName.gz, sep = ";", quote = FALSE)
+  close(fileName.gz)
+}
+```
+
+# Settings
+
+```{r settings}
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+# data_dir = "/Users/mdozmorov/Documents/nobackup" # Mac
+# data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
+# data_dir = "D:"
+# results_dir = "/Users/mdozmorov/Dropbox" # Path where the results are stored
+
+# Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
+# Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
+# Expression types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
+# Clinical values: http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf
+
+# General settings
+data.type = "RNASeq2"
+type = "" 
+# data.type = "miRNASeq" # miRNASeq - "count" for raw read counts (default); "rpmmm" for normalized read counts
+# type = "rpmmm"
+# data.type = "Mutation"
+# type = "somatic"
+# type="all"
+# data.type = "Methylation"
+# type = "450K"
+# clinical = TRUE
+
+# # Breast cancer
+# cancer = "BRCA" 
+# Ovarian cancer
+cancer = "OV"
+# # Liver hepatocellular carcinoma
+# cancer = "LIHC" 
+# # Head and Neck squamous cell carcinoma
+# cancer = "HNSC" 
+# # Sarcoma
+# cancer = "SARC" 
+# # Pancreatic cancer
+# cancer = "PAAD" 
+# # Lung adenocarcinoma
+# cancer = "LUAD"
+# # Lung squamous cell carcinoma
+# cancer = "LUSC"
+```
+
+# Load data
+
+```{r loadData}
+mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+clinical_annotations <- summarize_data(mtx = mtx)
+```
+
+```{r processData}
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+
+# Prepare clinical data
+clin <- mtx$merged.dat[, 1:3]
+colnames(clin)[1] <- "AffyID"
+```
+
+# Select genes
+
+```{r selectedGenes}
+# Select genes of interest
+# selected_genes = c("TMEM219", "IGFBP3") # BRCA
+# selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
+# selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
+# selected_genes = c("MTDH", "SND1", "TAF2") # LIHC
+# selected_genes = c("NF1") # LIHC
+# selected_genes = c("ANLN") # PAN
+# selected_genes = c("TAF2") # LIHC
+# selected_genes = c("CPEB2") # BRCA
+# selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
+# selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
+# selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
+# selected_genes = "DYRK1A"
+# selected_genes = "DCAF7"
+# selected_genes = "MBD2" # AML
+# selected_genes = c("FOXP3") # BRCA
+# selected_genes = c("TNFRSF1B") # TNFR2, BRCA
+# selected_genes = c("RORC") # BRCA
+selected_genes = c("SIAH1") # OV
+```
+
+### Analysis 1: Selected genes, selected cancers, no clinical annotations
+
+```{r analysis1}
+system("mkdir res") # Create results folder
+kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
+# Rename the results folder
+system("mv res res.genes.Analysis1")
+```
+
+```{r analysisExploratory, eval = FALSE}
+### Exploratory: All genes, selected cancers, no clinical annotations
+# kmplot(expr, clin, event_index=2, time_index=3,  affyid = "", auto_cutoff="true", transform_to_log2 = TRUE)
+```
+
+### Analysis 2: Selected genes, all (or selected) cancers, no clinical annotations
+
+```{r analysis2}
+# All cancers with RNASeq2 data
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+data.type = "RNASeq2"; type = "" 
+system("mkdir res") # Create results folder
+for (cancer_type in cancer_RNASeq2) {
+  print(paste0("Processing cancer ", cancer_type))
+  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  # Prepare expression data
+  expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+  # Filter out low expressed genes
+  # Should be more than 90% of non-zero values
+  # ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+  # expr <- expr[, apply(expr, 2, ff)] 
+  expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+  # Prepare clinical data
+  clin <- mtx$merged.dat[, 1:3]
+  colnames(clin)[1] <- "AffyID"
+  # Run survival analysis for selected genes
+  kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type, fileType = "png", use_survminer = FALSE)
+}
+### Plot the results of one gene across all cancers
+library(dplyr)
+library(ggplot2)
+# Read in analysis natrix
+mtx <- read.table("res/global_stats.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE, fill = TRUE)
+# Add -log10-transformed p-value
+mtx <- mtx %>% mutate(log10.pval = -1 * log10(p.value))
+# Print into PDF
+png(paste0("res/", selected_genes, "_all_TCGA_cancers.png"))
+mtx %>% subset(Gene == selected_genes) %>% 
+  ggplot(aes(x = factor(Cancer, levels(factor(Cancer))[order(log10.pval)]), y = log10.pval)) + 
+  geom_bar(stat = "identity") + 
+  theme(legend.position="none") +
+  labs(x="Cancer", y="-log10(p-value)") +
+  coord_flip()
+dev.off()
+# Rename the results folder
+system("mv res res.genes.Analysis2")
+```
+
+### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
+
+```{r analysis3}
+cancer_RNASeq2 = c("OV")
+system("mkdir res") # Create results folder
+for (cancer_type in cancer_RNASeq2) {
+  print(paste0("Processing cancer ", cancer_type))
+  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  
+  # Prepare expression data
+  expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+  # Filter out low expressed genes
+  # Should be more than 90% of non-zero values
+  # ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+  # expr <- expr[, apply(expr, 2, ff)] 
+  expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+  # expr[1:5, 1:5]
+  
+  # Prepare clinical data
+  clin <- mtx$merged.dat[, 1:3]
+  colnames(clin)[1] <- "AffyID"
+  
+  # Full clinical information
+  clinical_annotations <- summarize_data(mtx = mtx)
+  clin_full <- mtx$clinical
+  # Match to the order of small clinical annitation
+  clin_full <- clin_full[rownames(clin_full) %in% expr$AffyID, ]
+  clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
+  all.equal(expr$AffyID, rownames(clin_full))
+  
+  # Prepare extra clinical annotation
+  clin_extra <- read.table("data.TCGA/OvarianCancerSubtypes/data/23257362/TCGA_489_UE.k4.txt", sep = "\t", header = TRUE)
+  clin_extra$Sample.ID <- sapply(clin_extra$Sample.ID, function(x) strsplit(x, ".", fixed = TRUE)[[1]][1:3] %>% paste(., collapse = "-")) # Shorten sample IDs
+  # Subset to common samples
+  common_AffyID <- intersect(rownames(clin_full), clin_extra$Sample.ID)
+  expr <- expr[ expr$AffyID %in% common_AffyID, ]
+  clin <- clin[ clin$AffyID %in% common_AffyID, ]
+  clin_full <- clin_full[ rownames(clin_full) %in% common_AffyID, ]
+  clin_extra <- clin_extra[ clin_extra$Sample.ID %in% common_AffyID, ]
+  # Make clinical annotation the same order
+  clin <- clin[ match(expr$AffyID, clin$AffyID), ]
+  clin_extra <- clin_extra[ match(expr$AffyID, clin_extra$Sample.ID), ]
+  all.equal(expr$AffyID, clin$AffyID, rownames(clin_full), clin_extra$Sample.ID)
+  # Add extra clinical annotation
+  clin_full <- data.frame(clin_full, subtype = clin_extra$k4)
+  clinical_annotations <- c( clinical_annotations, "subtype")
+  
+  # For each clinical annotation
+  for (annotation in clinical_annotations) { 
+    # Get the number of patients per category in the current annotation
+    annotations <- table(clin_full[, annotation], useNA = "no") 
+    # How many categories in the current annotation
+    num_of_annot_categories <- length(annotations) 
+    # How many categories to select at one time
+    for (num_of_selected_categories in 1:num_of_annot_categories) {
+      # Select patients annotated with this categories
+      patients <- rownames(clin_full)[ clin_full[, annotation] %in% names(annotations)[ num_of_selected_categories] ]
+      # Get their index in the clin and expr matrixes
+      index_patients <- which(clin$AffyID %in% patients)
+      # If the number of patients annotated with the combination of categories is large enough, proceed
+      if (length(index_patients) > 40) {
+        print(paste("Processing annotation:", annotation, 
+                    ", categories:", names(annotations)[ num_of_selected_categories],
+                    ", number of patients:", length(index_patients)))
+        # Get a subset of clinical information for these patients
+        clin_selected <- clin[ index_patients, ]
+        # Get a subset of expression information for these patients
+        expr_selected <- expr[ index_patients, ]
+        # For this subset of expression, filter out low expressed genes
+        index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
+        expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
+        # Perform actual survival analysis
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "png", use_survminer = FALSE)
+      }
+    }
+  }
+}
+# Rename the results folder
+system("mv res res.genes.Analysis3")
+```
+
+```{r analysis4, eval = FALSE}
+### Analysis 4: Selected genes, selected cancers, all combinations of clinical annotations
+system("mkdir res") # Create results folder
+clin_full <- mtx$clinical # Full clinical information
+# For each clinical annotation
+for (annotation in clinical_annotations) { 
+  # Get the number of patients per category in the current annotation
+  annotations <- table(clin_full[, annotation], useNA = "no") 
+  # How many categories in the current annotation
+  num_of_annot_categories <- length(annotations) 
+  # How many categories to select at one time
+  for (num_of_selected_categories in 1:num_of_annot_categories) {
+    # All combinations of categories, m categories selected at one time
+    combination_of_categories <- combn(x = names(annotations), m = num_of_selected_categories)
+    # For each combination of categories (column)
+    for (combination in 1:ncol(combination_of_categories)) {
+      # Select patients annotated with this combination of categories
+      patients <- rownames(clin_full)[ clin_full[, annotation] %in% combination_of_categories[, combination]]
+      # Get their index in the clin and expr matrixes
+      index_patients <- which(clin$AffyID %in% patients)
+      # If the number of patients annotated with the combination of categories is large enough, proceed
+      if (length(index_patients) > 40) {
+        print(paste("Processing annotation:", annotation, 
+                    ", categories:", paste(combination_of_categories[, combination], collapse = ","),
+                    ", number of patients:", length(index_patients)))
+        # Get a subset of clinical information for these patients
+        clin_selected <- clin[ index_patients, ]
+        # Get a subset of expression information for these patients
+        expr_selected <- expr[ index_patients, ]
+        # For this subset of expression, filter out low expressed genes
+        index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
+        expr_selected <- cbind(expr_selected$AffyID, select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
+        # Perform actual survival analysis
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer, annotation, combination_of_categories[, combination]), collapse = "-"), fileType = "png", use_survminer = FALSE)
+      }
+    }
+  }
+}
+# Rename the results folder
+system("mv res res.genes.Analysis4")
+```
+
+```{r}
+# Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories
+system("mkdir -p res")
+# Select cancer and load expression data
+cancer <- "OV"
+mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+
+  # Prepare expression data
+  expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+  # Filter out low expressed genes
+  # Should be more than 90% of non-zero values
+  # ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+  # expr <- expr[, apply(expr, 2, ff)] 
+  expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+  # expr[1:5, 1:5]
+  
+  # Prepare clinical data
+  clin <- mtx$merged.dat[, 1:3]
+  colnames(clin)[1] <- "AffyID"
+  
+  # Full clinical information
+  clinical_annotations <- summarize_data(mtx = mtx)
+  clin_full <- mtx$clinical
+  # Match to the order of small clinical annitation
+  clin_full <- clin_full[rownames(clin_full) %in% expr$AffyID, ]
+  clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
+  all.equal(expr$AffyID, rownames(clin_full))
+  
+  # Prepare extra clinical annotation
+  clin_extra <- read.table("data.TCGA/OvarianCancerSubtypes/data/23257362/TCGA_489_UE.k4.txt", sep = "\t", header = TRUE)
+  clin_extra$Sample.ID <- sapply(clin_extra$Sample.ID, function(x) strsplit(x, ".", fixed = TRUE)[[1]][1:3] %>% paste(., collapse = "-")) # Shorten sample IDs
+  # Subset to common samples
+  common_AffyID <- intersect(rownames(clin_full), clin_extra$Sample.ID)
+  expr <- expr[ expr$AffyID %in% common_AffyID, ]
+  clin <- clin[ clin$AffyID %in% common_AffyID, ]
+  clin_full <- clin_full[ rownames(clin_full) %in% common_AffyID, ]
+  clin_extra <- clin_extra[ clin_extra$Sample.ID %in% common_AffyID, ]
+  # Make clinical annotation the same order
+  clin <- clin[ match(expr$AffyID, clin$AffyID), ]
+  clin_extra <- clin_extra[ match(expr$AffyID, clin_extra$Sample.ID), ]
+  all.equal(expr$AffyID, clin$AffyID, rownames(clin_full), clin_extra$Sample.ID)
+  # Add extra clinical annotation
+  clin_full <- data.frame(clin_full, subtype = clin_extra$k4)
+
+# Select clinical category and subcategories
+clinical_annotations_selected <- "subtype" # For OV classifier
+clin <- cbind(clin, clin_full[, clinical_annotations_selected, drop = FALSE])
+
+print(paste0("Number of patients in each subcategory, in the ", clinical_annotations_selected, " category"))
+table(clin[, clinical_annotations_selected]) 
+# All pairs of subcategories
+group_combinations <- combn(unique(clin[!is.na(clin[, clinical_annotations_selected]), clinical_annotations_selected]), 2) 
+# Survival analysis for all group combinations
+for (pair in 1:ncol(group_combinations)) {
+  # KM analysis on subcategories
+  kmplot.clin(clin = clin, event_index=2, time_index=3, clinical_annotations = clinical_annotations_selected, group1 = group_combinations[1, pair], group2 = group_combinations[2, pair], cancer_type = cancer, fileType = "png", use_survminer = FALSE)
+}
+
+
+# Plot expression boxplots for the selected gene in selected subcategories
+# selected_genes = c("SDC1") # BRCA
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+expr <- expr[ expr$AffyID %in% clin$AffyID, ]
+expr <- expr[match(clin$AffyID, expr$AffyID), ]
+# A matrix to plot
+mtx_to_plot <- data.frame(Gene = log2(expr[, selected_genes] + 1), Clinical = clin[, clinical_annotations_selected])
+mtx_to_plot <- mtx_to_plot[complete.cases(mtx_to_plot), ]
+save(mtx_to_plot, file = "res/mtx_to_plot.rda")
+# Plot and save
+p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value, fill = Clinical)) +
+  geom_boxplot() +
+  ylab("log2 expression")
+plot(p)
+ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".png"), p, width = 5, height = 4, device = "png")
+system("mv res res.genes.Analysis5")
+```
+
+```{r eval = FALSE}
+## Analysis 6: Dimensionality reduction of a gene signature across all cancers using NMF, PCA, or FA
+# For each cancer, extracts gene expression of a signature, reduces its dimensionality,
+# plots a heatmap sorted by the first component, biplots, saves eigenvectors in files
+# named after cancer, signature, method. They are used in `correlations.Rmd`
+system("rm -r res")
+system("mkdir res") # Create results folder
+library(NMF)
+library(ggfortify)
+library(pheatmap)
+signature      <- readLines("data.TCGA/EINAV_INTERFERON_SIGNATURE_IN_CANCER.txt") # Interferon signature
+selected_genes <- "interferon_signature" 
+
+pdf(file = paste0("res/dimreduction_", selected_genes, ".pdf"))
+# All cancers with RNASeq2 data
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+data.type = "RNASeq2"; type = "" 
+# Process each cancer
+for (cancer_type in cancer_RNASeq2) {
+  print(paste0("Processing cancer ", cancer_type))
+  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  # Prepare subset of expression data for a given signature
+  mtx_selected <- t(log2(mtx$merged.dat[, signature]))
+  colnames(mtx_selected) <- mtx$merged.dat$bcr
+  # NMF 
+  method <- "NMF"
+  mtx_nmf <- nmf(t(mtx_selected), 3) # with three components
+  pheatmap(mtx_selected[, order(mtx_nmf@fit@W[, 1])], cluster_cols = FALSE, treeheight_row = FALSE,   treeheight_col = FALSE, scale = "row", main = paste0(cancer_type, "_", method))
+  mtx_reduced <- mtx_nmf@fit@W
+  save(mtx_reduced, file = paste0("res/", cancer_type, "_", selected_genes, "_", method, ".Rda"))
+  # PCA
+  # https://cran.r-project.org/web/packages/ggfortify/vignettes/plot_pca.html
+  method <- "PCA"
+  mtx_pca <- prcomp(t(mtx_selected), scale. = TRUE, center = TRUE)
+  pheatmap(mtx_selected[, order(mtx_pca$x[, 1])], cluster_cols = FALSE, treeheight_row = FALSE, treeheight_col = FALSE, scale = "row", main = paste0(cancer_type, "_", method))
+  p <- autoplot(prcomp(t(mtx_selected), scale. = TRUE, center = TRUE), loadings = TRUE, loadings.label = TRUE) + ggtitle(paste0(cancer_type, "_", method))
+  print(p)
+  mtx_reduced <- mtx_pca$x
+  save(mtx_reduced, file = paste0("res/", cancer_type, "_", selected_genes, "_", method, ".Rda"))
+  # Factor analysis
+  method <- "FA"
+  mtx_fa <- factanal(t(mtx_selected), factors = 3, scores = "regression")
+  pheatmap(mtx_selected[, order(mtx_fa$scores[, 1])], cluster_cols = FALSE, treeheight_row = FALSE, treeheight_col = FALSE, scale = "row", main = paste0(cancer_type, "_", method))
+  p <- autoplot(mtx_fa,  loadings = TRUE, loadings.label = TRUE) + ggtitle(paste0(cancer_type, "_", method))
+  print(p)
+  mtx_reduced <- mtx_fa$scores
+  save(mtx_reduced, file = paste0("res/", cancer_type, "_", selected_genes, "_", method, ".Rda"))
+}
+dev.off()
+system("mv res res.genes.Analysis6")
+```
+
+# References
