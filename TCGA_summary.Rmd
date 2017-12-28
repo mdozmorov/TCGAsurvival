@@ -7,7 +7,7 @@ output:
     toc: no
   html_document:
     theme: united
-    toc: yes
+    toc: no
 csl: styles.ref/genomebiology.csl
 bibliography: data.TCGA/TCGA.bib
 ---
@@ -23,56 +23,46 @@ library(dplyr)
 options(stringsAsFactors = FALSE)
 ```
 
-# Methods
-
-## Survival analysis of gene expression data from TCGA
-
-Level 3 gene expression data summarized as RSEM values was obtained using the TCGA2STAT R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meyer curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
-
-We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
-
-```{r}
-# Settings
-gene <- "MIA" # Search and replace the name of the gene
+```{r settings}
+n_max  <- 10 # Maximum number of rows to output in tables
+gene   <- "SIAH1" # Search and replace the name of the gene
 cancer <- "BRCA"
 ```
-
-# Analysis 1: `r gene` in `r cancer` cancer
-
-```{r echo=FALSE, out.height='250px'}
-knitr::include_graphics('res.genes.Analysis1/MIA_BRCA.png')
-```
-
 
 # Analysis 2: `r gene` in all cancers
 
 The barplot shows the significance of `r gene` expression on survival in a given cancer. The wider (higher) the bar the more significant survival effect the gene has. See abbreviations of cancer types at [http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)   
 
-```{r echo=FALSE, out.height='550px'}
-knitr::include_graphics('res.genes.Analysis2/MIA_all_TCGA_cancers.png')
-```
-
+\begin{center}
+\includegraphics[height=300px]{res.genes.Analysis2/SIAH1_all_TCGA_cancers.png}
+\end{center}
 
 The same data in table format. Legend:
 
 - `Cancer`, `Cancer.Name` - cancer abbreviation and description
-- `p.value` - significance of the survival effect, sorted from smallest to largest
-- `HR` - hazard ratio, >1 means low expression is better for survival
-- `Min.`, `Median`, `Mean`, `Max.` - log2-transformed RSEM expression level summary of the gene in a corresponding cancer. Low range of expression (e.g., Max < 6) is undesirable.
-- `Cutoff_value` - gene expression cutoff best discriminating survival, found by automatic scanning. A cutoff near Min or Max is undesirable.
+- `Gene` - gene name for which survival analysis was run
+- `p.value` - significance of the survival effect
+- `HR`, `HR_left`, `HR_right` - hazard ratio, and left/right confidence interval
+- `Min.`, `X1st.Qu.`, `Median`, `Mean`, `X3rd.Qu.`, `Max.` - expression level of the gene in a corresponding cancer
+- `Cutoff_type`, `Cutoff_value` - gene expression cutoff best discriminating survival
 
 ```{r}
 cancers <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
 mtx <- read.table("res.genes.Analysis2/global_stats.txt", sep = "\t", header = TRUE)
 mtx <- mtx[order(mtx$p.value), ]
 mtx <- left_join(mtx, cancers, by = c("Cancer" = "Acronym"))
-mtx <- mtx[, c("Cancer", "Cancer.Name", "p.value", "HR", "Min.", "Median", "Mean", "Max.", "Cutoff_value")] # "HR_left", "HR_right", "X1st.Qu.", "X3rd.Qu.", 
+mtx <- mtx[, c("Cancer", "Cancer.Name", "Gene", "p.value", "HR", "HR_left", "HR_right", "Min.", "X1st.Qu.", "Median", "Mean", "X3rd.Qu.", "Max.", "Cutoff_type", "Cutoff_value")]
 # DT::datatable(mtx)
-rownames(mtx) <- NULL
-pander(mtx)
+kable(mtx[1:min(nrow(mtx), n_max), ])
 ```
 
-&nbsp;
+## Survival effect in `r cancer` cancer
+
+\begin{center}
+\includegraphics[height=250px]{res.genes.Analysis2/SIAH1_BRCA.png}
+\end{center}
+
+\pagebreak
 
 # Analysis 3: `r gene` in `r cancer`, clinical subtypes
 
@@ -80,32 +70,42 @@ The table lists clinical subtypes where the expression of `r gene` gene in `r ca
 
 ```{r}
 global_stats <- read.table("res.genes.Analysis3/global_stats.txt", sep = "\t", header = TRUE, fill = TRUE)
-global_stats <- global_stats[order(global_stats$p.value), c("Cancer", "p.value", "HR", "Min.", "Median", "Mean", "Max.", "Cutoff_value")]
-rownames(global_stats) <- NULL
-pander(global_stats)
+global_stats <- global_stats[order(global_stats$p.value), ]
+kable(global_stats[1:min(nrow(global_stats), n_max), ])
 ```
 
-## Survival effect in the selected subtype
+## "BRCA-person_neoplasm_cancer_status-TUMOR FREE"
 
-### MIA_BRCA-breast_carcinoma_estrogen_receptor_status-Positive.png
+\begin{center}
+\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-person_neoplasm_cancer_status-TUMOR FREE.png}
+\end{center}
 
-```{r echo=FALSE, out.height='240px'}
-knitr::include_graphics('res.genes.Analysis3/MIA_BRCA-breast_carcinoma_estrogen_receptor_status-Positive.png')
-```
+## "BRCA-lab_proc_her2_neu_immunohistochemistry_receptor_status-Negative"
 
-### MIA_BRCA-TP53_mut_status-p53wt
+\begin{center}
+\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-lab_proc_her2_neu_immunohistochemistry_receptor_status-Negative.png}
+\end{center}
 
-```{r echo=FALSE, out.height='240px'}
-knitr::include_graphics('res.genes.Analysis3/MIA_BRCA-TP53_mut_status-p53wt.png')
-```
+## "BRCA-histological_type-Infiltrating Lobular Carcinoma"
 
+\begin{center}
+\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-histological_type-Infiltrating Lobular Carcinoma.png}
+\end{center}
+
+## "BRCA-TP53_mut_status-p53wt"
+
+\begin{center}
+\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-TP53_mut_status-p53wt.png}
+\end{center}
+
+\pagebreak
 
 # Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, gene expression differences across categories
 
 Expression of `r gene` in selected clinical subcategories
 
-```{r echo=FALSE, out.height='200px'}
-knitr::include_graphics('res.genes.Analysis5/BRCA_MIA_PAM50Call_RNAseq.png')
+```{r echo=FALSE, out.height='250px'}
+knitr::include_graphics('res.genes.Analysis5/BRCA_SIAH1_PAM50Call_RNAseq.png')
 ```
 
 ```{r eval=FALSE}
@@ -150,6 +150,19 @@ par(mar = c(5, 8, 5, 8))
 plot(posthoc)
 ```
 
+\pagebreak 
+
+# Methods
+
+## Survival analysis of gene expression data from TCGA
+
+Level 3 gene expression data summarized as RSEM values was obtained using the `TCGA2STAT` R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meier curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
+
+We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
+
+## Differential expression analysis
+
+Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
 
 # References
 
