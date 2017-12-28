@@ -1,12 +1,11 @@
 # https://xenabrowser.net/datapages/?cohort=TCGA%20Breast%20Cancer%20(BRCA)
-# Pre-load BRCA expression matrix and clinical data
+# Pre-load BRCA expression matrix and clinical data, `mtx` object
 # Check what we have
 expr[1:5, 1:5]
 clin[1:5, ]
 
 library(jsonlite)
 library(readr)
-mtx_xena <- mtx_bak
 mtx_xena <- read_tsv("https://tcga.xenahubs.net/download/TCGA.BRCA.sampleMap/HiSeqV2.gz")
 mtx_xena <- mtx_xena[!(grepl("?", mtx_xena$sample, fixed = TRUE)), ] # Exclude genes without gene name
 mtx_xena <- mtx_xena[ order(mtx_xena$sample), ] # Order by gene names
@@ -30,7 +29,7 @@ mtx_xena <- mtx_xena[, colnames(mtx_xena) %in% colnames(expr)]
 mtx_xena <- mtx_xena[, match(colnames(expr), colnames(mtx_xena))]
 rownames(mtx_xena) <- NULL
 mtx_xena[1:5, 1:5]
-all.equal(mtx_xena, expr, tolerance = 0.001)
+all.equal(mtx_xena, expr, tolerance = 0.002)
 
 clin_xena$sampleID <- substr(clin_xena$sampleID, 1, 12) # Cut sample names
 clin_xena <- clin_xena[ clin_xena$sampleID %in% mtx_xena$AffyID, ]
