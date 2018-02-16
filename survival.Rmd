@@ -265,7 +265,10 @@ for (cancer_type in cancer_RNASeq2) {
   clin <- mtx$merged.dat[, 1:3]
   colnames(clin)[1] <- "AffyID"
   # Full clinical information
-  clin_full <- mtx$clinical
+  # clin_full <- mtx$clinical
+  clin_full <- mtx$clinical[rownames(mtx$clinical) %in% clin$AffyID, ]
+  clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
+  all.equal(rownames(clin_full), expr$AffyID)
   
   # For each clinical annotation
   for (annotation in clinical_annotations) { 
