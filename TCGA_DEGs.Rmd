@@ -228,7 +228,8 @@ expr <- (t(expr))
 colnames(expr) <- expr[1, ]
 expr <- expr[-1, ]
 class(expr) <- "numeric"
-expr <- log2(expr + 1)
+# expr <- log2(expr + 1)
+expr <- voom(expr)$E
 # boxplot(expr)
 
 # Limma
