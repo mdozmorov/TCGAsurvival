@@ -31,6 +31,8 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 - `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected. Change `selected_genes = "XXXX"` and `cancer = "YYYY"`. Manually run through line 254 to see which KEGG pathways are enriched. Then, run the code chunk on line 379 to generate a picture of the selected KEGG pathway, adjust the `![](hsa0YYYY.XXXX.png)` accordingly. Then, recompile the whole document.
 
+- `TCGA_DEGs_clin_subcategories.Rmd` - differential expression analysis between pairs of clinical subgroups, e.g., within "race" clinical category pairs of subcategories, e.g., "black or african american" vs. "white" subgroups. Output is saved in one Excel file `CANCERTYPE_DEGs_clin_subcategories.xlsx` with pairs of worksheets, one containing DEGs and another containing enrichment results. Data tables have headers describing individual comparisons and results.
+
 - `PPI_Networks.Rmd` - experimenting with extracting and visualizing data from different PPI databases, for a selected gene.
 
 - `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)

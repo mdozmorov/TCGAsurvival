@@ -1,0 +1,280 @@
+---
+title: Differential expression analysis of TCGA data between clinical subgroups
+author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    theme: united
+    toc: no
+csl: styles.ref/genomebiology.csl
+bibliography: data.TCGA/TCGA.bib
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is') #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+```{r results='hide'}
+library(TCGA2STAT)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(reshape2)
+library(gridExtra)
+library(limma)
+library(openxlsx)
+library(MDmisc)
+library(org.Hs.eg.db)
+library(enrichR)
+
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+
+# A function to get data overview
+summarize_data <- function(mtx = mtx) {
+  print(paste0("Dimensions of expression matrix, genex X patients: ", paste(dim(mtx$dat), collapse = " ")))
+  print(paste0("Dimensions of clinical matrix, patients X parameters: ", paste(dim(mtx$clinical), collapse = " ")))
+  print(paste0("Dimensions of merged matrix, patients X parameters + genes: ", paste(dim(mtx$merged.dat), collapse = " ")))
+  print("Head of the merged matrix")
+  print(mtx$merged.dat[1:5, 1:10])
+  print("Head of the clinical matrix")
+  print(mtx$clinical[1:5, 1:7])
+  print("List of clinical values, and frequency of each variable: ")
+  clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
+  # Filter clinical variables to have at least 2, but no more than 10 categories,
+  # And they are not dates
+  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
+  print(kable(clin_vars))
+  return(rownames(clin_vars))
+}
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+
+# A wrapper to save the results
+save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
+  print(paste("Running", databases, "analysis", sep = " "))
+  if (is.null(dn.genes)) {
+    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+  } else {
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+  }
+  
+  res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
+  res.kegg$qval <- formatC(res.kegg$qval, digits = 3, format = "e")
+  if (!is.null(fileNameOut)) {
+    if (nchar(databases) > 30) databases <- paste0(substr(databases, 1, 20), "_", substr(databases, nchar(databases) - 8, nchar(databases))) # If a database is longer that 30 characters, keep first 20 and last 10 characters
+    save_res(res.kegg, fileNameOut, wb = wb, sheetName = databases)
+  }
+  # Pause for a few seconds
+  pause_sec <- round(runif(1, min = 1, max = 10))
+  Sys.sleep(pause_sec)
+  return(res.kegg)
+}
+```
+
+# Methods
+
+```{r echo=TRUE}
+# Cancer type
+cancer = "LIHC" 
+# Minimum number of samples in a subcategory to be considered
+min_samples <- 15
+# Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats
+enrichr_category <- "Chromosome_Location"
+
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+
+# General settings
+useTPM    = FALSE # Whether or not to convert expression counts to TPM
+data.type = "RNASeq2"
+type = "" 
+
+# Selected clinical subcategory, will be run if not NA. Defined from summarize_data(mtx = mtx)
+selected_clinical_subcategory <- "race" # Set to NA to run all clinical subcategories
+
+# Differential expression cutoff
+pval_cutoff   <- 0.01 # P-value cutoff
+max_num_genes <- 5000 # Maximum number of genes to feed into KEGG enrichment
+
+# Enrichment cutoffs
+fdr.cutoff     <- 0.3
+up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
+top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
+
+# Filename to same the results
+fileNameRes <- paste0("results/", cancer, "_DEGs_clin_subcategories.xlsx")
+```
+
+```{r}
+# Do TPM conversion, if needed
+if (useTPM) {
+  # Check if the TPMs have already been precalculated for a given cancer
+  fileNameTPM <- paste0(data_dir, "/", cancer, "_TPM.Rda")
+  if (!file.exists(fileNameTPM)) {
+    source("calcTPM.R")
+    load(file = "data/feature_length.Rda")
+    common_genes <- intersect(colnames(expr), feature_length$Symbol) # Common gene symbols
+    expr         <- expr[, c("AffyID", common_genes)] # Subset expression matrix
+    feature_length <- feature_length[feature_length$Symbol %in% common_genes, ] # Subset feature length
+    feature_length <- feature_length[match(colnames(expr)[ -1 ], feature_length$Symbol), ] # Match order
+    all.equal(colnames(expr), c("AffyID", feature_length$Symbol)) # Should be true
+    expr_tpm <- calcTPM(t(expr[, -1]), feature_length = feature_length) # Convert to TPM, takes time
+    expr_tpm <- data.frame(AffyID = expr[, "AffyID"], t(expr_tpm), stringsAsFactors = FALSE)
+    expr <- expr_tpm
+    save(list = c("expr"), file = fileNameTPM) # Save the object
+  } else {
+    load(file = fileNameTPM)
+  }
+}
+```
+
+## Differential expression analysis
+
+Samples in the selected cancer cohort were separated into clinical subgroups, e.g., within "race" clinical category pairs of subcategories, e.g., "black or african american" vs. "white" subgroups were compared for differentially expressed genes using `limma` v `r packageVersion("limma")` R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at unadjusted p-value cutoff `r pval_cutoff` were selected for '`r enrichr_category`' functional enrichment analysis.
+
+Results are stored in the Excel file `r fileNameRes`. Sheets are named by numbers. Each results output has a header explaining what the results are.
+
+- Legend for differentially expressed gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
+
+- Legend for functional enrichment analysis: "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category.
+
+```{r}
+# Create results folder
+system("mkdir -p results") 
+# Initialize results file
+unlink(fileNameRes)
+wb <- openxlsx::createWorkbook(fileNameRes) # openxlsx::loadWorkbook(fileName)
+sheetCount <- 0 # Simple sheet name placeholder
+
+cancer_type <- cancer
+print(paste0("Processing cancer ", cancer_type))
+mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+clinical_annotations <- summarize_data(mtx = mtx)
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+# Prepare clinical data
+clin <- mtx$merged.dat[, 1:3]
+colnames(clin)[1] <- "AffyID"
+# Full clinical information
+clin_full <- mtx$clinical[rownames(mtx$clinical) %in% clin$AffyID, ]
+clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
+all.equal(rownames(clin_full), expr$AffyID)
+
+# Override clinical subcategories, if non-empty
+if (!is.na(selected_clinical_subcategory) | selected_clinical_subcategory != "") {
+  clinical_annotations <- selected_clinical_subcategory
+}
+
+# For each clinical annotation
+for (annotation in clinical_annotations) { 
+  # Get the number of patients per category in the current annotation
+  annotations <- table(clin_full[, annotation], useNA = "no") 
+  # Remove annotations less than a pre-defined number of samples
+  annotations <- annotations[annotations >= min_samples]
+  # Get combinations of all pairs of clinical subgroups
+  annotations_combn <- combn(names(annotations), 2)
+  # Go through each combination
+  for (i in 1:ncol(annotations_combn)) {
+    group1 <- annotations_combn[1, i] # First group
+    group2 <- annotations_combn[2, i] # second group
+    # Samples for second vs. first group comparison
+    ind_up <- which(rownames(clin_full) %in% rownames(clin_full[ clin_full[, annotation] %in% group2 , ]))     
+    ind_lo <- which(rownames(clin_full) %in% rownames(clin_full[ clin_full[, annotation] %in% group1 , ]))
+    # For differential analysis, create group labels
+    group <- vector(mode = "numeric", length = nrow(expr)) # Empty bector
+    group[ind_up] <- 1 # Assign numeric groups
+    group[ind_lo] <- 2
+    # table(group) # How many patients we have
+    expr_subset <- expr[group != 0, ] # Remove those that are not in quantiles
+    group <- group[ group != 0 ]
+    # Reshape expr_subsetession matrix
+    expr_subset <- (t(expr_subset))
+    colnames(expr_subset) <- expr_subset[1, ]
+    expr_subset <- expr_subset[-1, ]
+    class(expr_subset) <- "numeric"
+    expr_subset <- voom(expr_subset)$E
+    # boxplot(expr_subset)
+    
+    # Limma
+    design <- model.matrix(~0 + factor(group))
+    colnames(design) <- c("up", "lo")
+    fit <- lmFit(expr_subset, design)
+    contrast.matrix <- makeContrasts(up-lo, levels = design)
+    fit2 <- contrasts.fit(fit, contrast.matrix)
+    fit2 <- eBayes(fit2)
+    degs <- topTable(fit2, coef = 1, number = Inf, p.value = pval_cutoff)
+    
+    # Check if the list of DEGs is non-empty, proceed with enrichment analysis
+    if (nrow(degs) > 0) {
+      # Save DEGs, with header
+      sheetCount <- sheetCount + 1 # Increase sheet count
+      degs_to_save <- data.frame(Gene = rownames(degs), degs) #Append gene names to the DEG list
+      header <- data.frame(matrix("", ncol = ncol(degs_to_save), nrow = 1, dimnames = list(" ", colnames(degs_to_save)))) # Header one-row data frame, column names matching DEGs
+      header[1, 1] <- paste0(nrow(degs), " DEGs in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
+      save_res(rbind(header, degs_to_save), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
+      
+      # Subset the number of DEGs for KEGG analysis to the pre-defined maximum
+      if (nrow(degs) > max_num_genes) {
+        degs_subset <- degs[1:max_num_genes, ]
+      } else {
+        degs_subset <- degs
+      }
+      # Get list of up- and downregulated genes
+      up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
+      dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
+      # Run functional enrichment
+      if (up_dn_separate) {
+        # Analyze up- and downregulated genes separately
+        print(paste0(enrichr_category, " analysis run on ", length(up.gene), " upregulated and ", length(dn.genes), " downregulated genes."))
+        res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = enrichr_category, fdr.cutoff = fdr.cutoff)
+      } else {
+        # Analyze up- and downregulated genes together
+        print(paste0(enrichr_category, " analysis run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
+        res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = enrichr_category, fdr.cutoff = fdr.cutoff)
+      }
+      # Save the results, if non-empty
+      if (nrow(res.kegg) > 0) {
+        sheetCount <- sheetCount + 1 # Increase sheet count
+        header <- data.frame(matrix("", ncol = ncol(res.kegg), nrow = 1, dimnames = list(" ", colnames(res.kegg)))) # Header one-row data frame, column names matching DEGs
+        header[1, 1] <- paste0(nrow(res.kegg), " enrichments in ", enrichr_category, " in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
+        save_res(rbind(header, res.kegg), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
+      }
+    }
+  }
+}
+```
+
+# References
