@@ -115,7 +115,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 
 # General settings
 useTPM    = FALSE # Whether or not to convert expression counts to TPM
-data.type = "RNASeq2"
+data.type = "CNV_SNP" # "CNA_SNP" # "RNASeq2"
 type = "" 
 
 # Selected clinical subcategory, will be run if not NA. Defined from summarize_data(mtx = mtx)
@@ -234,7 +234,13 @@ for (annotation in clinical_annotations) {
     colnames(expr_subset) <- expr_subset[1, ]
     expr_subset <- expr_subset[-1, ]
     class(expr_subset) <- "numeric"
-    expr_subset <- voom(expr_subset)$E
+    # Convert to the proper numerical scale for limma
+    if (grepl("RNA", data.type)) {
+      expr_subset <- voom(expr_subset)$E
+    }
+    if (grepl("CN", data.type)) {
+      expr_subset <- ((1 + expr_subset) / 2) * 10
+    }
     # boxplot(expr_subset)
     
     # Limma
