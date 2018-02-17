@@ -124,7 +124,7 @@ selected_clinical_subgroup1   <- "black or african american" # Set both subgroup
 selected_clinical_subgroup2   <- "white"                     # To run all pairs of subgroups
   
 # Differential expression cutoff
-pval_cutoff   <- 0.01 # P-value cutoff
+pval_cutoff   <- 0.05 # P-value cutoff
 max_num_genes <- 5000 # Maximum number of genes to feed into functional enrichment
 full_degs_output <- TRUE # If TRUE, output differential expression statistics for all genes
 
@@ -133,7 +133,7 @@ fdr.cutoff     <- 0.3
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
-fileNameRes <- paste0("results/", cancer, "_DEGs_clin_subcategories.xlsx")
+fileNameRes <- paste0("results/", cancer, "_", data.type, "_DEGs_clin_subcategories.xlsx")
 ```
 
 ```{r}
