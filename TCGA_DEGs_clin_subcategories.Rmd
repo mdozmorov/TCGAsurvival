@@ -107,7 +107,7 @@ cancer = "LIHC"
 # Minimum number of samples in a subcategory to be considered
 min_samples <- 15
 # Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats
-enrichr_category <- "Chromosome_Location"
+enrichr_category <- c("Chromosome_Location", "KEGG_2016")
 
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
@@ -122,11 +122,12 @@ selected_clinical_subcategory <- "race" # Set to NA to run all clinical subcateg
 
 # Differential expression cutoff
 pval_cutoff   <- 0.01 # P-value cutoff
-max_num_genes <- 5000 # Maximum number of genes to feed into KEGG enrichment
+max_num_genes <- 5000 # Maximum number of genes to feed into functional enrichment
+full_degs_output <- TRUE # If TRUE, output differential expression statistics for all genes
 
 # Enrichment cutoffs
 fdr.cutoff     <- 0.3
-up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
+up_dn_separate <- FALSE # Whether to run functional separately on up- and downregulated genes. FALSE - do not distinguish directionality
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
@@ -239,19 +240,25 @@ for (annotation in clinical_annotations) {
     
     # Check if the list of DEGs is non-empty, proceed with enrichment analysis
     if (nrow(degs) > 0) {
-      # Save DEGs, with header
-      sheetCount <- sheetCount + 1 # Increase sheet count
-      degs_to_save <- data.frame(Gene = rownames(degs), degs) #Append gene names to the DEG list
-      header <- data.frame(matrix("", ncol = ncol(degs_to_save), nrow = 1, dimnames = list(" ", colnames(degs_to_save)))) # Header one-row data frame, column names matching DEGs
-      header[1, 1] <- paste0(nrow(degs), " DEGs in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
-      save_res(rbind(header, degs_to_save), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
-      
       # Subset the number of DEGs for KEGG analysis to the pre-defined maximum
       if (nrow(degs) > max_num_genes) {
         degs_subset <- degs[1:max_num_genes, ]
       } else {
         degs_subset <- degs
       }
+
+      # Save DEGs, with header
+      sheetCount <- sheetCount + 1 # Increase sheet count
+      if (full_degs_output) { # Save the full DEG list?
+        degs_to_save <- data.frame(Gene = rownames(degs), topTable(fit2, coef = 1, number = Inf)) # Append gene names to the DEG list
+      } else {
+        degs_to_save <- data.frame(Gene = rownames(degs), degs) #Append gene names to the DEG list
+      }
+      # Make header    
+      header <- data.frame(matrix("", ncol = ncol(degs_to_save), nrow = 1, dimnames = list(" ", colnames(degs_to_save)))) # Header one-row data frame, column names matching DEGs
+      header[1, 1] <- paste0(nrow(degs), " DEGs in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
+      save_res(rbind(header, degs_to_save), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
+      
       # Get list of up- and downregulated genes
       up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
       dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
