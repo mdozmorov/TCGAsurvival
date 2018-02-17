@@ -34,6 +34,7 @@ library(limma)
 library(openxlsx)
 library(MDmisc)
 library(org.Hs.eg.db)
+# devtools::install_github("mdozmorov/enrichR")
 library(enrichR)
 
 # A function to load TCGA data, from remote repository, or a local R object
@@ -81,9 +82,9 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
 save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
   print(paste("Running", databases, "analysis", sep = " "))
   if (is.null(dn.genes)) {
-    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = fdr.cutoff)
   } else {
-    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = fdr.cutoff)
   }
   
   res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
@@ -107,7 +108,7 @@ cancer = "LIHC"
 # Minimum number of samples in a subcategory to be considered
 min_samples <- 15
 # Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats
-enrichr_category <- c("Chromosome_Location", "KEGG_2016")
+enrichr_category <- c("Chromosome_Location", "KEGG_2016", "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b")
 
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
@@ -119,7 +120,9 @@ type = ""
 
 # Selected clinical subcategory, will be run if not NA. Defined from summarize_data(mtx = mtx)
 selected_clinical_subcategory <- "race" # Set to NA to run all clinical subcategories
-
+selected_clinical_subgroup1   <- "black or african american" # Set both subgroups to NA
+selected_clinical_subgroup2   <- "white"                     # To run all pairs of subgroups
+  
 # Differential expression cutoff
 pval_cutoff   <- 0.01 # P-value cutoff
 max_num_genes <- 5000 # Maximum number of genes to feed into functional enrichment
@@ -127,7 +130,6 @@ full_degs_output <- TRUE # If TRUE, output differential expression statistics fo
 
 # Enrichment cutoffs
 fdr.cutoff     <- 0.3
-up_dn_separate <- FALSE # Whether to run functional separately on up- and downregulated genes. FALSE - do not distinguish directionality
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
@@ -197,6 +199,7 @@ all.equal(rownames(clin_full), expr$AffyID)
 # Override clinical subcategories, if non-empty
 if (!is.na(selected_clinical_subcategory) | selected_clinical_subcategory != "") {
   clinical_annotations <- selected_clinical_subcategory
+  table(clin_full[, clinical_annotations], useNA = "no") # Check subgroups
 }
 
 # For each clinical annotation
@@ -207,6 +210,11 @@ for (annotation in clinical_annotations) {
   annotations <- annotations[annotations >= min_samples]
   # Get combinations of all pairs of clinical subgroups
   annotations_combn <- combn(names(annotations), 2)
+  # If custom subgroups selected, subset the combination matrix
+  if (!(is.na(selected_clinical_subgroup1) & is.na(selected_clinical_subgroup2))) {
+    annotations_combn <- annotations_combn[, grepl(selected_clinical_subgroup1, annotations_combn[1, ]) &
+                                             grepl(selected_clinical_subgroup2, annotations_combn[2, ]), drop = FALSE]
+  }
   # Go through each combination
   for (i in 1:ncol(annotations_combn)) {
     group1 <- annotations_combn[1, i] # First group
@@ -250,7 +258,8 @@ for (annotation in clinical_annotations) {
       # Save DEGs, with header
       sheetCount <- sheetCount + 1 # Increase sheet count
       if (full_degs_output) { # Save the full DEG list?
-        degs_to_save <- data.frame(Gene = rownames(degs), topTable(fit2, coef = 1, number = Inf)) # Append gene names to the DEG list
+        degs_to_save <- topTable(fit2, coef = 1, number = Inf)
+        degs_to_save <- data.frame(Gene = rownames(degs_to_save), degs_to_save) # Append gene names to the DEG list
       } else {
         degs_to_save <- data.frame(Gene = rownames(degs), degs) #Append gene names to the DEG list
       }
@@ -263,21 +272,15 @@ for (annotation in clinical_annotations) {
       up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
       dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
       # Run functional enrichment
-      if (up_dn_separate) {
-        # Analyze up- and downregulated genes separately
-        print(paste0(enrichr_category, " analysis run on ", length(up.gene), " upregulated and ", length(dn.genes), " downregulated genes."))
-        res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = enrichr_category, fdr.cutoff = fdr.cutoff)
-      } else {
-        # Analyze up- and downregulated genes together
-        print(paste0(enrichr_category, " analysis run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
-        res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = enrichr_category, fdr.cutoff = fdr.cutoff)
-      }
-      # Save the results, if non-empty
-      if (nrow(res.kegg) > 0) {
-        sheetCount <- sheetCount + 1 # Increase sheet count
-        header <- data.frame(matrix("", ncol = ncol(res.kegg), nrow = 1, dimnames = list(" ", colnames(res.kegg)))) # Header one-row data frame, column names matching DEGs
-        header[1, 1] <- paste0(nrow(res.kegg), " enrichments in ", enrichr_category, " in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
-        save_res(rbind(header, res.kegg), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
+      for (j in enrichr_category) {
+        res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = j, fdr.cutoff = fdr.cutoff)
+        # Save the results, if non-empty
+        if (nrow(res.kegg) > 0) {
+          sheetCount <- sheetCount + 1 # Increase sheet count
+          header <- data.frame(matrix("", ncol = ncol(res.kegg), nrow = 1, dimnames = list(" ", colnames(res.kegg)))) # Header one-row data frame, column names matching DEGs
+          header[1, 1] <- paste0(nrow(res.kegg), " enrichments in ", j, " in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
+          save_res(rbind(header, res.kegg), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
+        }
       }
     }
   }
