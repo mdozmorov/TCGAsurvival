@@ -6,9 +6,19 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
 - [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
 
+## Examples
+
+- [CELLX analysis summary, "CELLX_analysis.Rmd"](examples/CELLX_analysis_MIA.pdf)
+- [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary_MIA.pdf)
+- [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
+- [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
+- [Correlation analysis results, "TCGA_correlations.Rmd"](examples/TCGA_correlations_MIA.pdf), [Example Excel output](examples/TCGA_correlations_MIA.xlsx) 
+
+## Files
+
 - `Cancer_DB.Rmd` - a list of cancer-related databases
 
-- `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. Output is the HTML file.
+- `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. [Example](examples/CELLX_analysis_MIA.pdf)
 
 - `survival.Rmd` - a pipeline to run survival analyses. Based on `survival.R`. Change
     - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `res.genes.Analysis1` folder.
@@ -21,15 +31,15 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - `survival_BRCA.Rmd` - survival analyses adjusted for BRCA (Analysis 3)
 - `survival_OVCA.Rmd` - survival analyses adjusted for OV (Analysis 3)
 
-- `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders.
+- `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders. [Example](examples/TCGA_summary_MIA.pdf)
 
-- `coexpression.Rmd` - Expression of selected genes across all TCGA cancers. Change `selected_genes <- "XXXX"`, can be multiple. Generates an HTML file with a barplot of log2-expression of selected genes across all cancers, with standard errors.
+- `TCGA_expression.Rmd` - Expression of selected genes across all TCGA cancers. Used for comparing expression of two or more genes. Change `selected_genes <- "XXXX"`, can be multiple. Generates a PDF file with a barplot of log2-expression of selected genes across all cancers, with standard errors. [Example](examples/TCGA_expression.pdf)
 
-- `correlations.Rmd` - Co-expression analysis of selected gene vs. all others, in selected cancers. Genes best correlating with the selected gene may share common functions, described in the KEGG canonical pathway analysis section. Change `selected_genes <- "XXXX"` and `cancer_RNASeq2 <- "YYYY"` variables. The run saves two RData objects, `res/YYYY_expression_RNASeq2_.Rda` and `results/YYYY_correlation_XXXX_RNASeq2_.Rda`. This speeds up re-runs with the same settings. The full output is saved in `results/YYYY_results_XXXX_RNASeq2_.xlsx`
+- `TCGA_correlations.Rmd` - Co-expression analysis of selected gene vs. all others, in selected cancers. Genes best correlating with the selected gene may share common functions, described in the KEGG canonical pathway analysis section. Change `selected_genes <- "XXXX"` and `cancer_RNASeq2 <- "YYYY"` variables. The run saves two RData objects, `res/YYYY_expression_RNASeq2_.Rda` and `results/YYYY_correlation_XXXX_RNASeq2_.Rda`. This speeds up re-runs with the same settings. The full output is saved in `results/YYYY_results_XXXX_RNASeq2_.xlsx`. [Example PDF](examples/TCGA_correlations_MIA.pdf), [Example Excel](examples/TCGA_correlations_MIA.xlsx)
 
 - `correlations_one_vs_one.Rmd` - Co-expression analysis of two genes across all cancers. The knitted HTML contains table with correlation coefficients and p-values.
 
-- `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected. Change `selected_genes = "XXXX"` and `cancer = "YYYY"`. Manually run through line 254 to see which KEGG pathways are enriched. Then, run the code chunk on line 379 to generate a picture of the selected KEGG pathway, adjust the `![](hsa0YYYY.XXXX.png)` accordingly. Then, recompile the whole document.
+- `TCGA_DEGs.Rmd` - differential expression analysis of TCGA cohorts separated into groups with high/low expression of selected genes. The results are similar to the `correlation` results, most of the differentially expressed genes are also best correlated with the selected genes. This analysis is to explicitly look at the extremes of the selected gene expression and identify KEGG pathways that may be affected. Change `selected_genes = "XXXX"` and `cancer = "YYYY"`. Manually run through line 254 to see which KEGG pathways are enriched. Then, run the code chunk on line 379 to generate a picture of the selected KEGG pathway, [Example](examples/hsa05217.MIA.png), adjust the `![](hsa0YYYY.XXXX.png)` accordingly. Then, recompile the whole document. [Example PDF](examples/TCGA_DEGs_MIA.pdf), [Example Excel](examples/TCGA_DEGs_MIA.xlsx) 
 
 - `TCGA_DEGs_clin_subcategories.Rmd` - differential expression analysis between pairs of clinical subgroups, e.g., within "race" clinical category pairs of subcategories, e.g., "black or african american" vs. "white" subgroups. Output is saved in one Excel file `CANCERTYPE_DEGs_clin_subcategories.xlsx` with pairs of worksheets, one containing DEGs and another containing enrichment results. Data tables have headers describing individual comparisons and results.
 

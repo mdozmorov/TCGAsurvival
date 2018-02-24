@@ -1,14 +1,14 @@
 ---
 title: "Genes best correlating with the selected gene"
-output:
-  html_document:
-    toc: true
-    # toc_float: true
-    theme: united
-    # theme: cerulean
-    # number_sections: true
-date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+always_allow_html: yes
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    theme: united
+    toc: yes
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -96,7 +96,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 
 # Selected genes
 precalculated  <- FALSE
-selected_genes <- c("DLL3") # If nothing precalculated - use one of the genes
+selected_genes <- c("MIA") # If nothing precalculated - use one of the genes
 method         <- "" # If correlation with the selected_gene is measured, method is empty
 # If precalculated, use precalculated values
 # precalculated  <- TRUE 
@@ -106,8 +106,8 @@ method         <- "" # If correlation with the selected_gene is measured, method
 # Data type
 data.type = "RNASeq2" ; type = "" 
 # Expression cutoffs. To use all expression, use "0" expression cutoff and "TRUE" top_expression
-expression_cutoff <- 0.2   # From 0 to 1, percent cutoff of expression of the selected gene
-top_expression    <- FALSE # Whether to take top (TRUE) of bottom (FALSE) expression 
+expression_cutoff <- 0   # From 0 to 1, percent cutoff of expression of the selected gene
+top_expression    <- TRUE # Whether to take top (TRUE) of bottom (FALSE) expression 
 
 # All cancers with RNASeq2 data
 # cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
@@ -115,7 +115,7 @@ top_expression    <- FALSE # Whether to take top (TRUE) of bottom (FALSE) expres
 # fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
-cancer_RNASeq2 = c("LUAD")
+cancer_RNASeq2 = c("BRCA")
 fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
 fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
 fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), ".xlsx") # Save results
@@ -128,6 +128,7 @@ pval_cutoff  <- 0.05
 # Enrichment cutoffs
 p.adj.cutoff <- 0.1
 fdr.cutoff   <- 0.3
+top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 ```
 
 ```{r loadExpressionData}
@@ -232,7 +233,11 @@ Full correlation results are saved in `r fileNameRes` file.
 
 ```{r}
 res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileNameOut = fileNameRes, wb = wb)
-DT::datatable(res.kegg)
+# Display the results
+# DT::datatable(res.kegg)
+if (nrow(res.kegg) > 0 ) {
+  kable(res.kegg[1:min(top_X, nrow(res.kegg)), ])
+}
 ```
 
 ```{r eval = FALSE}
@@ -278,7 +283,9 @@ degs.genes <- degs$corr                           # A vector of numeric log fold
 names(degs.genes) <- degs$symbol                   # Give this vector names
 
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "hsa04510", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = "my_pathway")
-# ![](hsa04510.my_pathway.png)
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "hsa05217", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
+```{r echo=FALSE, out.height='300px', eval=TRUE}
+knitr::include_graphics('hsa05217.MIA.png')
+```
