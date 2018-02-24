@@ -179,14 +179,14 @@ colnames(clin)[1] <- "AffyID"
 # selected_genes = c("CPEB2") # BRCA
 # selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
 # selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
-# selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
+selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
 # selected_genes = "DYRK1A"
 # selected_genes = "DCAF7"
 # selected_genes = "MBD2" # AML
 # selected_genes = c("FOXP3") # BRCA
 # selected_genes = c("TNFRSF1B") # TNFR2, BRCA
 # selected_genes = c("RORC") # BRCA
-selected_genes = c("SIAH1") # OV
+# selected_genes = c("SIAH1") # OV
 ```
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
@@ -255,7 +255,7 @@ for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   # BRCA-specific - replace original annotations with XENA
-  mtx$clinical <- read.csv("data.TCGA/BRCA_XENA_clinical.csv", row.names = 1)
+  mtx$clinical <- read.csv("data.TCGA/XENA_classification.csv", row.names = 1)
   
   clinical_annotations <- summarize_data(mtx = mtx)
   # Prepare expression data
