@@ -131,7 +131,7 @@ pval_cutoff   <- 0.01 # P-value cutoff
 max_num_genes <- 6000 # Maximum number of genes to feed into KEGG enrichment
 # Enrichment cutoffs
 fdr.cutoff     <- 0.3
-up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
+up_dn_separate <- TRUE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
@@ -295,7 +295,7 @@ dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
 # Run KEGG
 if (up_dn_separate) {
   # Analyze up- and downregulated genes separately
-  print(paste0("KEGG pathway run on ", length(up.gene), " upregulated and ", length(dn.genes), " downregulated genes."))
+  print(paste0("KEGG pathway run on ", length(up.genes), " upregulated and ", length(dn.genes), " downregulated genes."))
   res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
 } else {
   # Analyze up- and downregulated genes together
@@ -325,11 +325,11 @@ degs <- read.xlsx(fileNameRes, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "04060", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "05217", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-```{r echo=FALSE, out.height='400px'}
-knitr::include_graphics('hsa04060.MIA.png')
+```{r echo=FALSE, out.height='300px', eval=TRUE}
+knitr::include_graphics('hsa05217.MIA.png')
 ```
 
 
@@ -463,3 +463,5 @@ pander(platform)
 packages <- as.data.frame(diagnostics$packages)
 pander(packages[ packages$`*` == "*", ])
 ```
+
+# References
