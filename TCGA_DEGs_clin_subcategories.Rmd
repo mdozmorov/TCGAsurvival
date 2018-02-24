@@ -104,18 +104,19 @@ save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "LIHC" 
+cancer = "BRCA" 
 # Minimum number of samples in a subcategory to be considered
 min_samples <- 15
 # Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats
-enrichr_category <- c("Chromosome_Location", "KEGG_2016", "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b")
+enrichr_category <- c("KEGG_2016", "Chromosome_Location",  "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b") # ,
 
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
 
 # General settings
 useTPM    = FALSE # Whether or not to convert expression counts to TPM
-data.type = "CNV_SNP" # "CNA_SNP" # "RNASeq2"
+# https://github.com/mksamur/RTCGAToolbox/issues/3
+data.type = "RNASeq2" #  "CNA_SNP" # "CNV_SNP" # "RNASeq2"
 type = "" 
 
 # Selected clinical subcategory, will be run if not NA. Defined from summarize_data(mtx = mtx)
@@ -124,12 +125,12 @@ selected_clinical_subgroup1   <- "black or african american" # Set both subgroup
 selected_clinical_subgroup2   <- "white"                     # To run all pairs of subgroups
   
 # Differential expression cutoff
-pval_cutoff   <- 0.05 # P-value cutoff
+pval_cutoff   <- 0.0000000001 # Adjusted P-value cutoff
 max_num_genes <- 5000 # Maximum number of genes to feed into functional enrichment
 full_degs_output <- TRUE # If TRUE, output differential expression statistics for all genes
 
 # Enrichment cutoffs
-fdr.cutoff     <- 0.3
+fdr.cutoff     <- 0.1
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
@@ -163,7 +164,11 @@ if (useTPM) {
 
 Samples in the selected cancer cohort were separated into clinical subgroups, e.g., within "race" clinical category pairs of subcategories, e.g., "black or african american" vs. "white" subgroups were compared for differentially expressed genes using `limma` v `r packageVersion("limma")` R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at unadjusted p-value cutoff `r pval_cutoff` were selected for '`r enrichr_category`' functional enrichment analysis.
 
-Results are stored in the Excel file `r fileNameRes`. Sheets are named by numbers. Each results output has a header explaining what the results are.
+Results are stored in the Excel file `r fileNameRes`. 
+
+- Sheets are named by numbers
+- One sheet contains differentially expressed genes, followed by sheets with functional analysis results 
+- Each results output has a header explaining what the results are
 
 - Legend for differentially expressed gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
 
@@ -195,6 +200,10 @@ colnames(clin)[1] <- "AffyID"
 clin_full <- mtx$clinical[rownames(mtx$clinical) %in% clin$AffyID, ]
 clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
 all.equal(rownames(clin_full), expr$AffyID)
+# Save clinical data
+# wb1 <- openxlsx::createWorkbook(paste0("results/", cancer, "_clinical.xlsx")) # openxlsx::loadWorkbook(fileName)
+# save_res(data.frame(Patients = rownames(clin_full), clin_full), fileName = paste0("results/", cancer, "_clinical.xlsx"), wb = wb1, sheetName = paste0(cancer, "_clinical"))
+
 
 # Override clinical subcategories, if non-empty
 if (!is.na(selected_clinical_subcategory) | selected_clinical_subcategory != "") {
