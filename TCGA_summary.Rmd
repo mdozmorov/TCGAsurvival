@@ -25,7 +25,7 @@ options(stringsAsFactors = FALSE)
 
 ```{r settings}
 n_max  <- 10 # Maximum number of rows to output in tables
-gene   <- "SIAH1" # Search and replace the name of the gene
+gene   <- "MIA" # Search and replace the name of the gene
 cancer <- "BRCA"
 ```
 
@@ -34,7 +34,7 @@ cancer <- "BRCA"
 The barplot shows the significance of `r gene` expression on survival in a given cancer. The wider (higher) the bar the more significant survival effect the gene has. See abbreviations of cancer types at [http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)   
 
 \begin{center}
-\includegraphics[height=300px]{res.genes.Analysis2/SIAH1_all_TCGA_cancers.png}
+\includegraphics[height=300px]{res.genes.Analysis2/MIA_all_TCGA_cancers.png}
 \end{center}
 
 The same data in table format. Legend:
@@ -59,7 +59,7 @@ kable(mtx[1:min(nrow(mtx), n_max), ])
 ## Survival effect in `r cancer` cancer
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis2/SIAH1_BRCA.png}
+\includegraphics[height=250px]{res.genes.Analysis2/MIA_BRCA.png}
 \end{center}
 
 \pagebreak
@@ -74,28 +74,28 @@ global_stats <- global_stats[order(global_stats$p.value), ]
 kable(global_stats[1:min(nrow(global_stats), n_max), ])
 ```
 
-## "BRCA-person_neoplasm_cancer_status-TUMOR FREE"
+## "MIA_BRCA-race-white"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-person_neoplasm_cancer_status-TUMOR FREE.png}
+\includegraphics[height=250px]{res.genes.Analysis3/MIA_BRCA-race-white.png}
 \end{center}
 
-## "BRCA-lab_proc_her2_neu_immunohistochemistry_receptor_status-Negative"
+## "MIA_BRCA-race-black or african american"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-lab_proc_her2_neu_immunohistochemistry_receptor_status-Negative.png}
+\includegraphics[height=250px]{res.genes.Analysis3/MIA_BRCA-race-black or african american.png}
 \end{center}
 
-## "BRCA-histological_type-Infiltrating Lobular Carcinoma"
+## "MIA_BRCA-radiation_therapy-NO"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-histological_type-Infiltrating Lobular Carcinoma.png}
+\includegraphics[height=250px]{res.genes.Analysis3/MIA_BRCA-radiation_therapy-NO.png}
 \end{center}
 
-## "BRCA-TP53_mut_status-p53wt"
+## "MIA_BRCA-radiation_therapy-YES"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/SIAH1_BRCA-TP53_mut_status-p53wt.png}
+\includegraphics[height=250px]{res.genes.Analysis3/MIA_BRCA-radiation_therapy-YES.png}
 \end{center}
 
 \pagebreak
@@ -105,10 +105,10 @@ kable(global_stats[1:min(nrow(global_stats), n_max), ])
 Expression of `r gene` in selected clinical subcategories
 
 ```{r echo=FALSE, out.height='250px'}
-knitr::include_graphics('res.genes.Analysis5/BRCA_SIAH1_PAM50Call_RNAseq.png')  # 'PAM50Call_RNAseq' for BRCA, 'subtype' for OV
+knitr::include_graphics('res.genes.Analysis5/BRCA_MIA_PAM50Call_RNAseq.png')  # 'PAM50Call_RNAseq' for BRCA, 'subtype' for OV
 ```
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 global_stats <- read.table("res.genes.Analysis5/global_stats.txt", sep = "\t", header = TRUE, fill = TRUE)
 global_stats <- global_stats[order(global_stats$p.value), c("Cancer", "Gene", "p.value", "HR")]
 rownames(global_stats) <- NULL
