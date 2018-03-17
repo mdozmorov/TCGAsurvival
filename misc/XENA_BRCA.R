@@ -1,5 +1,5 @@
 # https://xenabrowser.net/datapages/?cohort=TCGA%20Breast%20Cancer%20(BRCA)
-# Pre-load BRCA expression matrix and clinical data, `mtx` object
+# Pre-load BRCA expression matrix and clinical data, `mtx` object. Use, e.g., `survival_BRCA.Rmd`, run code through line 166
 # Check what we have
 expr[1:5, 1:5]
 clin[1:5, ]
@@ -46,11 +46,23 @@ clin_xena <- left_join(data.frame(sampleID = expr$AffyID), clin_xena, by = "samp
 # Attach race
 clin_xena <- left_join(clin_xena, data.frame(sampleID = rownames(clin_full), race = clin_full[ , "race"]), by = "sampleID")
 all.equal(expr$AffyID, clin_xena$sampleID)
+dim(expr)      # 1093 16012
+dim(clin_xena) # 1093   26
 
 sum(!is.na(clin_xena$PAM50Call_RNAseq))
 # 840
 table(clin_xena$PAM50Call_RNAseq[ !is.na(clin_xena$PAM50Call_RNAseq) ])
 table(clin_xena[, c("PAM50Call_RNAseq", "race")])
+# 840 patients annotated 
 # Basal   Her2   LumA   LumB Normal 
 # 139     67    419    192     23
 write_csv(clin_xena, "data.TCGA/XENA_classification.csv")
+# All 1093 samples are outputted, some have NA in `PAM50Call_RNAseq` annotation column
+mtx_to_save           <- expr[, -1] # Expression data without first column
+rownames(mtx_to_save) <- expr[, 1]  # First column as row names
+mtx_to_save <- t(mtx_to_save)       # Transpose
+mtx_to_save[1:5, 1:5]
+clin_xena[1:5, 1:5]
+dim(mtx_to_save); dim(clin_xena)
+all.equal(colnames(mtx_to_save), clin_xena$sampleID)
+write_csv(data.frame(gene = (rownames(mtx_to_save)), mtx_to_save), "data.TCGA/XENA_BRCA_RSEM.csv")
