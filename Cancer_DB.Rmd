@@ -26,6 +26,10 @@ options(stringsAsFactors = FALSE)
 
 # Survival
 
+## GEPIA, http://gepia.cancer-pku.cn/
+
+- Zefang Tang et al., “GEPIA: A Web Server for Cancer and Normal Gene Expression Profiling and Interactive Analyses,” Nucleic Acids Research 45, no. W1 (July 3, 2017): W98–102, https://doi.org/10.1093/nar/gkx247. - TCGA and GTEX web interface. Classical analyses - differential expression analysis, profiling plotting, correlation analysis, patient survival analysis, similar gene detection and dimensionality reduction analysis. http://gepia.cancer-pku.cn/
+
 ## KM plotter, http://kmplot.com/
 
 Gene-centric, customizable survival analysis for breast, ovarian, lung, gastric cancers
