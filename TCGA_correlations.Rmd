@@ -96,7 +96,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 
 # Selected genes
 precalculated  <- FALSE
-selected_genes <- c("MIA") # If nothing precalculated - use one of the genes
+selected_genes <- c("LONRF2") # If nothing precalculated - use one of the genes
 method         <- "" # If correlation with the selected_gene is measured, method is empty
 # If precalculated, use precalculated values
 # precalculated  <- TRUE 
@@ -105,6 +105,9 @@ method         <- "" # If correlation with the selected_gene is measured, method
 
 # Data type
 data.type = "RNASeq2" ; type = "" 
+data.type = "2018_pub"; type = "mrna" # Neuroblastoma
+
+
 # Expression cutoffs. To use all expression, use "0" expression cutoff and "TRUE" top_expression
 expression_cutoff <- 0   # From 0 to 1, percent cutoff of expression of the selected gene
 top_expression    <- TRUE # Whether to take top (TRUE) of bottom (FALSE) expression 
@@ -116,6 +119,8 @@ top_expression    <- TRUE # Whether to take top (TRUE) of bottom (FALSE) express
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
 cancer = c("BRCA")
+cancer = "nbl_target"  # Neuroblastoma
+
 fileNameIn <- (paste0("data/", cancer, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
 fileNameOut <- paste0("results/", cancer, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
 fileNameRes <- paste0("results/", cancer, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), ".xlsx") # Save results
