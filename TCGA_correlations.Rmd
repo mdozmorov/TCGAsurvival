@@ -133,7 +133,9 @@ pval_cutoff  <- 0.05
 # Enrichment cutoffs
 p.adj.cutoff <- 0.1
 fdr.cutoff   <- 0.3
+up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
+max_num_genes <- 6000 # Maximum number of genes to feed into KEGG enrichment
 ```
 
 ```{r loadExpressionData}
@@ -210,9 +212,21 @@ save_res(correlations[ order(correlations$corr, decreasing = TRUE), ], fileName 
 correlations.subset <- correlations[ correlations$pval < pval_cutoff & abs(correlations$corr) > corr_cutoff, ]
 correlations.subset$corr <- signif(correlations.subset$corr)
 correlations.subset$pval <- signif(correlations.subset$pval)
-DT::datatable(correlations.subset[ order(correlations.subset$corr, decreasing = TRUE), ])
+correlations.subset      <- correlations.subset[ order(correlations.subset$corr, decreasing = TRUE), ]
 up.genes <- sort(unique(correlations[ correlations$pval < pval_cutoff & correlations$corr >  corr_cutoff, ]$symbol))
 dn.genes <- sort(unique(correlations[ correlations$pval < pval_cutoff & correlations$corr < -corr_cutoff, ]$symbol))
+```
+
+Top `r top_X` upregulated genes
+
+```{r}
+kable(correlations.subset[1:min(nrow(correlations.subset), top_X), ])
+```
+
+Top `r top_X` downregulated genes
+
+```{r}
+kable(correlations.subset[nrow(correlations.subset):(nrow(correlations.subset) - top_X), ])
 ```
 
 Genes positively (n = `r length(up.genes)`) and negatively (n = `r length(dn.genes)`) correlating with the selected gene `r selected_genes` at p < `r pval_cutoff` cutoff and  `r corr_type` correlation coefficient cutoff: >`r corr_cutoff`. Legend:
@@ -237,7 +251,17 @@ Full correlation results are saved in `r fileNameRes` file.
 **Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category,  "direction" - UP/DN, an indicator whether genes are up- or downregulated.
 
 ```{r}
-res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileNameOut = fileNameRes, wb = wb)
+# Run KEGG
+if (up_dn_separate) {
+  # Analyze up- and downregulated genes separately
+  print(paste0("KEGG pathway run on ", length(up.genes), " upregulated and ", length(dn.genes), " downregulated genes."))
+  res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+} else {
+  # Analyze up- and downregulated genes together
+  print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
+  res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+}
+
 # Display the results
 # DT::datatable(res.kegg)
 if (nrow(res.kegg) > 0 ) {
@@ -291,6 +315,6 @@ names(degs.genes) <- degs$symbol                   # Give this vector names
 pv.out <- pathview(gene.data = degs.genes, pathway.id = "hsa05217", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-```{r echo=FALSE, out.height='300px', eval=TRUE}
+```{r echo=FALSE, out.height='300px', eval=FALSE}
 knitr::include_graphics('hsa05217.MIA.png')
 ```
