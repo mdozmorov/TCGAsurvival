@@ -110,15 +110,15 @@ expression_cutoff <- 0   # From 0 to 1, percent cutoff of expression of the sele
 top_expression    <- TRUE # Whether to take top (TRUE) of bottom (FALSE) expression 
 
 # All cancers with RNASeq2 data
-# cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+# cancer = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
 # fileNameIn <- (paste0("data/All_expression_", data.type, "_", type, ".Rda")) # Save expression data
 # fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
 # Or, one cancer
-cancer_RNASeq2 = c("BRCA")
-fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
-fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
-fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), ".xlsx") # Save results
+cancer = c("BRCA")
+fileNameIn <- (paste0("data/", cancer, "_expression_", data.type, "_", type, "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda"))  # Save expression data
+fileNameOut <- paste0("results/", cancer, "_correlation_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), expression_cutoff, ".Rda") # Save correlation data
+fileNameRes <- paste0("results/", cancer, "_results_", selected_genes, "_", data.type, "_", type,  "_", ifelse(top_expression, "UP", "LO"), ".xlsx") # Save results
 
 # Correlation type
 corr_type    <- "pearson"
@@ -135,7 +135,7 @@ top_X          <- 10 # How many top significant differentially expressed genes/p
 if (!file.exists(fileNameIn)) {
   all_exprs <- list() # List to store cancer-specific expression matrixes
   # Get correlation matrixes for the gene of interest in each cancer
-  for (cancer_type in cancer_RNASeq2) {
+  for (cancer_type in cancer) {
   #   print(paste0("Processing cancer ", cancer_type))
     # Prepare expression data
     mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
@@ -172,7 +172,7 @@ if (!file.exists(fileNameOut)) {
   all_corrs <- vector(mode = "numeric", length = nrow(all_expression))
   all_pvals <- vector(mode = "numeric", length = nrow(all_expression))
   if (precalculated) {
-    load(paste0("data/", cancer_RNASeq2, "_", selected_genes, "_", method, ".Rda"))
+    load(paste0("data/", cancer, "_", selected_genes, "_", method, ".Rda"))
   }
   for (i in 1:nrow(all_expression)) {
     # Depending on the existence of precalculated value, calculate the correlation
