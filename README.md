@@ -64,6 +64,8 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 
 - `cgdsr.R` - exploring the Cancer Genomic Data Server, http://www.cbioportal.org/study?id=msk_impact_2017, http://www.cbioportal.org/cgds_r.jsp, https://cran.r-project.org/web/packages/cgdsr/vignettes/cgdsr.pdf
 
+- `cgdsr_preprocessing.R` - preprocessing the data to the format used in the scripts. Currently, processes TARGET Neuroblastoma data
+
 - `overlap_significance.R` - simple example of Fisher's exact test
 
 - `PCA.R` - exercises on dimensionality reduction of gene signatures
