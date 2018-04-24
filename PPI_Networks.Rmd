@@ -232,7 +232,13 @@ IntAct Molecular Interaction Database. IntAct provides a freely available, open 
 
 ### `InBio`, https://www.intomics.com/inbio/map/#home
 
-InBio Map is a high coverage, high quality, convenient and transparent platform for investigating and visualizing protein-protein interactions. Visualization: http://apps.broadinstitute.org/genets#InWeb_InBiomap
+- Li, Taibo, Rasmus Wernersson, Rasmus B. Hansen, Heiko Horn, Johnathan Mercer, Greg Slodkowicz, Christopher T. Workman, et al. “A Scored Human Protein-Protein Interaction Network to Catalyze Genomic Interpretation.” Nature Methods 14, no. 1 (2017): 61–64. https://doi.org/10.1038/nmeth.4083.
+
+InBio Map is a high coverage, high quality, convenient and transparent platform for investigating and visualizing protein-protein interactions. 
+
+- Visualization: http://apps.broadinstitute.org/genets#InWeb_InBiomap
+- Data: https://www.intomics.com/inbio/map/#downloads
+
 
 ### `HIPPIE`, http://cbdm-01.zdv.uni-mainz.de/~mschaefer/hippie/index.php
 
