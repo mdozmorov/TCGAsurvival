@@ -81,6 +81,10 @@ Rich downloadable data - tissue-specific gene expression in cancer and normal, i
 
 # Misc
 
+## OncoKB, http://oncokb.org/
+
+- Chakravarty, Debyani, Jianjiong Gao, Sarah M. Phillips, Ritika Kundra, Hongxin Zhang, Jiaojiao Wang, Julia E. Rudolph, et al. “OncoKB: A Precision Oncology Knowledge Base.” JCO Precision Oncology 2017 (July 2017).
+
 ## TIMER, https://cistrome.shinyapps.io/timer/
 
 - Li, Taiwen, Jingyu Fan, Binbin Wang, Nicole Traugh, Qianming Chen, Jun S. Liu, Bo Li, and X. Shirley Liu. “TIMER: A Web Server for Comprehensive Analysis of Tumor-Infiltrating Immune Cells.” Cancer Research 77, no. 21 (November 1, 2017): e108–10. https://doi.org/10.1158/0008-5472.CAN-17-0307.
