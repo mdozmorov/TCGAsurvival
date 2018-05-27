@@ -239,6 +239,7 @@ InBio Map is a high coverage, high quality, convenient and transparent platform 
 - Visualization: http://apps.broadinstitute.org/genets#InWeb_InBiomap
 - Data: https://www.intomics.com/inbio/map/#downloads
 
+Column description: 1: uniprotkb:A0A5B9   2: uniprotkb:P01892   3: uniprotkb:TRBC2_HUMAN   4: uniprotkb:1A02_HUMAN|ensembl:ENSG00000227715|ensembl:ENSG00000235657|ensembl:ENST00000457879|ensembl:ENST00000547271|ensembl:ENST00000547522|ensembl:ENSP00000403575|ensembl:ENSP00000447962|ensembl:ENSP00000448077   5: uniprotkb:TRBC2(gene name)|uniprotkb:TRBC2(display_short)   6: uniprotkb:HLA-A(gene name)|uniprotkb:HLA-A(display_short)   7: psi-mi:"MI:0045"(experimental interaction detection)   8: -   9: -   10: taxid:9606(Homo sapiens)   11: taxid:9606(Homo sapiens)   12 -   13: psi-mi:"MI:0461"(interaction database)   14: -   15: 0.417|0.458   16: -. More details in Supplementary Note 10, https://media.nature.com/original/nature-assets/nmeth/journal/v14/n1/extref/nmeth.4083-S1.pdf
 
 ### `HIPPIE`, http://cbdm-01.zdv.uni-mainz.de/~mschaefer/hippie/index.php
 
