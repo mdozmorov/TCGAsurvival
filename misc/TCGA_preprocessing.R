@@ -8,6 +8,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 # data_dir = "D:"
 # results_dir = "/Users/mdozmorov/Dropbox" # Path where the results are stored
+results_dir = data_dir
 
 # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 # Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
@@ -114,15 +115,15 @@ make_annotation_matrix <- function(mtx = mtx, disease = cancer, data.type = data
 }
 
 
-mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+# mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 
-clinical_annotations <- summarize_data(mtx = mtx)
+# clinical_annotations <- summarize_data(mtx = mtx)
 
-make_expression_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
+# make_expression_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
 
-make_mapping_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
+# make_mapping_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir)
 
-make_annotation_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, clinical_annotations = clinical_annotations, results_dir = results_dir)
+# make_annotation_matrix(mtx = mtx, disease = cancer, data.type = data.type, type = type, clinical_annotations = clinical_annotations, results_dir = results_dir)
 
 # Get data for all cancers
 get_data <- function(cancers, data.type = data.type, type = type, data_dir = data_dir, force_reload) {
@@ -140,11 +141,14 @@ get_data <- function(cancers, data.type = data.type, type = type, data_dir = dat
 # All cancers with RNASeq2 data
 data.type = "RNASeq2"; type = "" 
 cancer_TCGA = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
-# All cancers with miRNAseq data
-data.type = "miRNASeq"; type = "rpmmm"
-cancer_TCGA = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+# All cancers with miRNAseq data. Uncomment to get miRNAseq data
+# data.type = "miRNASeq"; type = "rpmmm"
+# cancer_TCGA = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
 
-sink("TCGA2SynTarget.txt", split = FALSE)
+# sink("TCGA2SynTarget.txt", split = FALSE)
 get_data(cancers = cancer_TCGA, data.type = data.type, type = type, data_dir = data_dir, force_reload = TRUE)
-sink(type = "message")
-sink()
+# sink(type = "message")
+# sink()
+
+# Cleanup intermediate files
+unlink(paste0(data_dir, "/*.txt.gz"))
