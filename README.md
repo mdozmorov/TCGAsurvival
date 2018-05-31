@@ -14,7 +14,19 @@ Public data is available through the [TCGA2STAT R package](http://www.liuzlab.or
 - [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
 - [Correlation analysis results, "TCGA_correlations.Rmd"](examples/TCGA_correlations_MIA.pdf), [Example Excel output](examples/TCGA_correlations_MIA.xlsx) 
 
+## Data preparation
+
+First, get the data locally using `misc/TCGA_preprocessing`
+
+- Create a folder on a local computer
+- Change Path where the downloaded data is stored, `data_dir` variable
+- Run the file line-by-line, or source it
+- By default, RNA-seq data for all cancers will be downloaded and saved as `*.rda` files
+- **In all other scripts, Change Path where the downloaded data is stored, `data_dir` variable**
+
 ## Files
+
+- **In all other scripts, Change Path where the downloaded data is stored, `data_dir` variable**
 
 - `Cancer_DB.Rmd` - a list of cancer-related databases
 
