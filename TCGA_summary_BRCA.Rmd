@@ -25,8 +25,8 @@ options(stringsAsFactors = FALSE)
 
 ```{r settings}
 n_max  <- 10 # Maximum number of rows to output in tables
-gene   <- "TMEM219" # Search and replace the name of the gene
-cancer <- "OV"
+gene   <- "SDC1" # Search and replace the name of the gene
+cancer <- "BRCA"
 ```
 
 # Analysis 2: `r gene` in all cancers
@@ -34,7 +34,7 @@ cancer <- "OV"
 The barplot shows the significance of `r gene` expression on survival in a given cancer. The wider (higher) the bar the more significant survival effect the gene has. See abbreviations of cancer types at [http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)   
 
 \begin{center}
-\includegraphics[height=300px]{res.genes.Analysis2/TMEM219_all_TCGA_cancers.png}
+\includegraphics[height=300px]{res.genes.Analysis2/SDC1_all_TCGA_cancers.png}
 \end{center}
 
 The same data in table format. Legend:
@@ -59,7 +59,7 @@ kable(mtx[1:min(nrow(mtx), n_max), ])
 ## Survival effect in `r cancer` cancer
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis2/TMEM219_BRCA.png}
+\includegraphics[height=250px]{res.genes.Analysis2/SDC1_BRCA.png}
 \end{center}
 
 \pagebreak
@@ -74,17 +74,69 @@ global_stats <- global_stats[order(global_stats$p.value), ]
 kable(global_stats[1:min(nrow(global_stats), n_max), ])
 ```
 
-## "TMEM219_OV-subtype-Differentiated"
+## "SDC1_BRCA-radiation_therapy-NO"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/TMEM219_OV-subtype-Differentiated.png}
+\includegraphics[height=250px]{res.genes.Analysis3/SDC1_BRCA-radiation_therapy-NO.png}
 \end{center}
 
-## "TMEM219_OV-radiationtherapy-no"
+## "SDC1_BRCA-person_neoplasm_cancer_status-WITH TUMOR"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/TMEM219_OV-radiationtherapy-no.png}
+\includegraphics[height=250px]{res.genes.Analysis3/SDC1_BRCA-person_neoplasm_cancer_status-WITH TUMOR.png}
 \end{center}
+
+\pagebreak
+
+# Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, gene expression differences across categories
+
+Expression of `r gene` in selected clinical subcategories
+
+```{r echo=FALSE, out.height='250px'}
+knitr::include_graphics('res.genes.Analysis5/BRCA_SDC1_PAM50Call_RNAseq.png')  # 'PAM50Call_RNAseq' for BRCA, 'subtype' for OV
+```
+
+```{r eval=TRUE}
+global_stats <- read.table("res.genes.Analysis5/global_stats.txt", sep = "\t", header = TRUE, fill = TRUE)
+global_stats <- global_stats[order(global_stats$p.value), c("Cancer", "Gene", "p.value", "HR")]
+rownames(global_stats) <- NULL
+pander(global_stats)
+```
+
+## ANOVA and Tukey's test
+
+What are the means of log2-expression per clinical subgroup""
+
+```{r}
+load(file = "res.genes.Analysis5/mtx_to_plot.rda")
+tapply(mtx_to_plot$Gene, mtx_to_plot$Clinical, mean)
+```
+
+### ANOVA
+
+Is the expression of gene `r gene` significantly different across clinical subgroups? Significant "Pr(>F)" suggests "Yes"
+
+```{r}
+# ANOVA
+groupdiff <- lm(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
+# summary(groupdiff)
+anova(groupdiff)
+```
+
+### Tukey HSD (Honest Significant Difference) test
+
+Which pair of clinical categories has significant differences? "p.adj" and confidence intervals that do not cross 0 suggest significant differences in gene expression between the subgroups in the corresponding pairwise comparison.
+
+```{r}
+# Tukey HSD
+a1 <- aov(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
+# summary(a1)
+posthoc <- TukeyHSD(x=a1, 'mtx_to_plot$Clinical', conf.level=0.95)
+posthoc %>% pander()
+par(las = 2)
+par(mar = c(5, 8, 5, 8))
+plot(posthoc)
+```
 
 \pagebreak 
 

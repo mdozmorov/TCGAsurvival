@@ -32,7 +32,7 @@ First, get the data locally using `misc/TCGA_preprocessing`
 
 - `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. [Example](examples/CELLX_analysis_MIA.pdf)
 
-- `survival.Rmd` - a pipeline to run survival analyses. Based on `survival.R`. Change
+- `survival.Rmd` - a pipeline to run survival analyses for any cancer. Based on `survival.R`. Change
     - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `res.genes.Analysis1` folder.
     - `Exploratory` - All genes, selected cancers, no clinical annotations. Not run by default.
     - `Analysis 2` - Selected genes, all (or selected) cancers, no clinical annotations. Results are in `res.genes.Analysis2` folder.
@@ -43,7 +43,9 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `survival_BRCA.Rmd` - survival analyses adjusted for BRCA (Analysis 3)
 - `survival_OVCA.Rmd` - survival analyses adjusted for OV (Analysis 3)
 
-- `TCGA_summary.Rmd` - in which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders. [Example](examples/TCGA_summary_MIA.pdf)
+- `TCGA_summary.Rmd` - summary report tuned for `survival.Rmd` output. In which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders. [Example](examples/TCGA_summary_MIA.pdf)
+- `TCGA_summary_BRCA.Rmd` - summary report tuned for `survival_BRCA.Rmd` output. Includes Analysis 5
+- `TCGA_summary_OVCA.Rmd` - summary report tuned for `survival_OVCA.Rmd` output. Includes Analysis 5
 
 - `TCGA_expression.Rmd` - Expression of selected genes across all TCGA cancers. Used for comparing expression of two or more genes. Change `selected_genes <- "XXXX"`, can be multiple. Generates a PDF file with a barplot of log2-expression of selected genes across all cancers, with standard errors. [Example](examples/TCGA_expression.pdf)
 
