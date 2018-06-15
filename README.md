@@ -98,6 +98,7 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `gene_signatures_323.xls` - 323 gene signatures from Fan, Cheng, Aleix Prat, Joel S. Parker, Yufeng Liu, Lisa A. Carey, Melissa A. Troester, and Charles M. Perou. “Building Prognostic Models for Breast Cancer Patients Using Clinical Variables and Hundreds of Gene Expression Signatures.” BMC Medical Genomics 4 (January 9, 2011): 3. https://doi.org/10.1186/1755-8794-4-3.
 - `PAM50_classification.txt` - sample classification into PAM50 types
 - `patientsAll.tsv` - TCGA sample clinical information, including PAM50, from https://tcia.at/home
+- `TCGA_489_UE.k4.txt` - Ovarian cancer classification into four subtypes, from `https://github.com/aedin/OvarianCancerSubtypes/data/23257362`
 - `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 - `TCGA_genes.txt` - genes measured in TCGA RNA-seq experiments
 - `TCGA.bib` - BibTex of TCGA-related references
