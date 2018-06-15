@@ -186,7 +186,7 @@ colnames(clin)[1] <- "AffyID"
 # selected_genes = c("FOXP3") # BRCA
 # selected_genes = c("TNFRSF1B") # TNFR2, BRCA
 # selected_genes = c("RORC") # BRCA
-selected_genes = c("SIAH1") # OV
+selected_genes = c("TMEM219") # OV
 ```
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
@@ -277,7 +277,7 @@ for (cancer_type in cancer_RNASeq2) {
   all.equal(expr$AffyID, rownames(clin_full))
   
   # Prepare extra clinical annotation
-  clin_extra <- read.table("data.TCGA/OvarianCancerSubtypes/data/23257362/TCGA_489_UE.k4.txt", sep = "\t", header = TRUE)
+  clin_extra <- read.table("data.TCGA/TCGA_489_UE.k4.txt", sep = "\t", header = TRUE)
   clin_extra$Sample.ID <- sapply(clin_extra$Sample.ID, function(x) strsplit(x, ".", fixed = TRUE)[[1]][1:3] %>% paste(., collapse = "-")) # Shorten sample IDs
   # Subset to common samples
   common_AffyID <- intersect(rownames(clin_full), clin_extra$Sample.ID)
@@ -398,7 +398,7 @@ mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir 
   all.equal(expr$AffyID, rownames(clin_full))
   
   # Prepare extra clinical annotation
-  clin_extra <- read.table("data.TCGA/OvarianCancerSubtypes/data/23257362/TCGA_489_UE.k4.txt", sep = "\t", header = TRUE)
+  clin_extra <- read.table("data.TCGA/TCGA_489_UE.k4.txt", sep = "\t", header = TRUE)
   clin_extra$Sample.ID <- sapply(clin_extra$Sample.ID, function(x) strsplit(x, ".", fixed = TRUE)[[1]][1:3] %>% paste(., collapse = "-")) # Shorten sample IDs
   # Subset to common samples
   common_AffyID <- intersect(rownames(clin_full), clin_extra$Sample.ID)
