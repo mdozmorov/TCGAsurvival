@@ -181,6 +181,10 @@ Their algorithm ranks a set of candidate disease-causing genes in multiple susce
 
 ## Online and download
 
+### `HumanBase`, data-driven predictions of gene expression, function, regulation, and interactions in human, http://hb.flatironinstitute.org/
+
+Search for a gene, or multiple genes. Output: tissue-specific networks and the associated biological processes, tissue expression, gene interaction details, associated diseases.
+
 ### `RegNetwork`, Regulatory Network Repository, http://www.regnetworkweb.org
 
 RegNetwork is a database of transcriptional and posttranscriptional regulatory networks in human and mouse. TF and miRNA are two major regulators controlling gene expression. RegNetwork collects the knowledge-based regulatory relationships, as well as some potentially regulatory relationships between the two regulators and targets. It provides a platform of depositing the known and predicted gene regulations in the transcriptional and posttranscriptional levels simultaneously. The knowledge-derived regulatory networks is expected to be greatly beneficial for identifying critical regulatory programs in various context-specific conditions.
