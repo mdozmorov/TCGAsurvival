@@ -104,9 +104,9 @@ save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "BRCA" 
+cancer = "OV" 
 # Gene(s) of interest
-selected_genes = c("MIA") # Can be multiple
+selected_genes = c("MYBL2") # Can be multiple
 # Define quantile qutoffs
 quantile_up <- 0.75 # 0.75
 quantile_lo <- 0.25 # 0.25
@@ -131,7 +131,7 @@ pval_cutoff   <- 0.01 # P-value cutoff
 max_num_genes <- 6000 # Maximum number of genes to feed into KEGG enrichment
 # Enrichment cutoffs
 fdr.cutoff     <- 0.3
-up_dn_separate <- TRUE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
+up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
