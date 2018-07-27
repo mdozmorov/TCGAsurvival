@@ -24,8 +24,6 @@ library(dplyr)
 options(stringsAsFactors = FALSE)
 ```
 
-- Zhang, Zhuo, Hao Li, Shuai Jiang, Ruijiang Li, Wanying Li, Hebing Chen, and Xiaochen Bo. “A Survey and Evaluation of Web-Based Tools/Databases for Variant Analysis of TCGA Data.” Briefings in Bioinformatics, March 29, 2018. https://doi.org/10.1093/bib/bby023. - The most comprehensive review of TCGA-related tools. Table 3 - List of Web servers and databases. 
-
 # Survival
 
 ## GEPIA, http://gepia.cancer-pku.cn/
@@ -136,4 +134,10 @@ https://docs.gdc.cancer.gov/API/Users_Guide/Getting_Started/ - docs
 
 https://github.com/Bioconductor/GenomicDataCommons - R package
 
+
+# Links and References
+
+- Zhang, Zhuo, Hao Li, Shuai Jiang, Ruijiang Li, Wanying Li, Hebing Chen, and Xiaochen Bo. “A Survey and Evaluation of Web-Based Tools/Databases for Variant Analysis of TCGA Data.” Briefings in Bioinformatics, March 29, 2018. https://doi.org/10.1093/bib/bby023. - The most comprehensive review of TCGA-related tools. Table 3 - List of Web servers and databases. 
+
+- The Pan-Cancer analysis by TCGA consortium, all papers. https://www.cell.com/pb-assets/consortium/pancanceratlas/pancani3/index.html
 
