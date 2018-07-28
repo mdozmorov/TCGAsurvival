@@ -47,6 +47,8 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `TCGA_summary_BRCA.Rmd` - summary report tuned for `survival_BRCA.Rmd` output. Includes Analysis 5
 - `TCGA_summary_OVCA.Rmd` - summary report tuned for `survival_OVCA.Rmd` output. Includes Analysis 5
 
+- `TCGA_stemness.Rmd` - correlation of a selected gene with stemness indices, for details, see Malta, Tathiane M., Artem Sokolov, Andrew J. Gentles, Tomasz Burzykowski, Laila Poisson, John N. Weinstein, Bożena Kamińska, et al. “Machine Learning Identifies Stemness Features Associated with Oncogenic Dedifferentiation.” Cell 173, no. 2 (April 2018): 338-354.e15. https://doi.org/10.1016/j.cell.2018.03.034. [Results example PDF](examples/TCGA_stemness.pdf)
+
 - `TCGA_expression.Rmd` - Expression of selected genes across all TCGA cancers. Used for comparing expression of two or more genes. Change `selected_genes <- "XXXX"`, can be multiple. Generates a PDF file with a barplot of log2-expression of selected genes across all cancers, with standard errors. [Example](examples/TCGA_expression.pdf)
 
 - `TCGA_correlations.Rmd` - Co-expression analysis of selected gene vs. all others, in selected cancers. Genes best correlating with the selected gene may share common functions, described in the KEGG canonical pathway analysis section. Change `selected_genes <- "XXXX"` and `cancer_RNASeq2 <- "YYYY"` variables. The run saves two RData objects, `res/YYYY_expression_RNASeq2_.Rda` and `results/YYYY_correlation_XXXX_RNASeq2_.Rda`. This speeds up re-runs with the same settings. The full output is saved in `results/YYYY_results_XXXX_RNASeq2_.xlsx`. [Example PDF](examples/TCGA_correlations_MIA.pdf), [Example Excel](examples/TCGA_correlations_MIA.xlsx)
@@ -104,7 +106,6 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 - `TCGA_genes.txt` - genes measured in TCGA RNA-seq experiments
 - `TCGA_stemness.xlsx` - Supplementary Table 1 - stemness indices for all TCGA samples. Stemness indices built from various data: mRNAsi - gene expression-based, EREG-miRNAsi - epigenomic- and gene expression-baset, mDNAsi, EREG-mDNAsi - same but methylation-based, DMPsi - differentially methylated probes-based, ENHsi - enhancer-based. Each stemness index (si) ranges from low (zero) to high (one) stemness. From Malta, Tathiane M., Artem Sokolov, Andrew J. Gentles, Tomasz Burzykowski, Laila Poisson, John N. Weinstein, Bożena Kamińska, et al. “Machine Learning Identifies Stemness Features Associated with Oncogenic Dedifferentiation.” Cell 173, no. 2 (April 2018): 338-354.e15. https://doi.org/10.1016/j.cell.2018.03.034. 
-
 - `TCGA.bib` - BibTex of TCGA-related references
 - `TCPA_proteins.txt` - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). Paper: [http://cancerres.aacrjournals.org/content/77/21/e51](http://cancerres.aacrjournals.org/content/77/21/e51)
 - `XENA_classification.csv` - PAM50 and other clinical data from https://xenabrowser.net/datapages/?dataset=TCGA.BRCA.sampleMap/BRCA_clinicalMatrix&host=https://tcga.xenahubs.net

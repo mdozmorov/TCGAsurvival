@@ -1,0 +1,206 @@
+---
+title: "Correlation of selected genes with stemness index"
+author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+always_allow_html: yes
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    theme: united
+    toc: yes
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+```{r libraries, include=FALSE}
+library(openxlsx)
+library(MDmisc)
+library(org.Hs.eg.db)
+library(KEGG.db)
+library(TCGA2STAT)
+library(dplyr)
+library(knitr)
+# library(clusterProfiler)
+library(pathview)
+library(enrichR)
+library(annotables)
+# Remove non-canonical chromosome names
+grch38 <- grch38[ !(grepl("_", grch38$chr) | grepl("GL", grch38$chr)), ]
+grch38 <- grch38[, c("symbol", "description")]
+grch38 <- grch38[ complete.cases(grch38) , ]
+grch38 <- grch38[ !duplicated(grch38), ]
+```
+
+```{r functions}
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+# A wrapper function to perform all functional enrichment analyses.
+# Helper function to save non-empty results
+save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
+  if (nrow(res) > 0) {
+    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
+    openxlsx::writeData(wb, res, sheet = sheetName)
+    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
+  }
+}
+
+# A wrapper to save the results
+save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
+  print(paste("Running", databases, "analysis", sep = " "))
+  if (is.null(dn.genes)) {
+    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+  } else {
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+  }
+  
+  res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
+  res.kegg$qval <- formatC(res.kegg$qval, digits = 3, format = "e")
+  if (!is.null(fileNameOut)) {
+    if (nchar(databases) > 30) databases <- paste0(substr(databases, 1, 20), "_", substr(databases, nchar(databases) - 8, nchar(databases))) # If a database is longer that 30 characters, keep first 20 and last 10 characters
+    save_res(res.kegg, fileNameOut, wb = wb, sheetName = databases)
+  }
+  # Pause for a few seconds
+  pause_sec <- round(runif(1, min = 1, max = 10))
+  Sys.sleep(pause_sec)
+  return(res.kegg)
+}
+```
+
+```{r settings}
+system("mkdir -p data")
+system("mkdir -p results")
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+# data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
+
+# Selected genes
+selected_genes <- c("STARD5")
+
+# Data type
+data.type = "RNASeq2" ; type = "" 
+
+# All cancers with RNASeq2 data
+cancer = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+# Or, one cancer
+# cancer = c("COAD")
+
+# Correlation type
+corr_type    <- "pearson"
+```
+
+```{r loadExpressionData}
+# Combines expression across all selected cancers into one gigantic matrix
+all_exprs <- list() # List to store cancer-specific expression matrixes
+# Get correlation matrixes for the gene of interest in each cancer
+for (cancer_type in cancer) {
+#   print(paste0("Processing cancer ", cancer_type))
+  # Prepare expression data
+  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+  rownames(expr) <- mtx$merged.dat[, "bcr"] # Add row TCGA names
+  
+  expr <- t(log2(expr + 1))
+  all_exprs[length(all_exprs) + 1] <- list(expr)
+}
+```
+
+```{r loadStemnessData}
+mtx_RNA <- read.xlsx("data.TCGA/TCGA_stemness.xlsx", sheet = 1) # mRNA-based stemness indices
+# Remove NA cancers
+mtx_RNA <- mtx_RNA[complete.cases(mtx_RNA), ]
+# Subset to primary solid tumors, "01A" at positions 14-16
+index <- sapply(mtx_RNA$TCGAlong.id, function(x) make.names(substr(x, 14, 16)))
+mtx_RNA <- mtx_RNA[index == "X01A", ]
+# Make names 12-characters long
+mtx_RNA$TCGAlong.id <- sapply(mtx_RNA$TCGAlong.id, function(x) make.names(substr(x, 1, 12)))
+# Subset by cancer type
+# mtx_RNA <- mtx_RNA[mtx_RNA$cancer.type == cancer, ]
+
+mtx_DNA <- read.xlsx("data.TCGA/TCGA_stemness.xlsx", sheet = 2) # DNAm-based stemness indices
+# Remove NA cancers
+mtx_DNA <- mtx_DNA[complete.cases(mtx_DNA), ]
+# Subset to primary solid tumors, "01A" at positions 14-16
+index <- sapply(mtx_DNA$TCGAlong.id, function(x) make.names(substr(x, 14, 16)))
+mtx_DNA <- mtx_DNA[index == "X01A", ]
+# Make names 12-characters long
+mtx_DNA$TCGAlong.id <- sapply(mtx_DNA$TCGAlong.id, function(x) make.names(substr(x, 1, 12)))
+# Subset by cancer type
+# mtx_DNA <- mtx_DNA[mtx_DNA$cancer.type == cancer, ]
+
+# Names of stemness indices
+si_names <- c(colnames(mtx_RNA)[grepl("si", colnames(mtx_RNA))],
+              colnames(mtx_DNA)[grepl("si", colnames(mtx_DNA))])
+# Full matrix of stemness indices
+si_matrix <- full_join(mtx_RNA, mtx_DNA, by = "TCGAlong.id")
+```
+
+
+
+```{r correlations}
+correlations <- rbind()
+for (i in 1:length(cancer)) {
+  # Expression of the selected gene in the selected cancer
+  selected_expression <- data.frame(sample.id = make.names(colnames(all_exprs[[i]])), expr = all_exprs[[i]][ rownames(all_exprs[[i]]) == selected_genes, ])
+  # For each stemness indes si
+  # Vectors to store correlation values
+  all_corrs <- c() # vector(mode = "numeric", length = length(si_names))
+  all_pvals <- c() # vector(mode = "numeric", length = length(si_names))
+  all_nums  <- c()
+  for (j in 1:length(si_names)) {
+    si_matrix_selected <- si_matrix[, c("TCGAlong.id", si_names[j])] # Select current si
+    selected_expression_si <- inner_join(selected_expression, si_matrix_selected, by = c("sample.id" = "TCGAlong.id")) # Join it with expression
+    selected_expression_si <- selected_expression_si[complete.cases(selected_expression_si), ] # Drop NAs
+    cors <- Hmisc::rcorr(selected_expression_si[, "expr"], selected_expression_si[, si_names[j]], type = corr_type) # Run correlation
+    all_corrs[j] <- cors[[1]][1, 2] # Save the results
+    all_pvals[j] <- cors[[3]][1, 2]
+    all_nums[j]  <- nrow(selected_expression_si)
+  }
+  # Organize them into data frame
+  correlations <- rbind(correlations,
+                        data_frame(cancer = rep(cancer[i], length(si_names)), num.samples = all_nums, si= si_names, corr = all_corrs, pval = all_pvals))
+
+  
+}
+
+# Sort from largest to smallest correlation
+correlations <- correlations[order(correlations$corr, decreasing = TRUE), ]
+```
+
+# Correlation analysis
+
+**Question:** In which cancers expression of gene `r selected_genes` significantly correlates with stemness index, what type of stemness index?
+
+- **Legend:** 
+    - "cancer" - cancer type. See abbreviations of cancer types at [http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)
+    - "num.samples" - number of samples used to run correlation analysis
+    - "si" - stemness index. mRNAsi - gene expression-based, EREG-miRNAsi - epigenomic- and gene expression-baset, mDNAsi, EREG-mDNAsi - same but methylation-based, DMPsi - differentially methylated probes-based, ENHsi - enhancer-based. Sorted by in decreasing order
+    - "corr" - `r corr_type` correlation coefficient
+    - "pval" - significance of correlation
+
+For details on stemness indices, see Malta, Tathiane M., Artem Sokolov, Andrew J. Gentles, Tomasz Burzykowski, Laila Poisson, John N. Weinstein, Bożena Kamińska, et al. “Machine Learning Identifies Stemness Features Associated with Oncogenic Dedifferentiation.” Cell 173, no. 2 (April 2018): 338-354.e15. https://doi.org/10.1016/j.cell.2018.03.034
+
+```{r}
+pander(correlations)
+```
+
