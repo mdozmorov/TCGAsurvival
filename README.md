@@ -103,6 +103,8 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `TCGA_489_UE.k4.txt` - Ovarian cancer classification into four subtypes, from `https://github.com/aedin/OvarianCancerSubtypes/data/23257362`
 - `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 - `TCGA_genes.txt` - genes measured in TCGA RNA-seq experiments
+- `TCGA_stemness.xlsx` - Supplementary Table 1 - stemness indices for all TCGA samples. Stemness indices built from various data: mRNAsi - gene expression-based, EREG-miRNAsi - epigenomic- and gene expression-baset, mDNAsi, EREG-mDNAsi - same but methylation-based, DMPsi - differentially methylated probes-based, ENHsi - enhancer-based. Each stemness index (si) ranges from low (zero) to high (one) stemness. From Malta, Tathiane M., Artem Sokolov, Andrew J. Gentles, Tomasz Burzykowski, Laila Poisson, John N. Weinstein, Bożena Kamińska, et al. “Machine Learning Identifies Stemness Features Associated with Oncogenic Dedifferentiation.” Cell 173, no. 2 (April 2018): 338-354.e15. https://doi.org/10.1016/j.cell.2018.03.034. 
+
 - `TCGA.bib` - BibTex of TCGA-related references
 - `TCPA_proteins.txt` - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). Paper: [http://cancerres.aacrjournals.org/content/77/21/e51](http://cancerres.aacrjournals.org/content/77/21/e51)
 - `XENA_classification.csv` - PAM50 and other clinical data from https://xenabrowser.net/datapages/?dataset=TCGA.BRCA.sampleMap/BRCA_clinicalMatrix&host=https://tcga.xenahubs.net
