@@ -243,7 +243,7 @@ fit2 <- eBayes(fit2)
 degs <- topTable(fit2, coef = 1, number = Inf, p.value = pval_cutoff)
 ```
 
-We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having `r paste(selected_genes, collapse = ", ") ` in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value 0.01. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
+We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having `r paste(selected_genes, collapse = ", ") ` in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value `r pval_cutoff`. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
 
 Top 50 the most differentially expressed genes are shown
 
