@@ -36,7 +36,9 @@ library(MDmisc)
 library(org.Hs.eg.db)
 # devtools::install_github("mdozmorov/enrichR")
 library(enrichR)
+```
 
+```{r}
 # A function to load TCGA data, from remote repository, or a local R object
 load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
   FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
@@ -104,11 +106,11 @@ save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "BRCA" 
+cancer = "LIHC" 
 # Minimum number of samples in a subcategory to be considered
 min_samples <- 15
-# Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats
-enrichr_category <- c("KEGG_2016", "Chromosome_Location",  "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b") # ,
+# Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats. If NA, no enrichment analysis
+enrichr_category <- NA # c("KEGG_2016", "Chromosome_Location",  "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b") # ,
 
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
@@ -125,7 +127,7 @@ selected_clinical_subgroup1   <- "black or african american" # Set both subgroup
 selected_clinical_subgroup2   <- "white"                     # To run all pairs of subgroups
   
 # Differential expression cutoff
-pval_cutoff   <- 0.0000000001 # Adjusted P-value cutoff
+pval_cutoff   <- 0.74 # Adjusted P-value cutoff
 max_num_genes <- 5000 # Maximum number of genes to feed into functional enrichment
 full_degs_output <- TRUE # If TRUE, output differential expression statistics for all genes
 
@@ -286,20 +288,23 @@ for (annotation in clinical_annotations) {
       # Get list of up- and downregulated genes
       up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
       dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
-      # Run functional enrichment
-      for (j in enrichr_category) {
-        res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = j, fdr.cutoff = fdr.cutoff)
-        # Save the results, if non-empty
-        if (nrow(res.kegg) > 0) {
-          sheetCount <- sheetCount + 1 # Increase sheet count
-          header <- data.frame(matrix("", ncol = ncol(res.kegg), nrow = 1, dimnames = list(" ", colnames(res.kegg)))) # Header one-row data frame, column names matching DEGs
-          header[1, 1] <- paste0(nrow(res.kegg), " enrichments in ", j, " in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
-          save_res(rbind(header, res.kegg), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
+      # Run functional enrichment, if not NA
+      if (!is.na(enrichr_category)) {
+        for (j in enrichr_category) {
+          res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = j, fdr.cutoff = fdr.cutoff)
+          # Save the results, if non-empty
+          if (nrow(res.kegg) > 0) {
+            sheetCount <- sheetCount + 1 # Increase sheet count
+            header <- data.frame(matrix("", ncol = ncol(res.kegg), nrow = 1, dimnames = list(" ", colnames(res.kegg)))) # Header one-row data frame, column names matching DEGs
+            header[1, 1] <- paste0(nrow(res.kegg), " enrichments in ", j, " in ", cancer, ", between groups \'", annotation, ":", group2, "\' vs. \'", annotation, ":", group1, "\'") # Construct header
+            save_res(rbind(header, res.kegg), fileName = fileNameRes, wb = wb, sheetName = as.character(sheetCount))
+          }
         }
       }
     }
   }
 }
 ```
+
 
 # References
