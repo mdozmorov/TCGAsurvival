@@ -134,6 +134,7 @@ full_degs_output <- TRUE # If TRUE, output differential expression statistics fo
 # Enrichment cutoffs
 fdr.cutoff     <- 0.1
 top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
+nplot          <- 50 # How many genes to plot on a heatmap
 
 # Filename to same the results
 fileNameRes <- paste0("results/", cancer, "_", data.type, "_DEGs_clin_subcategories.xlsx")
@@ -240,6 +241,7 @@ for (annotation in clinical_annotations) {
     # table(group) # How many patients we have
     expr_subset <- expr[group != 0, ] # Remove those that are not in quantiles
     group <- group[ group != 0 ]
+    names(group) <- colnames(expr_subset)
     # Reshape expr_subsetession matrix
     expr_subset <- (t(expr_subset))
     colnames(expr_subset) <- expr_subset[1, ]
@@ -306,5 +308,16 @@ for (annotation in clinical_annotations) {
 }
 ```
 
+```{r fig.height=7}
+matrix.to.plot <- expr_subset[rownames(expr_subset) %in% rownames(degs)[1:min(nrow(degs), nplot)], ]
+matrix.to.plot[1:5, 1:5]
+
+group.to.plot <- group
+group.to.plot <- ifelse(group.to.plot == 1, "UP", "LO")
+group.to.plot <- data.frame(Group = group.to.plot)
+rownames(group.to.plot) <- colnames(matrix.to.plot)
+  
+pheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20), clustering_method = "ward.D", scale = "row", annotation_col = group.to.plot, treeheight_row = 0, treeheight_col = 0, show_colnames = FALSE)
+```
 
 # References
