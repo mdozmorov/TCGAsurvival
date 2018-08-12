@@ -79,12 +79,12 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
 }
 
 # A wrapper to save the results
-save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", fdr.cutoff = 1, fileNameOut = NULL, wb = NULL) {
+save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", p_adj_cutoff = 1, fileNameOut = NULL, wb = NULL) {
   print(paste("Running", databases, "analysis", sep = " "))
   if (is.null(dn.genes)) {
-    res.kegg <- enrichGeneList(up.genes, databases = databases, fdr.cutoff = 1)
+    res.kegg <- enrichGeneList(up.genes, databases = databases, p_adj_cutoff = 1)
   } else {
-    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, fdr.cutoff = 1)
+    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, p_adj_cutoff = 1)
   }
   
   res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
@@ -127,15 +127,18 @@ data.type = "RNASeq2"
 type = "" 
 
 # Differential expression cutoff
-pval_cutoff   <- 0.01 # P-value cutoff
-max_num_genes <- 6000 # Maximum number of genes to feed into KEGG enrichment
-# Enrichment cutoffs
-fdr.cutoff     <- 0.3
+p_val_cutoff   <- 0.05 # Regular p-value cutoff
+p_adj_cutoff   <- 0.05 # FDR cutoff
+nplot          <- 50 # How many genes to plot on a heatmap
+nbox           <- 9  # How many genes to plot on a boxplot
+ntable         <- 15 # Number of genes to output in a DEG table
+nkegg          <- 35 # Number of genes to output in a KEGG table
+min_kegg_genes <- 20 # Minimum number of genes to run enrichment analysis on
+max_kegg_genes <- 2000 # Maximum number of genes to run enrichment analysis on
 up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
-top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
 
 # Filename to same the results
-fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_", paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "_DEGs_", pval_cutoff, ".xlsx")
+fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_", paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "_DEGs_", p_val_cutoff, ".xlsx")
 ```
 
 ```{r results='hide'}
@@ -240,10 +243,10 @@ contrast.matrix <- makeContrasts(up-lo, levels = design)
 fit2 <- contrasts.fit(fit, contrast.matrix)
 fit2 <- eBayes(fit2)
 
-degs <- topTable(fit2, coef = 1, number = Inf, p.value = pval_cutoff)
+degs <- topTable(fit2, coef = 1, number = Inf, p.value = p_val_cutoff)
 ```
 
-We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having `r paste(selected_genes, collapse = ", ") ` in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value `r pval_cutoff`. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
+We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` patients having `r paste(selected_genes, collapse = ", ") ` in lower `r quantile_up` and upper `r quantile_lo` expression quantiles. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value `r p_val_cutoff`. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
 
 Top 50 the most differentially expressed genes are shown
 
@@ -271,21 +274,21 @@ Results are stored in the Excel file `r fileNameRes`
 
 ```{r}
 # DT::datatable(degs)
-pander(degs[1:min(top_X, nrow(degs)), ])
+pander(degs[1:min(ntable, nrow(degs)), ])
 ```
 
 # Functional enrichment analysis
 
 ## KEGG canonical pathway enrichment analysis 
 
-Up- and downregulated genes are tested for pathway enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))`. FDR cutoff of the significant enrichments - `r fdr.cutoff`. Top `r top_X` genes shown.
+Up- and downregulated genes are tested for pathway enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))`. FDR cutoff of the significant enrichments - `r p_adj_cutoff`. Top `r ntable` genes shown.
 
 **Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category. `r paste(ifelse(up_dn_separate, "\"direction\" - UP/DN, an indicator whether genes are up- or downregulated.", ""))` 
 
 ```{r}
 # Subset the number of DEGs for KEGG analysis to the maximum
-if (nrow(degs) > max_num_genes) {
-  degs_subset <- degs[1:max_num_genes, ]
+if (nrow(degs) > max_kegg_genes) {
+  degs_subset <- degs[1:max_kegg_genes, ]
 } else {
   degs_subset <- degs
 }
@@ -296,21 +299,21 @@ dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
 if (up_dn_separate) {
   # Analyze up- and downregulated genes separately
   print(paste0("KEGG pathway run on ", length(up.genes), " upregulated and ", length(dn.genes), " downregulated genes."))
-  res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+  res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", p_adj_cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
 } else {
   # Analyze up- and downregulated genes together
   print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
-  res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+  res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", p_adj_cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
 }
 ```
 
-A total of `r nrow(res.kegg)` KEGG pathways were detected as significantly affected at FDR `r fdr.cutoff`. Top `r top_X` shown.
+A total of `r nrow(res.kegg)` KEGG pathways were detected as significantly affected at FDR `r p_adj_cutoff`. Top `r ntable` shown.
 
 ```{r}
 # Display the results
 # DT::datatable(res.kegg)
 if (nrow(res.kegg) > 0 ) {
-  kable(res.kegg[1:min(top_X, nrow(res.kegg)), ])
+  kable(res.kegg[1:min(ntable, nrow(res.kegg)), ])
 }
 ```
 
