@@ -80,29 +80,9 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
   }
 }
 
-# A wrapper to save the results
-save_enrichr <- function(up.genes = up.genes, dn.genes = NULL, databases = "KEGG_2016", p_adj_cutoff = 1, fileNameOut = NULL, wb = NULL) {
-  print(paste("Running", databases, "analysis", sep = " "))
-  if (is.null(dn.genes)) {
-    res.kegg <- enrichGeneList(up.genes, databases = databases, p_adj_cutoff = 1)
-  } else {
-    res.kegg <- enrichFullGeneList(up.genes, dn.genes, databases = databases, p_adj_cutoff = 1)
-  }
-  
-  res.kegg$pval <- formatC(res.kegg$pval, digits = 3, format = "e")
-  res.kegg$qval <- formatC(res.kegg$qval, digits = 3, format = "e")
-  if (!is.null(fileNameOut)) {
-    if (nchar(databases) > 30) databases <- paste0(substr(databases, 1, 20), "_", substr(databases, nchar(databases) - 8, nchar(databases))) # If a database is longer that 30 characters, keep first 20 and last 10 characters
-    save_res(res.kegg, fileNameOut, wb = wb, sheetName = databases)
-  }
-  # Pause for a few seconds
-  pause_sec <- round(runif(1, min = 1, max = 10))
-  Sys.sleep(pause_sec)
-  return(res.kegg)
-}
 ```
 
-# Methods
+# Settings
 
 ```{r echo=TRUE}
 # Cancer type
@@ -112,6 +92,8 @@ selected_genes = c("MYBL2") # Can be multiple
 # Define quantile qutoffs
 quantile_up <- 0.75 # 0.75
 quantile_lo <- 0.25 # 0.25
+# Which pathway enrichment analysis to run
+run_gsea <- TRUE # If TRUE, GSEA pathway enrichment analysis is run, otherwise, standard hypergeometric-based enrichment
 ```
 
 ## Differential expression analysis
@@ -281,31 +263,78 @@ pander(degs[1:min(ntable, nrow(degs)), ])
 
 # Functional enrichment analysis
 
-## KEGG canonical pathway enrichment analysis 
+Up- and downregulated genes are tested for functional enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))`. FDR cutoff of the significant enrichments - `r p_adj_cutoff`. Top `r ntable` genes shown.
 
-Up- and downregulated genes are tested for pathway enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))`. FDR cutoff of the significant enrichments - `r p_adj_cutoff`. Top `r ntable` genes shown.
+## KEGG pathway enrichment analysis 
 
 **Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category. `r paste(ifelse(up_dn_separate, "\"direction\" - UP/DN, an indicator whether genes are up- or downregulated.", ""))` 
 
 ```{r}
-# Subset the number of DEGs for KEGG analysis to the maximum
-if (nrow(degs) > max_kegg_genes) {
-  degs_subset <- degs[1:max_kegg_genes, ]
-} else {
-  degs_subset <- degs
+if( run_gsea == FALSE) {
+  # Subset the number of DEGs for KEGG analysis to the maximum
+  if (nrow(degs) > max_kegg_genes) {
+    degs_subset <- degs[1:max_kegg_genes, ]
+  } else {
+    degs_subset <- degs
+  }
+  # Get list of up- and downregulated genes
+  up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
+  dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
+  # Run KEGG
+  if (up_dn_separate) {
+    # Analyze up- and downregulated genes separately
+    print(paste0("KEGG pathway run on ", length(up.genes), " upregulated and ", length(dn.genes), " downregulated genes."))
+    res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", fdr.cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
+  } else {
+    # Analyze up- and downregulated genes together
+    print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
+    res.kegg <- MDmisc::save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
+  }
 }
-# Get list of up- and downregulated genes
-up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
-dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
-# Run KEGG
-if (up_dn_separate) {
-  # Analyze up- and downregulated genes separately
-  print(paste0("KEGG pathway run on ", length(up.genes), " upregulated and ", length(dn.genes), " downregulated genes."))
-  res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", p_adj_cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
-} else {
-  # Analyze up- and downregulated genes together
-  print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
-  res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", p_adj_cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
+```
+
+## KEGG pathway GSEA analysis 
+
+**Legend:** "ID", "Description" - KEGG pathway ID/description, respectively; "NES" - [normalized enrichment score](http://software.broadinstitute.org/gsea/doc/GSEAUserGuideFrame.html); "pvalue", "p.adjust" - raw and FDR-adjusted p-values, respectively; "core_enrichment" - genes enriched in the corresponding pathway.
+
+```{r}
+if (run_gsea == TRUE) {
+  library(clusterProfiler)
+  ## GSEA using clusterProfiler
+  # All DEGs
+  degs.all <- topTable(fit2, coef = 1, number = Inf)
+  # Convert symbols to entrezids
+  eid <- bitr(rownames(degs.all), fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  # Attach converted entrezids
+  degs.all <- left_join(data.frame(SYMBOL = rownames(degs.all), degs.all), eid, by = "SYMBOL")
+  degs.all <- degs.all[ degs.all$ENTREZID != "", ]
+  # List of t-statistics
+  geneList <- degs.all$t
+  # Make it named
+  names(geneList) <- degs.all$ENTREZID
+  # And decreasing sorted
+  geneList <- sort(geneList, decreasing = TRUE)
+  # Actual GSEA
+  set.seed(1)
+  ego3 <- gseKEGG(geneList     = geneList,
+                  organism     = "hsa",
+                  nPerm        = 1000,
+                  minGSSize    = 10,
+                  pvalueCutoff = 0.1,
+                  verbose      = FALSE)
+  # Get summary
+  ego3 <- setReadable(ego3, OrgDb = org.Hs.eg.db, keytype = "ENTREZID")
+  res.kegg <- as.data.frame(ego3)
+  # Save the full results
+  save_res(res.kegg, fileName = fileNameRes, wb = wb, sheetName = "KEGG_GSEA")
+  # Prepare for table output
+  res.kegg <- res.kegg[, c("ID", "Description", "NES", "pvalue", "p.adjust", "core_enrichment")]
+  res.kegg <- res.kegg[order(res.kegg$NES, decreasing = TRUE), ]
+  res.kegg <- res.kegg[res.kegg$p.adjust < p_adj_cutoff, ]
+  res.kegg$NES       <- round(res.kegg$NES, digits = 2)
+  res.kegg$pvalue    <- formatC(res.kegg$pvalue, format = "e", digits = 2)
+  res.kegg$p.adjust  <- formatC(res.kegg$p.adjust, format = "e", digits = 2)
+  rownames(res.kegg) <- NULL
 }
 ```
 
@@ -330,11 +359,11 @@ degs <- read.xlsx(fileNameRes, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "05217", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04070", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
 ```{r echo=FALSE, out.height='300px', eval=TRUE}
-knitr::include_graphics('hsa05217.MIA.png')
+knitr::include_graphics('hsa04070.LONRF2.png')
 ```
 
 
@@ -400,64 +429,6 @@ DT::datatable(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c(
 DT::datatable(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]))
 ```
 
-```{r eval = FALSE}
-## KEGG clusterprofiler
-
-# Pathways identified using GSEA method
-
-library(clusterProfiler)
-## GSEA using clusterProfiler
-# All DEGs
-degs.all <- topTable(fit2, coef = 1, number = Inf)
-# Convert symbols to entrezids
-eid <- bitr(rownames(degs.all), fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
-# Attach converted entrezids
-degs.all <- left_join(data.frame(SYMBOL = rownames(degs.all), degs.all), eid, by = "SYMBOL")
-degs.all <- degs.all[ degs.all$ENTREZID != "", ]
-# List of t-statistics
-geneList <- degs.all$t
-# Make it named
-names(geneList) <- degs.all$ENTREZID
-# And decreasing sorted
-geneList <- sort(geneList, decreasing = TRUE)
-# 
-ego3 <- gseKEGG(geneList     = geneList,
-                organism     = "hsa",
-                nPerm        = 1000,
-                minGSSize    = 10,
-                pvalueCutoff = 0.1,
-                verbose      = FALSE)
-kegg.summary <- summary(ego3)
-```
-
-```{r eval = FALSE}
-DT::datatable(kegg.summary)
-```
-
-```{r eval = FALSE}
-# A wrapper function to perform all functional enrichment analyses.
-# Helper function to save non-empty results
-save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
-  if (nrow(res) > 0) {
-    openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
-    openxlsx::writeData(wb, res, sheet = sheetName)
-    openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
-  }
-}
-# Create (or, load)  Excel file
-wb <- openxlsx::createWorkbook(fileName) # openxlsx::loadWorkbook(fileName)
-openxlsx::addWorksheet(wb = wb, sheetName = "DEGs")
-openxlsx::writeData(wb, data.frame(Gene = rownames(degs), degs), sheet = "DEGs")
-openxlsx::saveWorkbook(wb, fileName, overwrite = TRUE)
-
-save_res(res, fileName, wb = wb, sheetName = "KEGG")
-save_res(data.frame(pathway = rownames(kegg.p$greater), kegg.p$greater[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGUP")
-save_res(data.frame(pathway = rownames(kegg.p$less), kegg.p$less[, c("p.val", "q.val", "set.size")]), fileName, wb = wb, sheetName = "KEGGDN")
-if (rownames(kegg.summary) > 0) {
-  save_res(kegg.summary, fileName, wb = wb, sheetName = "KEGG.clusterProfiler")
-}
-
-```
 
 ```{r session_info, eval = FALSE}
 diagnostics <- devtools::session_info()
