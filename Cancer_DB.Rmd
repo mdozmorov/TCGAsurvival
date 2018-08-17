@@ -141,3 +141,5 @@ https://github.com/Bioconductor/GenomicDataCommons - R package
 
 - The Pan-Cancer analysis by TCGA consortium, all papers. https://www.cell.com/pb-assets/consortium/pancanceratlas/pancani3/index.html
 
+- TCGA mutation data, MAF files, open and controlled access. https://gdc.cancer.gov/about-data/publications/mc3-2017
+
