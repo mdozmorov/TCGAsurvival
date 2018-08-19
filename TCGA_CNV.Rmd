@@ -1,0 +1,406 @@
+---
+title: CNV analysis
+author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    theme: united
+    toc: no
+csl: styles.ref/genomebiology.csl
+bibliography: data.TCGA/TCGA.bib
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is') #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+```{r results='hide'}
+library(TCGA2STAT)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(reshape2)
+library(gridExtra)
+library(limma)
+library(openxlsx)
+library(MDmisc)
+library(org.Hs.eg.db)
+library(enrichR)
+library(pheatmap)
+library(gplots) # install.packages("gplot")
+library(RColorBrewer) # of source("http:/bioconductor.org/biocLite.R") biocLite("RColorBrewer")
+```
+
+```{r}
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+
+# A function to get data overview
+summarize_data <- function(mtx = mtx) {
+  print(paste0("Dimensions of expression matrix, genex X patients: ", paste(dim(mtx$dat), collapse = " ")))
+  print(paste0("Dimensions of clinical matrix, patients X parameters: ", paste(dim(mtx$clinical), collapse = " ")))
+  print(paste0("Dimensions of merged matrix, patients X parameters + genes: ", paste(dim(mtx$merged.dat), collapse = " ")))
+  print("Head of the merged matrix")
+  print(mtx$merged.dat[1:5, 1:10])
+  print("Head of the clinical matrix")
+  print(mtx$clinical[1:5, 1:7])
+  print("List of clinical values, and frequency of each variable: ")
+  clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
+  # Filter clinical variables to have at least 2, but no more than 10 categories,
+  # And they are not dates
+  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
+  print(kable(clin_vars))
+  return(rownames(clin_vars))
+}
+
+```
+
+```{r echo=TRUE}
+# Cancer type
+cancer = "OV" 
+# Gene(s) of interest
+selected_genes = c("LATS2") #, "LATS2") # Can be multiple
+```
+
+```{r}
+# Differential expression cutoff
+p_val_cutoff   <- 0.01 # P-value cutoff
+p_adj_cutoff   <- 0.05 # FDR cutoff
+nplot          <- 50 # How many genes to plot on a heatmap
+nbox           <- 9  # How many genes to plot on a boxplot
+ntable         <- 15 # Number of genes to output in a DEG table
+nkegg          <- 15 # Number of genes to output in a KEGG table
+min_kegg_genes <- 20 # Minimum number of genes to run enrichment analysis on
+max_kegg_genes <- 2000 # Maximum number of genes to run enrichment analysis on
+up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
+# Which pathway enrichment analysis to run
+run_gsea <- FALSE # If TRUE, GSEA pathway enrichment analysis is run, otherwise, standard hypergeometric-based enrichment
+
+# Filename to same the results
+fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_DEGs_", p_val_cutoff, ".xlsx")
+```
+
+```{r}
+# Path where the downloaded data is stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+
+# General settings
+useTPM    = FALSE # Whether or not to convert expression counts to TPM
+# data.type = "CNA_SNP"
+# type = "" 
+data.type = "CNA_CGH"
+type = "415K" 
+```
+
+```{r results='hide'}
+mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+
+clinical_annotations <- summarize_data(mtx = mtx)
+# source("Supplemental_R_script_1.R")
+
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+
+# Prepare clinical data
+clin <- mtx$merged.dat[, 1:3]
+colnames(clin)[1] <- "AffyID"
+```
+
+Density plots of GISTIC scores. Two modes show approximate numerical cutoffs of deletion/amplification.
+
+```{r fig.height=3.5, results='hide'}
+expr_selected <- expr[, colnames(expr) %in% selected_genes | colnames(expr) == "AffyID"]
+for (i in 1:length(selected_genes)) {
+  density(expr_selected[, colnames(expr_selected) == selected_genes[i]]) %>% plot(main = selected_genes[i], xlab = "GISTIC scores") %>% print
+}
+rownames(expr_selected) <- expr_selected$AffyID
+expr_selected$AffyID    <- NULL
+```
+
+\pagebreak
+
+```{r fig.show='hide'} 
+# Initial heatmap building
+col3 <- colorRampPalette(c("blue", "white", "red"))
+dist.method <- "euclidean"  # "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski"
+hclust.method <- "ward.D" # "ward", "single", "complete", "average", "mcquitty", "median" or "centroid"
+# Get the data
+expr_selected_for_heatmap <- t(expr_selected) # Rotate, so samples are on X axis
+expr_selected_for_heatmap <- as.matrix(expr_selected_for_heatmap)
+# If just one gene, add a row of zeros to generate a heatmap
+if (nrow(expr_selected_for_heatmap) == 1) {
+  expr_selected_for_heatmap <- rbind(expr_selected_for_heatmap, 0)
+} 
+# Plot the heatmap
+h <- heatmap.2(expr_selected_for_heatmap, Rowv = FALSE, dendrogram = "column", distfun=function(x){dist(x,method=dist.method)}, hclustfun=function(x){hclust(x,method=hclust.method)}, col = col3, trace = "none", density.info = "none", cexRow = 1, labCol = NA)
+# And the dendrogram
+h$colDendrogram %>% plot
+```
+
+```{r }
+# Cut the dendrogram into four clusters
+h_clust <- cutree(as.hclust(h$colDendrogram), k = 4)
+# Redo cluster numbers into colors
+h_clust_color <- h_clust
+h_clust_color[h_clust_color == 1] <- "red"
+h_clust_color[h_clust_color == 2] <- "blue"
+h_clust_color[h_clust_color == 3] <- "green"
+h_clust_color[h_clust_color == 4] <- "yellow"
+# Plot the heatmap with colored clusters
+h <- heatmap.2(expr_selected_for_heatmap, dendrogram = "column", distfun=function(x){dist(x,method=dist.method)}, hclustfun=function(x){hclust(x,method=hclust.method)}, col = col3, trace = "none", density.info = "none", ColSideColors = h_clust_color, cexRow = 1, labCol = NA)
+```
+
+\pagebreak
+
+```{r}
+data.type = "RNASeq2"
+type = "" 
+```
+
+```{r results='hide'}
+mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+
+clinical_annotations <- summarize_data(mtx = mtx)
+# source("Supplemental_R_script_1.R")
+
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+
+# Prepare clinical data
+clin <- mtx$merged.dat[, 1:3]
+colnames(clin)[1] <- "AffyID"
+```
+
+```{r}
+# Common names in CNV and expression data
+common_names <- intersect(expr$AffyID, names(h_clust_color))
+# Subset both expression matrix and cluster assignment
+expr <- expr[expr$AffyID %in% common_names, ]
+h_clust_color <- h_clust_color[names(h_clust_color) %in% common_names]
+
+# For differential analysis, create group labels
+group <- vector(mode = "numeric", length = nrow(expr)) # Empty bector
+```
+
+```{r echo=TRUE}
+# !!! Critical. Group definition
+# Red cluster vs. other
+ind_up <- h_clust_color == "red"
+ind_lo <- !(ind_up)
+# Red cluster vs. yellow
+# ind_up <- h_clust_color == "red"
+# ind_lo <- h_clust_color == "blue"
+```
+
+```{r}
+group[ind_up] <- 1 # Assign numeric groups
+group[ind_lo] <- 2
+# table(group) # How many patients we have
+expr <- expr[group != 0, ] # Remove those that are not in quantiles
+group <- group[ group != 0 ]
+```
+
+
+
+
+# Differential expression analysis
+
+```{r}
+# Prerequisites, prepared by the survival.R script
+# expr_for_deg - expr_for_degession matrix separated by the high/low expr_for_degession of the selected genes
+# group - labeling of samples having high/low expr_for_degession of the selected genes
+
+# Reshape expr_for_degession matrix
+expr_for_deg <- (t(expr))
+colnames(expr_for_deg) <- expr_for_deg[1, ]
+expr_for_deg <- expr_for_deg[-1, ]
+class(expr_for_deg) <- "numeric"
+expr_for_deg <- log2(expr_for_deg + 1)
+# expr_for_deg <- voom(expr_for_deg)$E
+# boxplot(expr_for_deg)
+
+# Limma
+design <- model.matrix(~0 + factor(group))
+colnames(design) <- c("up", "lo")
+fit <- lmFit(expr_for_deg, design)
+contrast.matrix <- makeContrasts(up-lo, levels = design)
+fit2 <- contrasts.fit(fit, contrast.matrix)
+fit2 <- eBayes(fit2)
+
+degs <- topTable(fit2, coef = 1, number = Inf, p.value = p_adj_cutoff)
+```
+
+We split `r cancer` cohort into `r length(group[group == 1])` x `r length(group[group == 2])` groups manually separated previously. We have a total of `r nrow(degs)` differentially expressed genes at FDR corrected p-value `r p_adj_cutoff`. `r nrow(degs[ degs$logFC > 0, ])` are upregulated, `r nrow(degs[ degs$logFC < 0, ])` are downregulated.
+
+Top 50 the most differentially expressed genes are shown
+
+```{r fig.height=7}
+matrix.to.plot <- expr_for_deg[rownames(expr_for_deg) %in% rownames(degs)[1:min(nrow(degs), nplot)], ]
+colnames(matrix.to.plot) <- make.unique(colnames(matrix.to.plot))
+genes.to.plot <- rownames(degs)[1:min(nrow(degs), nplot)]
+group.to.plot <- group
+group.to.plot <- ifelse(group.to.plot == 1, "UP", "LO")
+group.to.plot <- data.frame(Group = group.to.plot)
+rownames(group.to.plot) <- colnames(matrix.to.plot)
+  
+pheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20), clustering_method = "ward.D", scale = "row", annotation_col = group.to.plot, treeheight_row = 0, treeheight_col = 0, show_colnames = FALSE)
+```
+
+```{r}
+# Save results
+# Create (or, load)  Excel file
+unlink(fileNameRes)
+wb <- openxlsx::createWorkbook(fileNameRes) # loadWorkbook(fileNameRes) # 
+save_res(data.frame(Gene = rownames(degs), degs), fileName = fileNameRes, wb = wb, sheetName = "DEGS")
+```
+
+Results are stored in the Excel file `r fileNameRes`
+
+- Legend for gene lists: "Gene" - gene annotations; "logFC" - log fold change; "AveExpr" - average expression, log2; "t" - t-statistics; "P.Val"/"adj.P.Val" - non-/FDR-adjusted p-value, "B" - another statistics.
+
+```{r}
+# DT::datatable(degs)
+pander(degs[1:min(ntable, nrow(degs)), ])
+```
+
+# Functional enrichment analysis
+
+Up- and downregulated genes are tested for functional enrichment `r paste(ifelse(up_dn_separate, "separately", "jointly"))`. `r paste(ifelse(up_dn_separate, "Each table has enrichment results for both up-/downregulated genes. The \"direction\" column indicate which pathways are enriched in \"UP\"- or \"DN\"-regulated genes.", ""))`. FDR cutoff of the significant enrichments - `r p_adj_cutoff`. Top `r ntable` genes shown.
+
+## KEGG pathway enrichment analysis 
+
+**Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category. `r paste(ifelse(up_dn_separate, "\"direction\" - UP/DN, an indicator whether genes are up- or downregulated.", ""))` 
+
+```{r}
+if( run_gsea == FALSE) {
+  # Subset the number of DEGs for KEGG analysis to the maximum
+  if (nrow(degs) > max_kegg_genes) {
+    degs_subset <- degs[1:max_kegg_genes, ]
+  } else {
+    degs_subset <- degs
+  }
+  # Get list of up- and downregulated genes
+  up.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t > 0 ]))
+  dn.genes <- sort(unique(rownames(degs_subset)[ degs_subset$t < 0 ]))
+  # Run KEGG
+  if (up_dn_separate) {
+    # Analyze up- and downregulated genes separately
+    print(paste0("KEGG pathway run on ", length(up.genes), " upregulated and ", length(dn.genes), " downregulated genes."))
+    res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2016", p_adj_cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
+  } else {
+    # Analyze up- and downregulated genes together
+    print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
+    res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2016", fdr.cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
+  }
+}
+```
+
+## KEGG pathway GSEA analysis 
+
+**Legend:** "ID", "Description" - KEGG pathway ID/description, respectively; "NES" - [normalized enrichment score](http://software.broadinstitute.org/gsea/doc/GSEAUserGuideFrame.html); "pvalue", "p.adjust" - raw and FDR-adjusted p-values, respectively; "core_enrichment" - genes enriched in the corresponding pathway.
+
+```{r}
+if (run_gsea == TRUE) {
+  library(clusterProfiler)
+  ## GSEA using clusterProfiler
+  # All DEGs
+  degs.all <- topTable(fit2, coef = 1, number = Inf, p.value = 1)
+  # Convert symbols to entrezids
+  eid <- bitr(rownames(degs.all), fromType="SYMBOL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  # Attach converted entrezids
+  degs.all <- left_join(data.frame(SYMBOL = rownames(degs.all), degs.all), eid, by = "SYMBOL")
+  degs.all <- degs.all[ degs.all$ENTREZID != "", ]
+  degs.all <- degs.all[ complete.cases(degs.all), ]
+  # List of t-statistics
+  geneList <- degs.all$B
+  # Make it named
+  names(geneList) <- degs.all$ENTREZID
+  # And decreasing sorted
+  geneList <- sort(geneList, decreasing = TRUE)
+  # Actual GSEA
+  set.seed(1)
+  ego3 <- gseKEGG(geneList     = geneList,
+                  organism     = "hsa",
+                  nPerm        = 1000,
+                  minGSSize    = 10,
+                  pvalueCutoff = 0.1,
+                  verbose      = FALSE)
+  # Get summary
+  ego3 <- setReadable(ego3, OrgDb = org.Hs.eg.db, keytype = "ENTREZID")
+  res.kegg <- as.data.frame(ego3)
+  if (nrow(res.kegg) > 0) {
+    # Save the full results
+    save_res(res.kegg, fileName = fileNameRes, wb = wb, sheetName = "KEGG_GSEA")
+    # Prepare for table output
+    res.kegg <- res.kegg[, c("ID", "Description", "NES", "pvalue", "p.adjust", "core_enrichment")]
+    res.kegg <- res.kegg[order(res.kegg$NES, decreasing = TRUE), ]
+    res.kegg <- res.kegg[res.kegg$p.adjust < p_adj_cutoff, ]
+    res.kegg$NES       <- round(res.kegg$NES, digits = 2)
+    res.kegg$pvalue    <- formatC(res.kegg$pvalue, format = "e", digits = 2)
+    res.kegg$p.adjust  <- formatC(res.kegg$p.adjust, format = "e", digits = 2)
+    rownames(res.kegg) <- NULL
+  }
+}
+```
+
+A total of `r nrow(res.kegg)` KEGG pathways were detected as significantly affected at FDR `r p_adj_cutoff`. Top `r ntable` shown.
+
+```{r}
+# Display the results
+# DT::datatable(res.kegg)
+if (nrow(res.kegg) > 0 ) {
+  kable(res.kegg[1:min(ntable, nrow(res.kegg)), ])
+}
+```
+
+
+
+## Selected pathway
+
+Red/Green - up/downregulated genes in upper vs. lower `r selected_genes` expressing samples. Gray - marginal fold change, yet significant. White - gene is not differentially expressed
+
+```{r eval=FALSE}
+library(pathview)
+library(openxlsx)
+degs <- read.xlsx(fileNameRes, cols = c(1, 2))
+degs.genes <- degs$logFC
+names(degs.genes) <- degs$Gene
+# Adjust as needed
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "05217", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+```
+
+```{r echo=FALSE, out.height='300px', eval=FALSE}
+knitr::include_graphics('hsa05217.MIA.png')
+```
+
+
