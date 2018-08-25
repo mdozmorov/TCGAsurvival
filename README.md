@@ -43,6 +43,8 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `survival_BRCA.Rmd` - survival analyses adjusted for BRCA (Analysis 3)
 - `survival_OVCA.Rmd` - survival analyses adjusted for OV (Analysis 3)
 
+- `survival_Neuroblastoma.Rmd` - survival analysis for Neuroblastoma samples from TARGET database. Prepare the data with `misc/cgdsr_preprocessing.R`, see Methods section for data description.
+
 - `TCGA_summary.Rmd` - summary report tuned for `survival.Rmd` output. In which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Search and replace the name of the selected gene, and cancer type. Uses results from `res.genes.Analysis2` and `res.genes.Analysis3` folders. Change `gene <- "XXXX"` as needed. Adjust two `![](res.genes.AnalysisX/XXXX.png)` placeholders. [Example](examples/TCGA_summary_MIA.pdf)
 - `TCGA_summary_BRCA.Rmd` - summary report tuned for `survival_BRCA.Rmd` output. Includes Analysis 5
 - `TCGA_summary_OVCA.Rmd` - summary report tuned for `survival_OVCA.Rmd` output. Includes Analysis 5

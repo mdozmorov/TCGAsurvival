@@ -1,0 +1,249 @@
+---
+title: "Neuroblastoma (TARGET database) survival analysis"
+output:
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+bibliography: data.TCGA/TCGA.bib
+csl: styles.ref/genomebiology.csl
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+
+# Libraries
+
+```{r libraries}
+library(TCGA2STAT)
+library(ggplot2)
+library(reshape2)
+if (!require(survplot)) {
+  install.packages("survplot_0.0.7.tar.gz", repos = NULL, type="source")
+}
+source("Supplemental_R_script_1.R")
+```
+
+# Helper functions
+
+```{r functions}
+# A function to load TCGA data, from remote repository, or a local R object
+load_data <- function(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE) {
+  FILE = paste0(data_dir, "/mtx_", disease, "_", data.type, "_", type, ".rda") # R object with data
+  if (all(file.exists(FILE), !(force_reload))) {
+    # If the data has been previously saved, load it
+    load(file = FILE)
+  } else {
+    # If no saved data exists, get it from the remote source
+    mtx <- getTCGA(disease = disease, data.type = data.type, type = type, clinical = TRUE)
+    save(file = FILE, list = c("mtx")) # Save it
+  }
+  return(mtx)
+}
+
+# A function to get data overview
+summarize_data <- function(mtx = mtx) {
+  print(paste0("Dimensions of expression matrix, genex X patients: ", paste(dim(mtx$dat), collapse = " ")))
+  print(paste0("Dimensions of clinical matrix, patients X parameters: ", paste(dim(mtx$clinical), collapse = " ")))
+  print(paste0("Dimensions of merged matrix, patients X parameters + genes: ", paste(dim(mtx$merged.dat), collapse = " ")))
+  print("Head of the merged matrix")
+  print(mtx$merged.dat[1:5, 1:10])
+  print("Head of the clinical matrix")
+  print(mtx$clinical[1:5, 1:7])
+  print("List of clinical values, and frequency of each variable: ")
+  clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
+  # Filter clinical variables to have at least 2, but no more than 10 categories,
+  # And they are not dates
+  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
+  print(kable(clin_vars))
+  return(rownames(clin_vars))
+}
+
+# A function to create expression matrix
+make_expression_matrix <- function(mtx = mtx, disease = cancer, data.type = data.type, type = type, results_dir = results_dir) {
+  # transposed expression matrix (genes start at column 4) 
+  mtx.expression <- mtx$merged.dat[, 4:ncol(mtx$merged.dat) ] %>% t 
+  # Set column names as patient IDs
+  colnames(mtx.expression) <- mtx$merged.dat$bcr 
+  # Set row names as probe IDs
+  rownames(mtx.expression) <- colnames(mtx$merged.dat)[ 4:ncol(mtx$merged.dat) ] 
+  # Save gzipped matrix
+  fileName.gz <- gzfile(paste0(results_dir, "/mtx_", disease, "_", data.type, "_", type, "_1expression.txt.gz"), "w")
+  write.table(mtx.expression, fileName.gz, sep = ";", quote = FALSE)
+  close(fileName.gz)
+}
+```
+
+# Settings
+
+```{r settings}
+# Path where the downloaded data is stored
+# Prepare the data with `misc/cgdsr_preprocessing.R`
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
+# data_dir = "/Users/mdozmorov/Documents/nobackup" # Mac
+# data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
+# data_dir = "D:"
+# results_dir = "/Users/mdozmorov/Dropbox" # Path where the results are stored
+
+# Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
+# Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
+# Expression types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
+# Clinical values: http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf
+
+# General settings
+cancer = "nbl_target" 
+data.type = "2018_pub"
+# type = "mrna" # Doesn't work as of 08-15-2018
+type = "mrna_median_Zscores" 
+
+# Maximum number of days to take for survival analysis
+max_days <- 200 * 30 # In days, # months x # days. For all days, use, e.g., 200 * 30
+```
+
+# Select genes
+
+```{r selectedGenes}
+# Select genes of interest
+selected_genes = c("MCTS1")
+```
+
+# Methods
+
+## Survival analysis
+
+<!--TCGAsurvival/misc/cgdsr_preprocessing-->
+
+Microarray gene expression data for 249 neuroblastoma patients were downloaded from the Therapeutically Applicable Research to Generate Effective Treatments (TARGET) database using the `cgdsr` v.1.2.6 R package on 08-15-2018. The data was provided as Z-score-transformed. It was analyzed using Kaplan-Meyer curves and Cox proportional hazard model by separating patients into high/low LONRF2 expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
+
+<!-- TCGA_DEGs.Rmd -->
+
+We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
+
+# Load data
+
+```{r loadData}
+mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+clinical_annotations <- summarize_data(mtx = mtx)
+```
+
+```{r processData}
+# Prepare expression data
+expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+# Filter out low expressed genes
+# Should be more than 90% of non-zero values
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
+expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+
+# Prepare clinical data
+clin <- mtx$merged.dat[, 1:3]
+colnames(clin)[1] <- "AffyID"
+
+# Filtering clinical data
+clin <- clin[complete.cases(clin), ] # Remove NAs
+clin <- clin[clin$OS < max_days, ] # Filtering by max days
+# Filtering expression data
+expr <- expr[expr$AffyID %in% clin$AffyID, ]
+all.equal(expr$AffyID, clin$AffyID)
+```
+
+### Analysis 1: Selected genes, selected cancers, no clinical annotations
+
+```{r analysis1}
+system("mkdir res") # Create results folder
+kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = FALSE, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
+# Density plot of gene expression
+png(paste0("res/", selected_genes, "_density.png"), width = 400, height = 400)
+plot(density(expr[, colnames(expr) %in% selected_genes]), main = paste0("Expression of ", selected_genes, "gene"), xlab = "Z-score-transformed gene expression", ylab = "Frequency", lwd = 3)
+abline(v = 0.7963, col = "red", lwd = 3)
+dev.off()
+# Rename the results folder
+system("mv res res.genes.Analysis1")
+```
+
+
+### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
+
+```{r analysis3}
+system("mkdir res") # Create results folder
+for (cancer_type in cancer) {
+  print(paste0("Processing cancer ", cancer_type))
+  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  clinical_annotations <- summarize_data(mtx = mtx)
+  # Prepare expression data
+  expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+  # Filter out low expressed genes
+  # Should be more than 90% of non-zero values
+  # ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+  # expr <- expr[, apply(expr, 2, ff)] 
+  expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
+  # Prepare clinical data
+  clin <- mtx$merged.dat[, 1:3]
+  colnames(clin)[1] <- "AffyID"
+  # Full clinical information
+  # clin_full <- mtx$clinical
+  clin_full <- mtx$clinical[rownames(mtx$clinical) %in% clin$AffyID, ]
+  clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
+  all.equal(rownames(clin_full), expr$AffyID)
+  
+  clinical_annotations <- c("DIAGNOSIS", "ETHNICITY", "GRADE", "INSS_STAGE", "MKI",  "MYCN", "PLOIDY", "RACE", "RISK_GROUP", "SEX", "TUMOR_SAMPLE_HISTOLOGY", "TUMOR_TISSUE_SITE")
+  # For each clinical annotation
+  for (annotation in clinical_annotations) { 
+    # Get the number of patients per category in the current annotation
+    annotations <- table(clin_full[, annotation], useNA = "no") 
+    # How many categories in the current annotation
+    num_of_annot_categories <- length(annotations) 
+    # How many categories to select at one time
+    for (num_of_selected_categories in 1:num_of_annot_categories) {
+      # Select patients annotated with this categories
+      patients <- rownames(clin_full)[ clin_full[, annotation] %in% names(annotations)[ num_of_selected_categories] ]
+      # Get their index in the clin and expr matrixes
+      index_patients <- which(clin$AffyID %in% patients)
+      # If the number of patients annotated with the combination of categories is large enough, proceed
+      if (length(index_patients) > 40) {
+        print(paste("Processing annotation:", annotation, 
+                    ", categories:", names(annotations)[ num_of_selected_categories],
+                    ", number of patients:", length(index_patients)))
+        # Get a subset of clinical information for these patients
+        clin_selected <- clin[ index_patients, ]
+        # Get a subset of expression information for these patients
+        expr_selected <- expr[ index_patients, ]
+        # For this subset of expression, filter out low expressed genes
+        # index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
+        # expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
+        # Perform actual survival analysis
+        kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = FALSE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "png", use_survminer = FALSE)
+      }
+    }
+  }
+}
+# Rename the results folder
+system("mv res res.genes.Analysis3")
+```
+
+### Analysis 2: Different survival times
+
+```{r}
+system("mkdir res") # Create results folder
+clin$status <- clin_full$EFSCENS
+clin$OS     <- clin_full$EFS_TIME
+kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = FALSE, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
+# Rename the results folder
+system("mv res res.genes.Analysis1_EFS")
+```
+
+
+# References
