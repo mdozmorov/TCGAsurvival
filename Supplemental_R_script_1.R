@@ -327,12 +327,12 @@ for(j in 1:length(index_arr)){
 	  surv <- NULL
 		surv<-Surv(survival_data[,1], survival_data[,2]);
     if (use_survminer) {
-      res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer)
+      res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer, stitle = paste0(affyid, "\n", "Expression"))
       pvalue <- res$plot$plot_env$pval
       hr <- hr_left <- hr_right <- NA
       print(res$plot)
     } else {
-      res = mySurvplot(surv, gene_expr, use_survminer = use_survminer)
+      res = mySurvplot(surv, gene_expr, use_survminer = use_survminer, stitle = paste0(affyid, "\n", "Expression"))
       pvalue = res[[1]];
       hr = res[[2]]
       hr_left = res[[3]]
