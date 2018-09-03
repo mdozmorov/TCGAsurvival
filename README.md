@@ -1,20 +1,26 @@
 # Scripts to extract TCGA data for survival analysis.
 
-Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/).
+* [Data](#data-description)
+  * [Data preparation](#data-preparation)
+* [Analysis examples](#analysis-examples)
+* [Analysis scripts](#analysis-scripts)
+* [Misc scripts](#misc-scripts)
+* [TCGA data](#tcga-data)
+  * [OvarianCancerSubtypes](#OvarianCancerSubtypes)
+  * [ProteinAtlas](#ProteinAtlas)
+  * [brca_mbcproject_wagle_2017](#brca_mbcproject_wagle_2017)
+  * [TCGA_Ovarian](#TCGA_Ovarian)
 
+For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
+
+## Data description
+
+- Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/).
 - [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)
 - [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
 - [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
 
-## Examples
-
-- [CELLX analysis summary, "CELLX_analysis.Rmd"](examples/CELLX_analysis_MIA.pdf)
-- [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary_MIA.pdf)
-- [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
-- [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
-- [Correlation analysis results, "TCGA_correlations.Rmd"](examples/TCGA_correlations_MIA.pdf), [Example Excel output](examples/TCGA_correlations_MIA.xlsx) 
-
-## Data preparation
+### Data preparation
 
 First, get the data locally using `misc/TCGA_preprocessing`
 
@@ -24,11 +30,17 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - By default, RNA-seq data for all cancers will be downloaded and saved as `*.rda` files
 - **In all other scripts, Change Path where the downloaded data is stored, `data_dir` variable**
 
-## Files
+## Analysis examples
+
+- [CELLX analysis summary, "CELLX_analysis.Rmd"](examples/CELLX_analysis_MIA.pdf)
+- [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary_MIA.pdf)
+- [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
+- [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
+- [Correlation analysis results, "TCGA_correlations.Rmd"](examples/TCGA_correlations_MIA.pdf), [Example Excel output](examples/TCGA_correlations_MIA.xlsx) 
+
+## Analysis scripts
 
 - **In all other scripts, Change Path where the downloaded data is stored, `data_dir` variable**
-
-- `Cancer_DB.Rmd` - a list of cancer-related databases
 
 - `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. [Example](examples/CELLX_analysis_MIA.pdf)
 
@@ -70,7 +82,9 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `TCPA_correlation.Rmd` - experimenting with TCPA data.
 
 
-## `misc` - Misc scripts
+## Misc scripts
+
+`misc` folder
 
 - `aracne._networks.R` - experimenting with `aracne.networks` R package, https://www.bioconductor.org/packages/release/data/experiment/html/aracne.networks.html
 
@@ -99,7 +113,9 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `XENA_BRCA.R` - Exploring data from Xena UCSC genome browser, https://xenabrowser.net/datapages/?cohort=TCGA%20Breast%20Cancer%20(BRCA)
 
 
-# `data.TCGA` - TCGA data
+## TCGA data
+
+`data.TCGA` folder. Some data are absent from the repository because of large size - download through links.
 
 - `BRCA_with_TP53_mutation.tsv` - 355 TCGA samples with TP53 mutations, obtained from https://portal.gdc.cancer.gov/exploration?cases_offset=300&cases_size=100&facetTab=mutations&filters=~%28op~%27and~content~%28~%28op~%27in~content~%28field~%27cases.project.project_id~value~%28~%27TCGA-BRCA%29%29%29~%28op~%27in~content~%28field~%27genes.gene_id~value~%28~%27ENSG00000141510%29%29%29%29%29&searchTableTab=cases
 - `CCR-13-0583tab1.xlsx` - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
@@ -116,11 +132,11 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `XENA_classification.csv` - PAM50 and other clinical data from https://xenabrowser.net/datapages/?dataset=TCGA.BRCA.sampleMap/BRCA_clinicalMatrix&host=https://tcga.xenahubs.net
 
 
-## `OvarianCancerSubtypes`
+### OvarianCancerSubtypes
 
 Sample annotations by ovarian cancer subtypes. https://github.com/aedin/OvarianCancerSubtypes
 
-## `ProteinAtlas`
+### ProteinAtlas
 
 Uhlen, Mathias, Cheng Zhang, Sunjae Lee, Evelina Sjöstedt, Linn Fagerberg, Gholamreza Bidkhori, Rui Benfeitas, et al. “A Pathology Atlas of the Human Cancer Transcriptome.” Science (New York, N.Y.) 357, no. 6352 (August 18, 2017). doi:10.1126/science.aan2507. http://science.sciencemag.org/content/357/6352/eaan2507
 
@@ -129,7 +145,7 @@ Supplementary material http://science.sciencemag.org/content/suppl/2017/08/16/35
 - `Table S6` - summary of survival prognostic value, with a simple "favorable/unfavorable" label for each gene. Each worksheet corresponds to a different cancer.  
 - `Table S8` - per-gene summary, in which cancers it is prognostic of survival.  
 
-## `brca_mbcproject_wagle_2017`
+### brca_mbcproject_wagle_2017
 
 https://www.mbcproject.org/
 
@@ -137,16 +153,10 @@ The Metastatic Breast Cancer Project is a patient-driven initiative. This study 
 
 Data download: http://www.cbioportal.org/study?id=brca_mbcproject_wagle_2017#summary. Data includes 78 patients, 103 samples, sample-specific clinical annotations, Putative copy-number from GISTIC, MutSig regions
 
-## `TCGA_Ovarian`
+### TCGA_Ovarian
 
 - Gene expression, methylation, miRNA expression matrices, from Zhang, Shihua, Chun-Chi Liu, Wenyuan Li, Hui Shen, Peter W. Laird, and Xianghong Jasmine Zhou. “Discovery of Multi-Dimensional Modules by Integrative Analysis of Cancer Genomic Data.” Nucleic Acids Research 40, no. 19 (October 2012): 9379–91. https://doi.org/10.1093/nar/gks725. - Integrative analysis of gene expression, metnylation, miRNA expression, using NMF, implemented in Matlab. Supplementary material from https://academic.oup.com/nar/article/40/19/9379/2414808#supplementary-data. 
 
-
-# External tools
-
-- `TNBCtype` tool to classify triple negative breast cancer samples (microarray gene expression) into six subtypes, http://cbc.mc.vanderbilt.edu/tnbc/index.php
-
-- `genefu` R package for PAM50 classification and survival analysis. https://www.bioconductor.org/packages/release/bioc/html/genefu.html
 
 
 
