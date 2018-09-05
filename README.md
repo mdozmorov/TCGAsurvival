@@ -1,7 +1,7 @@
 # Scripts to extract TCGA data for survival analysis.
 
-* [Data](#data-description)
-  * [Data preparation](#data-preparation)
+* [Data Description](#data-description)
+* [Data preparation](#data-preparation)
 * [Analysis examples](#analysis-examples)
 * [Analysis scripts](#analysis-scripts)
 * [Misc scripts](#misc-scripts)
@@ -20,7 +20,7 @@ For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
 - [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
 - [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
 
-### Data preparation
+## Data preparation
 
 First, get the data locally using `misc/TCGA_preprocessing`
 
@@ -117,7 +117,7 @@ First, get the data locally using `misc/TCGA_preprocessing`
 
 `data.TCGA` folder. Some data are absent from the repository because of large size - download through links.
 
-- `BRCA_with_TP53_mutation.tsv` - 355 TCGA samples with TP53 mutations, obtained from https://portal.gdc.cancer.gov/exploration?cases_offset=300&cases_size=100&facetTab=mutations&filters=~%28op~%27and~content~%28~%28op~%27in~content~%28field~%27cases.project.project_id~value~%28~%27TCGA-BRCA%29%29%29~%28op~%27in~content~%28field~%27genes.gene_id~value~%28~%27ENSG00000141510%29%29%29%29%29&searchTableTab=cases
+- `BRCA_with_TP53_mutation.tsv` - 355 TCGA samples with TP53 mutations, [Source](https://portal.gdc.cancer.gov/exploration?cases_offset=300&cases_size=100&facetTab=mutations&filters=~%28op~%27and~content~%28~%28op~%27in~content~%28field~%27cases.project.project_id~value~%28~%27TCGA-BRCA%29%29%29~%28op~%27in~content~%28field~%27genes.gene_id~value~%28~%27ENSG00000141510%29%29%29%29%29&searchTableTab=cases)
 - `CCR-13-0583tab1.xlsx` - TNBCtype predictions for 163 primary tumors in TCGA considered to be TNBC, classification into six TNBC subtypes. See http://cbc.mc.vanderbilt.edu/tnbc/index.php for details. "UNC" - unclassified. Supplementary table 1 from Mayer, Ingrid A., Vandana G. Abramson, Brian D. Lehmann, and Jennifer A. Pietenpol. “New Strategies for Triple-Negative Breast Cancer--Deciphering the Heterogeneity.” Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 20, no. 4 (February 15, 2014): 782–90. doi:10.1158/1078-0432.CCR-13-0583.
 - `gene_signatures_323.xls` - 323 gene signatures from Fan, Cheng, Aleix Prat, Joel S. Parker, Yufeng Liu, Lisa A. Carey, Melissa A. Troester, and Charles M. Perou. “Building Prognostic Models for Breast Cancer Patients Using Clinical Variables and Hundreds of Gene Expression Signatures.” BMC Medical Genomics 4 (January 9, 2011): 3. https://doi.org/10.1186/1755-8794-4-3.
 - `PAM50_classification.txt` - sample classification into PAM50 types
@@ -126,10 +126,11 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 - `TCGA_genes.txt` - genes measured in TCGA RNA-seq experiments
 - `TCGA_purity.xlsx` - Tumor purity estimates for TCGA samples. Tumor purity estimates according to four methods and the consensus method for all TCGA samples with available data. https://www.nature.com/articles/ncomms9971#supplementary-information. Supplementary Data 1 from Aran, Dvir, Marina Sirota, and Atul J. Butte. “Systematic Pan-Cancer Analysis of Tumour Purity.” Nature Communications 6, no. 1 (December 2015). https://doi.org/10.1038/ncomms9971.
+- `TCGA_sample_types.xlsx` - Cancer types and subtypes for all TCGA samples. Includes BRCA subtypes, and subtyping of other cancers, where applicable. PMID: 29625050. [Source](https://www.cell.com/cms/10.1016/j.cell.2018.03.035/attachment/ec810e54-7eb5-43f4-9eaf-3bca356bf347/mmc1.xlsx)
 - `TCGA_stemness.xlsx` - Supplementary Table 1 - stemness indices for all TCGA samples. Stemness indices built from various data: mRNAsi - gene expression-based, EREG-miRNAsi - epigenomic- and gene expression-baset, mDNAsi, EREG-mDNAsi - same but methylation-based, DMPsi - differentially methylated probes-based, ENHsi - enhancer-based. Each stemness index (si) ranges from low (zero) to high (one) stemness. From Malta, Tathiane M., Artem Sokolov, Andrew J. Gentles, Tomasz Burzykowski, Laila Poisson, John N. Weinstein, Bożena Kamińska, et al. “Machine Learning Identifies Stemness Features Associated with Oncogenic Dedifferentiation.” Cell 173, no. 2 (April 2018): 338-354.e15. https://doi.org/10.1016/j.cell.2018.03.034. 
 - `TCGA.bib` - BibTex of TCGA-related references
 - `TCPA_proteins.txt` - List of 224 proteins profiled by RPPA technology. The Cancer Proteome Atlas, [http://tcpaportal.org/tcpa/](http://tcpaportal.org/tcpa/). Data download: [http://tcpaportal.org/tcpa/download.html](http://tcpaportal.org/tcpa/download.html). Paper: [http://cancerres.aacrjournals.org/content/77/21/e51](http://cancerres.aacrjournals.org/content/77/21/e51)
-- `XENA_classification.csv` - PAM50 and other clinical data from https://xenabrowser.net/datapages/?dataset=TCGA.BRCA.sampleMap/BRCA_clinicalMatrix&host=https://tcga.xenahubs.net
+- `XENA_classification.csv` - PAM50 and other clinical data, [Source](https://xenabrowser.net/datapages/?dataset=TCGA.BRCA.sampleMap/BRCA_clinicalMatrix&host=https://tcga.xenahubs.net) 
 
 
 ### OvarianCancerSubtypes
