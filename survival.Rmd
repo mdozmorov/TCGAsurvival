@@ -127,7 +127,7 @@ type = ""
 # clinical = TRUE
 
 # Breast cancer
-cancer = "BRCA" 
+# cancer = "BRCA" 
 # # Ovarian cancer
 # cancer = "OV"
 # # Liver hepatocellular carcinoma
@@ -137,7 +137,7 @@ cancer = "BRCA"
 # # Sarcoma
 # cancer = "SARC" 
 # # Pancreatic cancer
-# cancer = "PAAD" 
+cancer = "PAAD" 
 # # Lung adenocarcinoma
 # cancer = "LUAD"
 # # Lung squamous cell carcinoma
@@ -177,9 +177,9 @@ colnames(clin)[1] <- "AffyID"
 # selected_genes = c("ANLN") # PAN
 # selected_genes = c("TAF2") # LIHC
 # selected_genes = c("CPEB2") # BRCA
-# selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
-# selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
-selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
+# selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer = c("PAAD")
+# selected_genes = c("hsa.mir.142"); cancer = c("BRCA")
+selected_genes = "PRDM16"
 # selected_genes = "DYRK1A"
 # selected_genes = "DCAF7"
 # selected_genes = "MBD2" # AML
@@ -191,6 +191,7 @@ selected_genes = "MIA"; cancer_RNASeq2 = c("BRCA")
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
 
 ```{r analysis1}
+system("rm -r res.*") # Remove previous results folders, if any
 system("mkdir res") # Create results folder
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
 # Rename the results folder
@@ -206,10 +207,10 @@ system("mv res res.genes.Analysis1")
 
 ```{r analysis2}
 # All cancers with RNASeq2 data
-cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+cancer = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
 data.type = "RNASeq2"; type = "" 
 system("mkdir res") # Create results folder
-for (cancer_type in cancer_RNASeq2) {
+for (cancer_type in cancer) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   # Prepare expression data
@@ -248,9 +249,9 @@ system("mv res res.genes.Analysis2")
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
 
 ```{r analysis3}
-cancer_RNASeq2 = c("BRCA")
+cancer = c("BRCA")
 system("mkdir res") # Create results folder
-for (cancer_type in cancer_RNASeq2) {
+for (cancer_type in cancer) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   clinical_annotations <- summarize_data(mtx = mtx)
@@ -434,10 +435,10 @@ selected_genes <- "interferon_signature"
 
 pdf(file = paste0("res/dimreduction_", selected_genes, ".pdf"))
 # All cancers with RNASeq2 data
-cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+cancer = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
 data.type = "RNASeq2"; type = "" 
 # Process each cancer
-for (cancer_type in cancer_RNASeq2) {
+for (cancer_type in cancer) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   # Prepare subset of expression data for a given signature
