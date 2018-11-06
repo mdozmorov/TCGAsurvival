@@ -311,7 +311,7 @@ for(j in 1:length(index_arr)){
 	# 0 if m bigger then the gene expression value
 	gene_expr <- NULL
 	gene_expr=vector(mode="numeric", length=length(row))
-	gene_expr[which(m < row)] = 1
+	gene_expr[which(row > m)] = 1 # low/high
 	
 	# --------------------- KMplot ----------------------
 	tryCatch({
