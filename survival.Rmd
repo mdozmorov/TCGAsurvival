@@ -249,7 +249,6 @@ system("mv res res.genes.Analysis2")
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
 
 ```{r analysis3}
-cancer = c("BRCA")
 system("mkdir res") # Create results folder
 for (cancer_type in cancer) {
   print(paste0("Processing cancer ", cancer_type))
