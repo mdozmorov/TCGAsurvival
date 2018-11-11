@@ -179,7 +179,7 @@ colnames(clin)[1] <- "AffyID"
 # selected_genes = c("CPEB2") # BRCA
 # selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer = c("PAAD")
 # selected_genes = c("hsa.mir.142"); cancer = c("BRCA")
-selected_genes = "PRDM16"
+selected_genes = "SMAD4"
 # selected_genes = "DYRK1A"
 # selected_genes = "DCAF7"
 # selected_genes = "MBD2" # AML
@@ -207,10 +207,10 @@ system("mv res res.genes.Analysis1")
 
 ```{r analysis2}
 # All cancers with RNASeq2 data
-cancer = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
 data.type = "RNASeq2"; type = "" 
 system("mkdir res") # Create results folder
-for (cancer_type in cancer) {
+for (cancer_type in all_cancers) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   # Prepare expression data
