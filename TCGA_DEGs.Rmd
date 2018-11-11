@@ -86,9 +86,9 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "OV" 
+cancer = "PAAD" 
 # Gene(s) of interest
-selected_genes = c("MYBL2") # Can be multiple
+selected_genes = c("SMAD4") # Can be multiple
 # Define quantile qutoffs
 quantile_up <- 0.75 # 0.75
 quantile_lo <- 0.25 # 0.25
@@ -300,6 +300,7 @@ if( run_gsea == FALSE) {
 ```{r}
 if (run_gsea == TRUE) {
   library(clusterProfiler)
+  library(DOSE)
   ## GSEA using clusterProfiler
   # All DEGs
   degs.all <- topTable(fit2, coef = 1, number = Inf)
@@ -359,11 +360,11 @@ degs <- read.xlsx(fileNameRes, cols = c(1, 2))
 degs.genes <- degs$logFC
 names(degs.genes) <- degs$Gene
 # Adjust as needed
-pv.out <- pathview(gene.data = degs.genes, pathway.id = "04070", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
+pv.out <- pathview(gene.data = degs.genes, pathway.id = "04972", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
 ```{r echo=FALSE, out.height='300px', eval=TRUE}
-knitr::include_graphics('hsa04070.LONRF2.png')
+knitr::include_graphics('hsa04972.SMAD4.png')
 ```
 
 
