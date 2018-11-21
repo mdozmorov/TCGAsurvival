@@ -133,11 +133,11 @@ type = ""
 # # Liver hepatocellular carcinoma
 # cancer = "LIHC" 
 # # Head and Neck squamous cell carcinoma
-# cancer = "HNSC" 
+cancer = "HNSC" 
 # # Sarcoma
 # cancer = "SARC" 
 # # Pancreatic cancer
-cancer = "PAAD" 
+#cancer = "PAAD" 
 # # Lung adenocarcinoma
 # cancer = "LUAD"
 # # Lung squamous cell carcinoma
@@ -150,6 +150,25 @@ cancer = "PAAD"
 mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 clinical_annotations <- summarize_data(mtx = mtx)
 ```
+
+```{r eval=FALSE}
+# If needed, same the full clinical annotation and the expression matrices in an Excel file
+library(MDmisc)
+fileName <- paste0("results/", cancer, ".xlsx") # File name to save the results
+unlink(fileName) # Delete the old file, if it exists
+wb <- openxlsx::createWorkbook(fileName) # Create new worksheet
+# Make expression matrix
+mtx_expr <- data.frame(ID = mtx$merged.dat[, "bcr"], mtx$merged.dat[ , 4:ncol(mtx$merged.dat)]) # Append IDs
+# Make clinical matrix
+mtx_clin <- mtx$clinical[rownames(mtx$clinical) %in% mtx_expr$ID, ] # Subset full clinical data to IDs that have expression
+mtx_clin <- mtx_clin[match(mtx_expr$ID, rownames(mtx_clin)), ] # Match the order of expression and clinical sample IDs
+mtx_clin <- data.frame(ID = rownames(mtx_clin), mtx_clin) # Append IDs
+all_equal(mtx_expr$ID, mtx_clin$ID) # Should be TRUE
+# Save the results
+save_res(mtx_expr, fileName = fileName, wb = wb, sheetName = "Expression")
+save_res(mtx_clin, fileName = fileName, wb = wb, sheetName = "Clinical")
+```
+
 
 ```{r processData}
 # Prepare expression data
