@@ -37,6 +37,7 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
 - [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
 - [Correlation analysis results, "TCGA_correlations.Rmd"](examples/TCGA_correlations_MIA.pdf), [Example Excel output](examples/TCGA_correlations_MIA.xlsx) 
+- [CNV analysis of two genes, survival and differential expression, "TCGA_CNV.Rmd"](examples/TCGA_CNV.pdf)
 
 ## Analysis scripts
 
@@ -61,7 +62,7 @@ First, get the data locally using `misc/TCGA_preprocessing`
 - `TCGA_summary_BRCA.Rmd` - summary report tuned for `survival_BRCA.Rmd` output. Includes Analysis 5
 - `TCGA_summary_OVCA.Rmd` - summary report tuned for `survival_OVCA.Rmd` output. Includes Analysis 5
 
-- `TCGA_CNV.Rmd` - Separate samples based on copy number variation of one or several genes, do differential expression analysis on the two groups, and KEGG enrichment. An ad hoc analysis, requires manual intervention.
+- `TCGA_CNV.Rmd` - Separate samples based on copy number variation of one or several genes, do survival and differential expression analysis on the two groups, and KEGG enrichment. An ad hoc analysis, requires manual intervention.
 
 - `TCGA_stemness.Rmd` - correlation of a selected gene with stemness indices, for details, see Malta, Tathiane M., Artem Sokolov, Andrew J. Gentles, Tomasz Burzykowski, Laila Poisson, John N. Weinstein, Bożena Kamińska, et al. “Machine Learning Identifies Stemness Features Associated with Oncogenic Dedifferentiation.” Cell 173, no. 2 (April 2018): 338-354.e15. https://doi.org/10.1016/j.cell.2018.03.034. [Results example PDF](examples/TCGA_stemness.pdf)
 
