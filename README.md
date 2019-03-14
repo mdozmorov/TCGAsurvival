@@ -82,6 +82,7 @@ First, get the data locally using `misc/TCGA_preprocessing`
 
 - `TCPA_correlation.Rmd` - experimenting with TCPA data.
 
+- `survival_notes.md` - notes on survival analysis
 
 ## Misc scripts
 
