@@ -43,8 +43,8 @@ unconverted <- gsub(".", "-", unconverted, fixed = TRUE)
 unconverted <- as.data.frame(unconverted)
 
 # Save the resulting object
-save(list = c("feature_length"), file = "data/feature_length.Rda")
-load(file = "data/feature_length.Rda")
+save(list = c("feature_length"), file = "data.TCGA/feature_length.Rda")
+load(file = "data.TCGA/feature_length.Rda")
 
 
 # library(annotables)
