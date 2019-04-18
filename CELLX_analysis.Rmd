@@ -40,7 +40,7 @@ library(plotly)
 - Import the downloaded data into R
 
 ```{r}
-gene <- "MIA" # Change 
+gene <- "MCL1" # Change 
 ```
 
 # Gene `r gene` analysis
@@ -148,6 +148,7 @@ rownames(t.table) <- NULL # Drop rownames
 t.table <- t.table[, c("Cancer.Name", "Acronym", "Fold_change", "p_value", "Number_of_normal", "Number_of_cancer", "Mean_expression_normal", "Mean_expression_cancer", "t_statistic")]
 kable(t.table)
 # DT::datatable(t.table, width = 800)
+write.csv(t.table, "CELLX_analysis.csv")
 ```    
 
 # Cancer vs. normal expression boxplots, individual cancers
