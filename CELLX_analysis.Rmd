@@ -40,7 +40,8 @@ library(plotly)
 - Import the downloaded data into R
 
 ```{r}
-gene <- "MCL1" # Change 
+gene <- "PLK1" # Change 
+min_number_of_normal <- 12 # Minimum number of samples to conduct a test
 ```
 
 # Gene `r gene` analysis
@@ -78,7 +79,7 @@ rsem
 
 The table below displays differential expression statistics comparing the expression levels of *`r names(expr)[3]`* in normal versus cancer tissues (where normal comparison tissues are available) by Welch two-sample t-test.
 
-Column names: "Cancer.Name", "Acronym" - cancer type, "Fold_change" - fold change (positive/negative - upregulated/downregulated in cancer), "p_value", "t_statistic" - results of Welch two-sample t-test, "Number_of_normal", "Number_of_cancer" - number of samples, "Mean_expression_normal", "Mean_expression_cancer" - log2-transformed RSEM expression.
+Column names: "Cancer.Name", "Acronym" - cancer type, "Fold_change" - fold change (positive/negative - upregulated/downregulated in cancer), "p_value", "t_statistic" - results of Welch two-sample t-test, "Normal", "Cancer" - number of samples<!--, "Mean_expression_normal", "Mean_expression_cancer" - log2-transformed RSEM expression-->.
 
 The table is sorted by "p_value" column, from most to least significant.
 
@@ -90,8 +91,8 @@ The table is sorted by "p_value" column, from most to least significant.
 
 # Set up object for storing t-test results
 t.table <- data.frame(Cancer_name = NA, 
-                      Number_of_normal = NA, 
-                      Number_of_cancer = NA, 
+                      Normal = NA, 
+                      Cancer = NA, 
                       Mean_expression_normal = NA, 
                       Mean_expression_cancer = NA, 
                       Fold_change = NA,
@@ -114,7 +115,7 @@ for (i in 1:length(cancer)) {
     
     # Skip other variables if no normal tissues are available for comparison
     if (cancer[i] %in% substr(normal, 1, (nchar(normal) - 2)) == F) {
-        t.table$Number_of_normal[i] <- 0
+        t.table$Normal[i] <- 0
         t.table$Method[i] <- "Not Conducted"
         next
     }
@@ -133,7 +134,7 @@ for (i in 1:length(cancer)) {
     res <- t.test(expr[which(expr$affy_source == cancer[i]), 3], expr[which(expr$affy_source == normal_i), 3], alternative = "two.sided")
     
     # Write results to t.table
-    t.table[i, 7:9] <- c(round(res$statistic, 3), round(res$parameter, 3), round(res$p.value, 6))
+    t.table[i, 7:9] <- c(round(res$statistic, 3), round(res$parameter, 3), res$p.value, 6)
     t.table[i, 10:11] <- c(paste0("(", round(res$conf.int[1], 2), ", ", round(res$conf.int[2], 2), ")"), 
         res$method)
 }
@@ -142,13 +143,16 @@ cancers <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
 
 t.table <- t.table[ !is.na(t.table$t_statistic), ]
 t.table <- left_join(cancers, t.table, by = c("Acronym" = "Cancer_name"))
-t.table <- t.table[ !is.na(t.table$Number_of_normal), ] # Excluded cancers without normal samples
+t.table <- t.table[ !is.na(t.table$Normal), ] # Excluded cancers without normal samples
 t.table <- t.table[ order(as.numeric(t.table$p_value)), !(colnames(t.table) %in% c("Degrees_of_freedom", "Confidence_interval", "Method"))]
 rownames(t.table) <- NULL # Drop rownames
-t.table <- t.table[, c("Cancer.Name", "Acronym", "Fold_change", "p_value", "Number_of_normal", "Number_of_cancer", "Mean_expression_normal", "Mean_expression_cancer", "t_statistic")]
-kable(t.table)
+t.table <- t.table[, c("Cancer.Name", "Acronym", "Fold_change", "p_value", "Normal", "Cancer", "t_statistic")] # , "Mean_expression_normal", "Mean_expression_cancer"
 # DT::datatable(t.table, width = 800)
+# Save the full results
 write.csv(t.table, "CELLX_analysis.csv")
+# Visualize the most important
+t.table$p_value <- formatC(as.numeric(t.table$p_value), format = "e", digits = 2)
+kable(t.table[ t.table$Normal > min_number_of_normal, ])
 ```    
 
 # Cancer vs. normal expression boxplots, individual cancers
@@ -164,7 +168,7 @@ expr$Cancer[grepl("TCGA", expr$Cancer)] <- substr(expr$Cancer[grepl("TCGA", expr
 # length(unique(expr$Cancer)) 
 # table(expr$Cancer)
 expr2 <- merge(expr, t.table, by.x = "Cancer", by.y = "Acronym")
-expr2 <- expr2[!is.na(expr2$Mean_expression_normal), ]
+# expr2 <- expr2[!is.na(expr2$Mean_expression_normal), ]
 
 expr2$tissue <- relevel(expr2$tissue, ref = "Normal") # Make normal boxplot plotted first
 
@@ -182,12 +186,13 @@ rsem_int <- ggplot(expr2, aes(tissue, eval(parse(text = gene)), text = paste("p:
 plot(rsem_int)
 ```    
 
-<!--
+
+
+```{r interactive.coord.plot, eval=FALSE}
 # Cancer vs. normal expression~significance plot
 
-The figure below is an interactive plot that highlights the relationship between *`r names(expr)[3]`* expression in normal and cancerous tissues for each type of cancer, colored by the significance of the differences.
+# The figure below is an interactive plot that highlights the relationship between *`r names(expr)[3]`* expression in normal and cancerous tissues for each type of cancer, colored by the significance of the differences.
 
-```{r interactive.coord.plot}
 # Coordinate plot version
 t.int <- ggplot(t.table[complete.cases(t.table), ], aes(Mean_expression_normal, Mean_expression_cancer)) + 
     geom_point(aes(text = paste("Name:", Acronym, ", t:", t_statistic), color = p_value)) + labs(title = paste("Expression of", names(expr)[3], "Across Cancer Types"), x = "\nExpression Level in Normal Tissue", y = "Expression Level in Cancer Tissue\n") + 
