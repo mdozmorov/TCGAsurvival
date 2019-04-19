@@ -119,11 +119,11 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "LIHC" 
+cancer = "BRCA" 
 # Minimum number of samples in a subcategory to be considered
 min_samples <- 15
 # Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats. If NA, no enrichment analysis
-enrichr_category <- NA # c("KEGG_2016", "Chromosome_Location",  "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b") # ,
+enrichr_category <- c("KEGG_2019_Human", "Chromosome_Location",  "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b", "GO_Cellular_Component_2017b") # NA
 
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
@@ -377,10 +377,10 @@ pheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20)
 ```
 
 ```{r fig.height=3, fig.width=5}
-selected_genes <- c("ISG15", "OAS1", "MX1", "IFI6", "IFIT1", "IFITM1", "IFIT3")
+selected_genes <- c("UBA1", "PMAIP1")
 
 selected_genes_expr <- expr_subset[rownames(expr_subset) %in% selected_genes, ]
-colnames(selected_genes_expr) <- ifelse(group == 1, "White", "Black, or AA") %>% as.character()
+colnames(selected_genes_expr) <- ifelse(group == 1, "Black, or AA", "White") %>% as.character()
 
 # Reshape the data
 gdata <- reshape2::melt(selected_genes_expr)
