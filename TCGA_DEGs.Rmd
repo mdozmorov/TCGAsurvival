@@ -86,7 +86,7 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "LUAD" 
+cancer = "LUSC" 
 # Gene(s) of interest
 selected_genes = c("LIN52") # Can be multiple
 # Define quantile qutoffs
@@ -122,7 +122,7 @@ max_kegg_genes <- 2000 # Maximum number of genes to run enrichment analysis on
 up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
 
 # Filename to same the results
-fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_", paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "_DEGs_", p_val_cutoff, ".xlsx")
+fileNameRes <- paste0("results/TCGA_DEGs_", selected_genes, "_", cancer, ".xlsx")
 ```
 
 ```{r results='hide'}
