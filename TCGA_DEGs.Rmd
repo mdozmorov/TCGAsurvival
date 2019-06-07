@@ -86,14 +86,14 @@ save_res <- function(res, fileName = fileName, wb = wb, sheetName = "KEGG") {
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "PAAD" 
+cancer = "LUSC" 
 # Gene(s) of interest
-selected_genes = c("SMAD4") # Can be multiple
+selected_genes = c("LIN52") # Can be multiple
 # Define quantile qutoffs
 quantile_up <- 0.75 # 0.75
 quantile_lo <- 0.25 # 0.25
 # Which pathway enrichment analysis to run
-run_gsea <- TRUE # If TRUE, GSEA pathway enrichment analysis is run, otherwise, standard hypergeometric-based enrichment
+run_gsea <- FALSE # If TRUE, GSEA pathway enrichment analysis is run, otherwise, standard hypergeometric-based enrichment
 ```
 
 ## Differential expression analysis
@@ -122,7 +122,7 @@ max_kegg_genes <- 2000 # Maximum number of genes to run enrichment analysis on
 up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
 
 # Filename to same the results
-fileNameRes <- paste0("results/", cancer, "_", paste(selected_genes, collapse = "-"), "_", paste0("UP", quantile_up * 100), paste0("LO", quantile_lo * 100), "_DEGs_", p_val_cutoff, ".xlsx")
+fileNameRes <- paste0("results/TCGA_DEGs_", selected_genes, "_", cancer, ".xlsx")
 ```
 
 ```{r results='hide'}
@@ -363,8 +363,8 @@ names(degs.genes) <- degs$Gene
 pv.out <- pathview(gene.data = degs.genes, pathway.id = "04972", species = "hsa", gene.idtype = "SYMBOL", gene.annotpkg = "org.Hs.eg.db", out.suffix = paste(selected_genes, collapse = "-"))
 ```
 
-```{r echo=FALSE, out.height='300px', eval=TRUE}
-knitr::include_graphics('hsa04972.SMAD4.png')
+```{r echo=FALSE, out.height='300px', eval=FALSE}
+knitr::include_graphics('hsa04972.LIN52.png')
 ```
 
 
