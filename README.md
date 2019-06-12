@@ -32,7 +32,7 @@ First, get the data locally using `misc/TCGA_preprocessing`
 
 ## Analysis examples
 
-- [CELLX analysis summary, "CELLX_analysis.Rmd"](examples/CELLX_analysis_MIA.pdf)
+- [CELLX analysis summary, "CELLX_analysis.Rmd"](examples/CELLX_analysis_PLK1.pdf). Compare with published [Table 1. Comparison of PLK1 Expression between Cancers and Normal Tissue](https://www.sciencedirect.com/science/article/pii/S1936523316301371?via%3Dihub#t0005), [Paper](https://www.ncbi.nlm.nih.gov/pubmed/27888710)
 - [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary_MIA.pdf)
 - [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
 - [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)

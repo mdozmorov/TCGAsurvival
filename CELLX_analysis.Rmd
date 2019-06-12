@@ -124,7 +124,7 @@ for (i in 1:length(cancer)) {
     normal_i <- paste0(cancer[i], "_N")
     t.table[i, c(2, 4)] <- c(length(which(expr$affy_source == normal_i)), round(mean(expr[which(expr$affy_source == normal_i), 3]), 4))
     # Add fold change
-    t.table$Fold_change[i] <- signif( (t.table$Mean_expression_cancer[i] - t.table$Mean_expression_normal[i]) ) # 2^
+    t.table$Fold_change[i] <- signif( 2^(t.table$Mean_expression_cancer[i] - t.table$Mean_expression_normal[i]) ) 
 
     # Skip t.test errors when N of normal samples is too small; else run and save output
     if (is.null(tryCatch(res <- t.test(expr[which(expr$affy_source == normal_i), 3], expr[which(expr$affy_source ==  cancer[i]), 3], alternative = "two.sided"), error = function(e) NULL))) {
