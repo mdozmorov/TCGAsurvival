@@ -135,6 +135,8 @@ First, get the data locally using `misc/TCGA_preprocessing`
 
 - `TCGA_genes.txt` - genes measured in TCGA RNA-seq experiments
 
+- `TCGA_isoforms.xlsx` - Isoform switching analysis of TCGA data, tumor vs. normal. Consequences, survival prediction. Using IsoformSwitchAnalyzeR R package. [Supplementary Table 1](https://mcr.aacrjournals.org/highwire/filestream/37855/field_highwire_adjunct_files/4/175983_2_unknown_upload_4059088_hqghxc.xlsx) - gene- and isoforms differentially expressed in all cancers. From Vitting-Seerup, Kristoffer, and Albin Sandelin. “The Landscape of Isoform Switches in Human Cancers.” Molecular Cancer Research 15, no. 9 (September 2017): 1206–20. https://doi.org/10.1158/1541-7786.MCR-16-0459.
+
 - `TCGA_purity.xlsx` - Tumor purity estimates for TCGA samples. Tumor purity estimates according to four methods and the consensus method for all TCGA samples with available data. https://www.nature.com/articles/ncomms9971#supplementary-information. Supplementary Data 1 from Aran, Dvir, Marina Sirota, and Atul J. Butte. “Systematic Pan-Cancer Analysis of Tumour Purity.” Nature Communications 6, no. 1 (December 2015). https://doi.org/10.1038/ncomms9971.
 
 - `TCGA_sample_types.xlsx` - Cancer types and subtypes for all TCGA samples. Includes BRCA subtypes, and subtyping of other cancers, where applicable. PMID: 29625050. [Source](https://www.cell.com/cms/10.1016/j.cell.2018.03.035/attachment/ec810e54-7eb5-43f4-9eaf-3bca356bf347/mmc1.xlsx)
