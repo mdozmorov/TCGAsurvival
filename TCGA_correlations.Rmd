@@ -37,6 +37,7 @@ library(sva)
 # library(enrichR)
 source("https://raw.githubusercontent.com/mdozmorov/enrichR/master/R/api_wrapper.R")
 source("https://raw.githubusercontent.com/mdozmorov/RNA-seq/master/calcTPM.R")
+library(enrichR)
 library(annotables)
 # Append gene length
 grch37 <- grch37 %>% mutate(Length = abs(end - start))
@@ -73,7 +74,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 
 # Selected genes
 precalculated  <- FALSE
-selected_genes <- c("MIA") # If nothing precalculated - use one of the genes
+selected_genes <- c("SPHK2") # If nothing precalculated - use one of the genes
 method         <- "" # If correlation with the selected_gene is measured, method is empty
 # If precalculated, use precalculated values
 # precalculated  <- TRUE 
@@ -90,7 +91,7 @@ expression_cutoff <- 0   # From 0 to 1, percent cutoff of expression of the sele
 top_expression    <- TRUE # Whether to take top (TRUE) of bottom (FALSE) expression 
 
 # All cancers with RNASeq2 data
-# cancer = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+# cancer = c("ACC", "BLCA", "HNSC" , "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
 # fileNameIn <- (paste0("data/All_expression_", data.type, "_", type, ".Rda")) # Save expression data
 # fileNameOut <- paste0("results/All_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
 # fileNameRes <- paste0("results/All_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
@@ -102,12 +103,12 @@ cancer = c("BRCA")
 corr_type    <- "pearson"
 # Correlation cutoffs
 corr_cutoff  <- 0.2
-pval_cutoff  <- 0.05
-# Enrichment cutoffs
-fdr.cutoff   <- 0.3
+p_val_cutoff   <- 0.05 # Regular p-value cutoff
+p_adj_cutoff   <- 0.3 # FDR cutoff
+min_kegg_genes <- 20 # Minimum number of genes to run enrichment analysis on
+max_kegg_genes <- 2000 # Maximum number of genes to run enrichment analysis on
 up_dn_separate <- FALSE # Whether to run KEGG separately on up- and downregulated genes. FALSE - do not distinguish directionality
-top_X          <- 10 # How many top significant differentially expressed genes/pathways to output
-max_num_genes  <- 2000 # Maximum number of genes to feed into KEGG enrichment
+ntable         <- 15 # Number of genes to output in a DEG table
 
 # Save results
 fileNameIn <- (paste0("data/Expression_", paste(cancer, collapse = "_"), ".Rda"))  # Save expression data
@@ -217,28 +218,37 @@ save_res(correlations, fileName = fileNameRes, wb = wb, sheetName = "CORR")
 ```
 
 ```{r}
-# sum(correlations$pval < pval_cutoff & correlations$corr > corr_cutoff)
-correlations.subset <- correlations[ correlations$pval < pval_cutoff & abs(correlations$corr) > corr_cutoff, ]
+# Select max_kegg_genes for up and dn genes
+correlations.up <- correlations[ correlations$pval < p_val_cutoff & correlations$corr > corr_cutoff, ]
+if (nrow(correlations.up) > max_kegg_genes) {
+  correlations.up <- correlations.up[1:max_kegg_genes, ]
+}
+correlations.dn <- correlations[ correlations$pval < p_val_cutoff & correlations$corr < -corr_cutoff, ]
+if (nrow(correlations.dn) > max_kegg_genes) {
+  correlations.dn <- correlations.dn[(nrow(correlations.dn) - max_kegg_genes):nrow(correlations.dn), ]
+}
 # Select only significantly correlated genes, positive and negative separately
-up.genes <- sort(unique(correlations[ correlations$pval < pval_cutoff & correlations$corr >  corr_cutoff, ]$symbol))
-dn.genes <- sort(unique(correlations[ correlations$pval < pval_cutoff & correlations$corr < -corr_cutoff, ]$symbol))
+up.genes <- sort(unique(correlations.up$symbol))
+dn.genes <- sort(unique(correlations.dn$symbol))
 ```
 
-Top `r top_X` genes positively correlated with `r selected_genes`
+Top `r ntable` genes positively correlated with `r selected_genes`
 
 ```{r}
-correlations.subset$corr <- signif(correlations.subset$corr)
-correlations.subset$pval <- signif(correlations.subset$pval)
-kable(correlations.subset[1:min(nrow(correlations.subset), top_X), ])
+correlations.up$corr <- signif(correlations.up$corr)
+correlations.up$pval <- signif(correlations.up$pval)
+kable(correlations.up[1:min(nrow(correlations.up), ntable), ])
 ```
 
-Top `r top_X` genes negatively correlated with `r selected_genes`
+Top `r ntable` genes negatively correlated with `r selected_genes`
 
 ```{r}
-kable(correlations.subset[nrow(correlations.subset):(nrow(correlations.subset) - top_X), ])
+correlations.dn$corr <- signif(correlations.dn$corr)
+correlations.dn$pval <- signif(correlations.dn$pval)
+kable(correlations.dn[nrow(correlations.dn):min((nrow(correlations.dn) - ntable), nrow(correlations.dn)), ])
 ```
 
-Genes positively (n = `r length(up.genes)`) and negatively (n = `r length(dn.genes)`) correlating with the selected gene `r selected_genes` at p < `r pval_cutoff` cutoff and  `r corr_type` correlation coefficient cutoff: >`r corr_cutoff`. Legend:
+Genes positively (n = `r length(up.genes)`) and negatively (n = `r length(dn.genes)`) correlating with the selected gene `r selected_genes` at p < `r p_val_cutoff` cutoff and  `r corr_type` correlation coefficient cutoff: >`r corr_cutoff`. Legend:
 
 - `symbol`, `description` - gene symbols/description
 - `cor`, `pval - Pearson correlation coefficient, and p-value of correlation significance
@@ -255,7 +265,7 @@ Full correlation results are saved in `r fileNameRes` file.
 
 - Use the "Search" box for each table, to filter the results for "UP" or "DN" only. Search is global within the table, case insensitive.
 
-- FDR cutoff of the significant enrichments - `r fdr.cutoff`.
+- FDR cutoff of the significant enrichments - `r p_adj_cutoff`.
 
 **Legend:** "database" - source of functional annotations, "category" - name of functional annotation,  "pval" - unadjusted enrichment p-value,  "qval" - FDR-adjusted p-value,  "genes" - comma-separated differentially expressed genes enriched in a corresponding functional category,  "direction" - UP/DN, an indicator whether genes are up- or downregulated.
 
@@ -264,17 +274,45 @@ Full correlation results are saved in `r fileNameRes` file.
 if (up_dn_separate) {
   # Analyze up- and downregulated genes separately
   print(paste0("KEGG pathway run on ", length(up.genes), " upregulated and ", length(dn.genes), " downregulated genes."))
-  res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2019_Human", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+  # res.kegg <- save_enrichr(up.genes = up.genes, dn.genes = dn.genes, databases = "KEGG_2019_Human", fdr.cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
+  res.kegg    <- NULL # Initially, empty value
+  res.kegg.up <- enrichr(up.genes, databases = "KEGG_2019_Human")
+  res.kegg.dn <- enrichr(dn.genes, databases = "KEGG_2019_Human")
+  # If significant results are present, save them
+  if(nrow(res.kegg.up[["KEGG_2019_Human"]]) > 0 & sum(res.kegg.up[["KEGG_2019_Human"]]$Adjusted.P.value < p_adj_cutoff) > 0) {
+    res.kegg.up <- as.data.frame(res.kegg.up[["KEGG_2019_Human"]])
+    res.kegg.up <- res.kegg.up[res.kegg.up$Adjusted.P.value < p_adj_cutoff, , drop = FALSE]
+    res.kegg.up <- res.kegg.up %>% mutate(Direction = "UP")
+    res.kegg    <- rbind(res.kegg, res.kegg.up)
+  }
+  if(nrow(res.kegg.dn[["KEGG_2019_Human"]]) > 0 & sum(res.kegg.dn[["KEGG_2019_Human"]]$Adjusted.P.value < p_adj_cutoff) > 0) {
+    res.kegg.dn <- as.data.frame(res.kegg.dn[["KEGG_2019_Human"]])
+    res.kegg.dn <- res.kegg.dn[res.kegg.dn$Adjusted.P.value < p_adj_cutoff, , drop = FALSE]
+    res.kegg.dn <- res.kegg.dn %>% mutate(Direction = "DN")
+    res.kegg    <- rbind(res.kegg, res.kegg.dn)
+  }
 } else {
   # Analyze up- and downregulated genes together
   print(paste0("KEGG pathway run on ", length(unique(c(up.genes, dn.genes))), " genes without distinguishing them by directionality."))
-  res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2019_Human", fdr.cutoff = fdr.cutoff, fileName = fileNameRes, wb = wb)
+  # res.kegg <- save_enrichr(up.genes = unique(c(up.genes, dn.genes)), databases = "KEGG_2019_Human", fdr.cutoff = p_adj_cutoff, fileName = fileNameRes, wb = wb)
+  res.kegg <- enrichr(unique(c(up.genes, dn.genes)), databases = "KEGG_2019_Human") # KEGG results only
+  # If significant results are present, save them
+  if(nrow(res.kegg[["KEGG_2019_Human"]]) > 0 & sum(res.kegg[["KEGG_2019_Human"]]$Adjusted.P.value < p_adj_cutoff) > 0) {
+    res.kegg <- as.data.frame(res.kegg[["KEGG_2019_Human"]])
+    res.kegg <- res.kegg[res.kegg$Adjusted.P.value < p_adj_cutoff, , drop = FALSE]
+  }
+}
+# Finally, if something is significant, save that
+if (class(res.kegg) == "data.frame") {
+  res.kegg <- res.kegg[, !grepl("Old", colnames(res.kegg))] # Remove columns having "Old" prefix
+  save_res(res.kegg[res.kegg$Adjusted.P.value < p_adj_cutoff, , drop = FALSE], fileName = fileNameRes, wb = wb, sheetName = "KEGG")
+
 }
 
 # Display the results
 # DT::datatable(res.kegg)
 if (nrow(res.kegg) > 0 ) {
-  kable(res.kegg[1:min(top_X, nrow(res.kegg)), ])
+  kable(res.kegg[1:min(ntable, nrow(res.kegg)), ])
 }
 ```
 
@@ -325,5 +363,5 @@ pv.out <- pathview(gene.data = degs.genes, pathway.id = "hsa05217", species = "h
 ```
 
 ```{r echo=FALSE, out.height='300px', eval=FALSE}
-knitr::include_graphics('hsa05217.MIA.png')
+knitr::include_graphics('hsa05217.SLC40A1.png')
 ```
