@@ -47,38 +47,59 @@ max_to_plot <- 60 # Maximum number of PPI links to plot
 
 ### `STRING`, http://string-db.org/
 
-STRING v10: protein-protein interaction networks, integrated over the tree of life. https://www.ncbi.nlm.nih.gov/pubmed/25352553
+STRING v11: protein-protein interaction networks, integrated over the tree of life. https://www.ncbi.nlm.nih.gov/pubmed/25352553
 
-wget https://string-db.org/download/protein.links.v10.5/9606.protein.links.v10.5.txt.gz # 05/29/2017
+Download human data only, protein network data (incl. distinction: direct vs. interologs)
 
-Total number of interactions: 7,083,920
+```
+wget https://stringdb-static.org/download/protein.links.full.v11.0/9606.protein.links.full.v11.0.txt.gz # 2019-07-10
+```
 
-"protein1", "protein2", "combined_score"
- 
-wget https://string-db.org/download/protein.actions.v10.5/9606.protein.actions.v10.5.txt.gz # 05/29/2017 # A subset of directional interactions
+Columns: protein1 protein2 neighborhood neighborhood_transferred fusion cooccurence homology coexpression coexpression_transferred experiments experiments_transferred database database_transferred textmining textmining_transferred combined_score
 
-Total number of interactions: 1,862,289 
+Total number of interactions: 11,759,455
+
+```
+wget https://stringdb-static.org/download/protein.links.detailed.v11.0/9606.protein.links.detailed.v11.0.txt.gz  # 2019-07-10
+```
+
+Columns: protein1 protein2 neighborhood fusion cooccurence coexpression experimental database textmining combined_score
+
+Total number of interactions: 11,759,455
+
+```
+wget wget https://stringdb-static.org/download/protein.links.v11.0/9606.protein.links.v11.0.txt.gz  # 2019-07-10
+```
+
+Columns: protein1 protein2 combined_score
+
+Total number of interactions: 11,759,455
+
+```
+wget https://stringdb-static.org/download/protein.actions.v11.0/9606.protein.actions.v11.0.txt.gz # 2019-07-10
+```
 
 - Column 1: "item_id_a", e.g., 9606.ENSP00000000233
 - Column 2: "item_id_b", e.g., 9606.ENSP00000005257
 - Column 3: "mode"
-    - 107288 activation
-    - 326100 binding
-    - 506918 catalysis
-    - 23488 expression
-    - 23454 inhibition
-    - 29080 ptmod
-    - 845960 reaction
+              - 167962 activation
+              - 676016 binding
+              - 907966 catalysis
+              - 22978 expression
+              - 60986 inhibition
+              - 47370 ptmod
+              - 1587628 reaction
 - Column 4: "action"
-    - 107296 activation
-    - 35026 inhibition
+              - 168086 activation
+              - 72250 inhibition
 - Colum 5: "is_directional"
-    - 1260194 t
+              - 2272988 t
 - Column 6: "a_is_acting"
-    - 1232191 f
-    - 630097 t
+              - 2334412 f
+              - 1136494 t
 - Column 7: "score", from 150 to 900. Median 900.
 
+Total number of interactions: 3,470,907
 
 ```{r eval = TRUE}
 # STRING data
