@@ -16,9 +16,9 @@ For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
 ## Data description
 
 - Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/), [vignette](https://cran.r-project.org/web/packages/TCGA2STAT/vignettes/TCGA2STAT.html).
-- [Cancer types](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)
-- [Data types](http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf)
-- [Clinical values](http://www.liuzlab.org/TCGA2STAT/ClinicalVariables.pdf)
+- [Cancer types](data/CancerDataChecklist_AppendixA.PDF)
+- [Data types](data/DataPlatforms_AppendixB.PDF)
+- [Clinical values](data/ClinicalVariables_AppendixC.PDF)
 
 ## Data preparation
 
