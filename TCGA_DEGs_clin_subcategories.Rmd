@@ -10,12 +10,14 @@ output:
     toc: no
 csl: styles.ref/genomebiology.csl
 bibliography: data.TCGA/TCGA.bib
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
 # Set up the environment
 library(knitr)
-opts_chunk$set(cache.path='cache/', fig.path='img/', cache=T, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is') #out.width=700, 
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is') #out.width=700, 
 library(pander)
 panderOptions('table.split.table', Inf)
 set.seed(1)
@@ -119,20 +121,27 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 
 ```{r echo=TRUE}
 # Cancer type
-cancer = "BRCA" 
+cancer = "LUAD" 
 # Minimum number of samples in a subcategory to be considered
 min_samples <- 15
-# Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats. If NA, no enrichment analysis
-enrichr_category <- c("KEGG_2019_Human", "Chromosome_Location",  "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b", "GO_Cellular_Component_2017b") # NA
 
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mac
 
 # General settings
 useTPM    = FALSE # Whether or not to convert expression counts to TPM
+# What is the difference between CNV and CNA?
 # https://github.com/mksamur/RTCGAToolbox/issues/3
+
+# RNA-seq data 
 data.type = "RNASeq2" #  "CNA_SNP" # "CNV_SNP" # "RNASeq2"
 type = "" 
+# Functional category, from http://amp.pharm.mssm.edu/Enrichr/#stats. If NA, no enrichment analysis
+enrichr_category <- c("KEGG_2019_Human", "Chromosome_Location",  "GO_Biological_Process_2017b", "GO_Molecular_Function_2017b", "GO_Cellular_Component_2017b") # NA
+# miRNA-seq data
+data.type = "miRNASeq" # miRNASeq - "count" for raw read counts (default); "rpmmm" for normalized read counts
+type = "rpmmm"
+enrichr_category <- NA
 
 # Selected clinical subcategory, will be run if not NA. Defined from summarize_data(mtx = mtx)
 selected_clinical_subcategory <- "race" # Set to NA to run all clinical subcategories
@@ -140,7 +149,7 @@ selected_clinical_subgroup1   <- "black or african american" # Set both subgroup
 selected_clinical_subgroup2   <- "white"                     # To run all pairs of subgroups
   
 # Differential expression cutoff
-pval_cutoff   <- 0.74 # Adjusted P-value cutoff
+pval_cutoff   <- 0.3 # Adjusted P-value cutoff
 max_num_genes <- 5000 # Maximum number of genes to feed into functional enrichment
 full_degs_output <- TRUE # If TRUE, output differential expression statistics for all genes
 
@@ -151,6 +160,12 @@ nplot          <- 50 # How many genes to plot on a heatmap
 
 # Filename to same the results
 fileNameRes <- paste0("results/", cancer, "_", data.type, "_DEGs_clin_subcategories.xlsx")
+
+# Color palette for the heatmap, https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/colorPaletteCheatsheet.pdf
+col3 <- colorRampPalette(c('blue', 'white', 'red'))(20)
+col3 <- colorRampPalette(c('blue', 'gray', 'yellow'))(20)
+col3 <- colorRampPalette(c('green', 'black', 'red'))(20)
+# col3 <- colorRamps::green2red(n = 20)
 ```
 
 ```{r}
@@ -298,12 +313,15 @@ for (annotation in clinical_annotations) {
     expr_subset <- expr[group != 0, ] # Remove those that are not in quantiles
     group <- group[ group != 0 ]
     names(group) <- rownames(expr_subset)
-    # Reshape expr_subsetession matrix
+    # Reshape expr_subset matrix
     expr_subset <- (t(expr_subset))
     colnames(expr_subset) <- expr_subset[1, ]
     expr_subset <- expr_subset[-1, ]
     class(expr_subset) <- "numeric"
     # Convert to the proper numerical scale for limma
+    if (grepl("miRNA", data.type)) {
+      expr_subset <- log2(expr_subset + 1) # miRNA data needs log2 transformation
+    }
     if (grepl("RNA", data.type)) {
       expr_subset <- voom(expr_subset)$E
     }
@@ -369,14 +387,14 @@ matrix.to.plot <- expr_subset[rownames(expr_subset) %in% rownames(degs)[1:min(nr
 matrix.to.plot[1:5, 1:5]
 
 group.to.plot <- group
-group.to.plot <- ifelse(group.to.plot == 1, "UP", "LO")
+group.to.plot <- ifelse(group.to.plot == 1, "EA", "AA")
 group.to.plot <- data.frame(Group = group.to.plot)
 rownames(group.to.plot) <- colnames(matrix.to.plot)
   
-pheatmap(matrix.to.plot, color=colorRampPalette(c('blue', 'gray', 'yellow'))(20), clustering_method = "ward.D", scale = "row", annotation_col = group.to.plot, treeheight_row = 0, treeheight_col = 0, show_colnames = FALSE)
+pheatmap(matrix.to.plot, color=col3, clustering_method = "ward.D", scale = "row", annotation_col = group.to.plot, treeheight_row = 0, treeheight_col = 0, show_colnames = FALSE)
 ```
 
-```{r fig.height=3, fig.width=5}
+```{r fig.height=3, fig.width=5, eval=FALSE}
 selected_genes <- c("UBA1", "PMAIP1")
 
 selected_genes_expr <- expr_subset[rownames(expr_subset) %in% selected_genes, ]
