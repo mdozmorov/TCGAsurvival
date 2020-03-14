@@ -9,6 +9,8 @@ output:
     theme: united
     toc: yes
 always_allow_html: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -30,6 +32,7 @@ library(MDmisc)
 # library(TCGA2STAT)
 library(ggplot2)
 library(reshape2)
+library(writexl)
 # library(clusterProfiler)
 # library(pathview)
 # library(annotables)
@@ -94,7 +97,7 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
 
 # Selected genes, TWO genes only
-selected_genes <- c("DYRK1A", "RNF169")
+selected_genes <- c("IGFBP3", "TMEM219")
 # Check if the names exist
 genes <- readLines("data.TCGA/TCGA_genes.txt")
 setdiff(selected_genes, genes) # Should be 0, meaning selected genes are among the TCGA genes
@@ -108,8 +111,7 @@ cancer_RNASeq2 = c("ACC", "BLCA", "BRCA" , "CESC", "CHOL", "COAD", "COADREAD", "
 # Or, one cancer
 # cancer_RNASeq2 = c("LUAD")
 fileNameIn <- (paste0("data/", cancer_RNASeq2, "_expression_", data.type, "_", type, ".Rda"))  # Save expression data
-fileNameOut <- paste0("results/", cancer_RNASeq2, "_correlation_", selected_genes, "_", data.type, "_", type, ".Rda") # Save correlation data
-fileNameRes <- paste0("results/", cancer_RNASeq2, "_results_", selected_genes, "_", data.type, "_", type, ".xlsx") # Save results
+fileNameOut <- paste0("results/correlations_", selected_genes[1], "_vs_", selected_genes[2], ".xlsx") # Save correlation results
 
 # Correlation type
 corr_type    <- "pearson"
@@ -187,5 +189,6 @@ res_corr <- round_df(res_corr)
 res_corr <- res_corr[ order(res_corr$corr, decreasing = TRUE), ]
 # DT::datatable(res_corr, options = list(pageLength = 50))
 pander(res_corr)
+write_xlsx(list(Correlation = res_corr), fileNameOut)
 ```
 
