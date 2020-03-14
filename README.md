@@ -22,13 +22,13 @@ For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
 
 ## Data preparation
 
-First, get the data locally using `misc/TCGA_preprocessing`
+First, get the data locally using `misc/TCGA_preprocessing.R` script.
 
 - Create a folder on a local computer
-- Change Path where the downloaded data is stored, `data_dir` variable
+- Change the `data_dir` variable with the path where the downloaded data is stored
 - Run the file line-by-line, or source it
 - By default, RNA-seq data for all cancers will be downloaded and saved as `*.rda` files
-- **In all other scripts, Change Path where the downloaded data is stored, `data_dir` variable**
+- **In all other scripts, change the `data_dir` variable to the path where the downloaded data is stored**
 
 ## Analysis examples
 
