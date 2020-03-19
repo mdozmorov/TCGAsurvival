@@ -44,7 +44,7 @@ library(TCGA2STAT)
 library(ggplot2)
 library(reshape2)
 if (!require(survplot)) {
-  install.packages("survplot_0.0.7.tar.gz", repos = NULL, type="source")
+  install.packages("data/survplot_0.0.7.tar.gz", repos = NULL, type="source")
 }
 source("Supplemental_R_script_1.R")
 ```
@@ -127,13 +127,13 @@ type = ""
 # clinical = TRUE
 
 # Breast cancer
-# cancer = "BRCA" 
+cancer = "BRCA" 
 # # Ovarian cancer
 # cancer = "OV"
 # # Liver hepatocellular carcinoma
 # cancer = "LIHC" 
 # # Head and Neck squamous cell carcinoma
-cancer = "HNSC" 
+# cancer = "HNSC" 
 # # Sarcoma
 # cancer = "SARC" 
 # # Pancreatic cancer
@@ -198,7 +198,7 @@ colnames(clin)[1] <- "AffyID"
 # selected_genes = c("CPEB2") # BRCA
 # selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer = c("PAAD")
 # selected_genes = c("hsa.mir.142"); cancer = c("BRCA")
-selected_genes = "SMAD4"
+selected_genes = "IGFBP3"
 # selected_genes = "DYRK1A"
 # selected_genes = "DCAF7"
 # selected_genes = "MBD2" # AML
