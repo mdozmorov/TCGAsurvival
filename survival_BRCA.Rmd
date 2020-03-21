@@ -11,6 +11,8 @@ date: "`r Sys.Date()`"
 author: "Mikhail Dozmorov"
 bibliography: data.TCGA/TCGA.bib
 csl: styles.ref/genomebiology.csl
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -142,6 +144,9 @@ cancer = "BRCA"
 # cancer = "LUAD"
 # # Lung squamous cell carcinoma
 # cancer = "LUSC"
+
+# Censor KM plots at certain duration
+max_days <- 3650 # 3650 days = 10 years
 ```
 
 # Load data
@@ -179,7 +184,7 @@ colnames(clin)[1] <- "AffyID"
 # selected_genes = c("CPEB2") # BRCA
 # selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
 # selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
-selected_genes = "MKI67"; cancer_RNASeq2 = c("BRCA")
+selected_genes = "TMEM97"; cancer_RNASeq2 = c("BRCA")
 # selected_genes = "DYRK1A"
 # selected_genes = "DCAF7"
 # selected_genes = "MBD2" # AML
@@ -194,6 +199,11 @@ selected_genes = "MKI67"; cancer_RNASeq2 = c("BRCA")
 ```{r analysis1}
 system("rm -r res.*") # Remove previous results folders, if any
 system("mkdir res") # Create results folder
+# Censor KM plots at certain duration
+index <- clin$OS <= max_days & !is.na(clin$OS)
+clin <- clin[index, ]
+expr <- expr[index, ]
+# Run survival analysis for selected genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = FALSE)
 # Rename the results folder
 system("mv res res.genes.Analysis1")
@@ -224,6 +234,10 @@ for (cancer_type in cancer_RNASeq2) {
   # Prepare clinical data
   clin <- mtx$merged.dat[, 1:3]
   colnames(clin)[1] <- "AffyID"
+  # Censor KM plots at certain duration
+  index <- clin$OS <= max_days & !is.na(clin$OS)
+  clin <- clin[index, ]
+  expr <- expr[index, ]
   # Run survival analysis for selected genes
   kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type, fileType = "png", use_survminer = FALSE)
 }
@@ -269,6 +283,10 @@ for (cancer_type in cancer_RNASeq2) {
   # Prepare clinical data
   clin <- mtx$merged.dat[, 1:3]
   colnames(clin)[1] <- "AffyID"
+  # Censor KM plots at certain duration
+  index <- clin$OS <= max_days & !is.na(clin$OS)
+  clin <- clin[index, ]
+  expr <- expr[index, ]
   # Full clinical information
   clin_full <- mtx$clinical
   # Match to the order of small clinical annitation
@@ -299,7 +317,7 @@ for (cancer_type in cancer_RNASeq2) {
         # For this subset of expression, filter out low expressed genes
         index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
         expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
-        # Perform actual survival analysis
+        # Run survival analysis for selected genes
         kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "png", use_survminer = FALSE)
       }
     }
