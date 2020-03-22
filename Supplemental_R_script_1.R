@@ -64,6 +64,8 @@
 library(survival)
 library(survplot)
 library(survminer)
+library(cowplot)
+library(gridExtra)
 
 # demo = getParameter(c_args, "demo");
 demo = "false"
@@ -152,31 +154,34 @@ loadData = function(exprFile="@supplemental table 1_GEO expression data_sorted.t
 	list("expr"=expr, "clin"=clin);
 }
 
-mySurvplot = function(surv, gene_expr, xlab="Time (days)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA, use_survminer = TRUE) {
+mySurvplot = function(survival_data, gene_expr, xlab="Time (days)", ylab="Probability", snames = c('low', 'high'), stitle = "Expression", hr.pos=NA, use_survminer = TRUE, fileNameOut = fileNameOut) {
+  # General calculations of p-value and hazard ratio
+  surv <- Surv(survival_data[,1], survival_data[,2]);
+  cox = summary(coxph(surv ~ gene_expr))
+  pvalue = cox$sctest['pvalue'];
+  hr = round(cox$conf.int[1],2)
+  hr_left = round(cox$conf.int[3],2)
+  hr_right = round(cox$conf.int[4],2)
+  conf_int =  paste(" (", hr_left, " - ", hr_right, ")", sep=""); 
+  
+  # Plot survival plot
   if (use_survminer) {
-    res <- fit <- NULL
-    fit <- survfit(surv ~ gene_expr)
-    res <- ggsurvplot(fit, risk.table = FALSE, pval = TRUE, conf.int = FALSE, xlab = "Time (days)", palette = c("#67A9CF", "#EF8A62"),
-               legend = "top", legend.title = "Expression", legend.labs = c("Low", "High"))
-    return(res)
+    surv_expr <- data.frame(time = survival_data[, 1], status = survival_data[, 2], gene = gene_expr)
+    fit <- survfit(Surv(time, status) ~ gene, data = surv_expr)
+    p <- ggsurvplot(fit, data = surv_expr, risk.table = TRUE, pval = TRUE, pval.method = TRUE, conf.int = FALSE, xlab = "Time (days)", palette = c("#67A9CF", "#EF8A62"), legend = "top", legend.title = "Expression", legend.labs = c("Low", "High"))
+    p <- grid.arrange(p$plot, p$table, ncol = 1, heights = c(3, 1))
+    plot(p)
+    # ggsave("res/text.png", plot = p$plot)
+    save_plot(fileNameOut, p, base_height = 5, base_width = 5)
   } else {
+    png(filename = fileNameOut)
     survplot(surv ~ gene_expr, xlab=xlab, ylab=ylab, snames = snames, stitle = stitle, hr.pos=hr.pos);
-    cox = summary(coxph(surv ~ gene_expr))
-    
-    pvalue=cox$sctest['pvalue'];
-    hr = round(cox$conf.int[1],2)
-    hr_left = round(cox$conf.int[3],2)
-    hr_right = round(cox$conf.int[4],2)
-    
-    conf_int =  paste(" (", hr_left, " - ", hr_right, ")", sep=""); 
-    
     txt = paste("HR = ", hr, conf_int, "\nlogrank P = ", signif(pvalue, 2), sep="")
-    text(grconvertX(0.98, "npc"), grconvertY(.97, "npc"),
-         labels=txt,
-         adj=c(1, 1))
-    
-    list(pvalue, hr, hr_left, hr_right)
+    text(grconvertX(0.98, "npc"), grconvertY(.97, "npc"), labels=txt, adj=c(1, 1))
+    dev.off()
   }
+  # Data to return
+  list(pvalue, hr, hr_left, hr_right)
 }
 
 createDirectory = function(base){
@@ -316,31 +321,15 @@ for(j in 1:length(index_arr)){
 	# --------------------- KMplot ----------------------
 	tryCatch({
 	  # draws the KM plot into a  file
-	  if (fileType == "png") {
-	    png(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".png", sep=""));
-	  }
-	  if (fileType == "pdf") {
-	    pdf(paste(toDir, "/", colnames(expr)[i], "_", cancer_type, ".pdf", sep=""));
-	  }
-	  
-		# Surv(time, event)
-	  surv <- NULL
-		surv<-Surv(survival_data[,1], survival_data[,2]);
-    if (use_survminer) {
-      res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer, stitle = paste0(affyid, "\n", "Expression"))
-      pvalue <- res$plot$plot_env$pval
-      hr <- hr_left <- hr_right <- NA
-      print(res$plot)
-    } else {
-      res = mySurvplot(surv, gene_expr, use_survminer = use_survminer, stitle = paste0(affyid, "\n", "Expression"))
-      pvalue = res[[1]];
-      hr = res[[2]]
-      hr_left = res[[3]]
-      hr_right = res[[4]]
-      resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
-    }
-		dev.off();
+	  fileNameOut <- paste0(toDir, "/", colnames(expr)[i], "_", cancer_type, ".", fileType)
+	  res <- mySurvplot(survival_data, gene_expr, use_survminer = use_survminer, stitle = paste0(affyid, "\n", "Expression"), fileNameOut = fileNameOut)
+		
 		# Save global statistics
+		pvalue = res[[1]];
+		hr = res[[2]]
+		hr_left = res[[3]]
+		hr_right = res[[4]]
+		resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
 		write.table( paste(c(cancer_type, colnames(expr)[i], formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right, row_summary$nums), digits = 2), ifelse(auto_cutoff == "true", "Automatic", "Manual"), round(m, digits = 2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
 		
 		
@@ -389,32 +378,46 @@ kmplot.clin = function(clin, event_index=2, time_index=3, clinical_annotations =
   if (!file.exists(paste0(toDir, "/global_stats.txt"))) {
     write.table( paste(c("Cancer", "Gene", "p-value", "HR", "HR_left", "HR_right", "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.", paste(group1, "counts"), paste(group2, "counts")), collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
-  # draws the KM plot into a  file
-  if (fileType == "png") {
-    png(paste(toDir, "/", cancer_type, "_", clinical_annotations, "_", group1, "_", group2,  ".png", sep=""));
-  }
-  if (fileType == "pdf") {
-    pdf(paste(toDir, "/", cancer_type, "_", clinical_annotations, "_", group1, "_", group2, ".pdf", sep=""));
-  }
+  # # draws the KM plot into a  file
+  # if (fileType == "png") {
+  #   png(paste(toDir, "/", cancer_type, "_", clinical_annotations, "_", group1, "_", group2,  ".png", sep=""));
+  # }
+  # if (fileType == "pdf") {
+  #   pdf(paste(toDir, "/", cancer_type, "_", clinical_annotations, "_", group1, "_", group2, ".pdf", sep=""));
+  # }
+  # 
+  # # Surv(time, event)
+  # surv <- NULL
+  # surv<-Surv(survival_data[,1], survival_data[,2]);
+  # if (use_survminer) {
+  #   res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer)
+  #   pvalue <- res$plot$plot_env$pval
+  #   hr <- hr_left <- hr_right <- NA
+  #   print(res$plot)
+  # } else {
+  #   res = mySurvplot(surv, gene_expr, snames = c(group1, group2), use_survminer = use_survminer)
+  #   pvalue = res[[1]];
+  #   hr = res[[2]]
+  #   hr_left = res[[3]]
+  #   hr_right = res[[4]]
+  #   resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
+  # }
+  # dev.off();
+  # # Save global statistics
+  # write.table( paste(c(cancer_type, paste(clinical_annotations, group1, group2, sep = "-"), formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right), digits = 2), rep("", 6), sum(clinical_groups == group1), sum(clinical_groups == group2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
   
-  # Surv(time, event)
-  surv <- NULL
-  surv<-Surv(survival_data[,1], survival_data[,2]);
-  if (use_survminer) {
-    res <- mySurvplot(surv, gene_expr, use_survminer = use_survminer)
-    pvalue <- res$plot$plot_env$pval
-    hr <- hr_left <- hr_right <- NA
-    print(res$plot)
-  } else {
-    res = mySurvplot(surv, gene_expr, snames = c(group1, group2), use_survminer = use_survminer)
-    pvalue = res[[1]];
-    hr = res[[2]]
-    hr_left = res[[3]]
-    hr_right = res[[4]]
-    resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
-  }
-  dev.off();
+  # draws the KM plot into a  file
+  fileNameOut <- paste0(toDir, "/", cancer_type, "_", clinical_annotations, "_", group1, "_", group2, ".", fileType)
+  res <- mySurvplot(survival_data, gene_expr, use_survminer = use_survminer, stitle = paste0(affyid, "\n", "Expression"), fileNameOut = fileNameOut)
+  
   # Save global statistics
+  pvalue = res[[1]];
+  hr = res[[2]]
+  hr_left = res[[3]]
+  hr_right = res[[4]]
+  resTable = rbind(resTable, c(pvalue, hr, hr_left, hr_right));
   write.table( paste(c(cancer_type, paste(clinical_annotations, group1, group2, sep = "-"), formatC(pvalue, digits = 2, format = "e"), round(c(hr, hr_left, hr_right), digits = 2), rep("", 6), sum(clinical_groups == group1), sum(clinical_groups == group2)),  collapse = "\t") , paste0(toDir, "/global_stats.txt"), sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE, append = TRUE)
+  
+  
 }
 
