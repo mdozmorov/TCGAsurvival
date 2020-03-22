@@ -10,6 +10,8 @@ output:
     toc: no
 csl: styles.ref/genomebiology.csl
 bibliography: data.TCGA/TCGA.bib
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -25,8 +27,8 @@ options(stringsAsFactors = FALSE)
 
 ```{r settings}
 n_max  <- 10 # Maximum number of rows to output in tables
-gene   <- "TMEM219" # Search and replace the name of the gene
-cancer <- "OV"
+gene   <- "IGFBP3" # Search and replace the name of the gene
+cancer <- "BRCA"
 ```
 
 # Analysis 2: `r gene` in all cancers
@@ -34,7 +36,7 @@ cancer <- "OV"
 The barplot shows the significance of `r gene` expression on survival in a given cancer. The wider (higher) the bar the more significant survival effect the gene has. See abbreviations of cancer types at [http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf](http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf)   
 
 \begin{center}
-\includegraphics[height=300px]{res.genes.Analysis2/TMEM219_all_TCGA_cancers.png}
+\includegraphics[height=300px]{res.genes.Analysis2/IGFBP3_all_TCGA_cancers.png}
 \end{center}
 
 The same data in table format. Legend:
@@ -59,7 +61,7 @@ kable(mtx[1:min(nrow(mtx), n_max), ])
 ## Survival effect in `r cancer` cancer
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis2/TMEM219_BRCA.png}
+\includegraphics[height=250px]{res.genes.Analysis2/IGFBP3_BRCA.png}
 \end{center}
 
 \pagebreak
@@ -70,20 +72,27 @@ The table lists clinical subtypes where the expression of `r gene` gene in `r ca
 
 ```{r}
 global_stats <- read.table("res.genes.Analysis3/global_stats.txt", sep = "\t", header = TRUE, fill = TRUE)
+global_stats <- global_stats[grepl(cancer, global_stats$Cancer, fixed = TRUE, ignore.case = FALSE), ]
 global_stats <- global_stats[order(global_stats$p.value), ]
 kable(global_stats[1:min(nrow(global_stats), n_max), ])
 ```
 
-## "TMEM219_OV-subtype-Differentiated"
+## "IGFBP3_BRCA-race-black or african american"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/TMEM219_OV-subtype-Differentiated.png}
+\includegraphics[height=250px]{res.genes.Analysis3/IGFBP3_BRCA-race-black or african american.png}
 \end{center}
 
-## "TMEM219_OV-radiationtherapy-no"
+## "IGFBP3_BRCA-ethnicity-not hispanic or latino"
 
 \begin{center}
-\includegraphics[height=250px]{res.genes.Analysis3/TMEM219_OV-radiationtherapy-no.png}
+\includegraphics[height=250px]{res.genes.Analysis3/IGFBP3_BRCA-ethnicity-not hispanic or latino.png}
+\end{center}
+
+## "IGFBP3_BRCA-pathologyMstage-m0"
+
+\begin{center}
+\includegraphics[height=250px]{res.genes.Analysis3/IGFBP3_BRCA-pathologyMstage-m0.png}
 \end{center}
 
 \pagebreak 

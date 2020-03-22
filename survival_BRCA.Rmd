@@ -50,6 +50,7 @@ if (!require(survplot)) {
   install.packages("misc/survplot_0.0.7.tar.gz", repos = NULL, type="source")
 }
 source("Supplemental_R_script_1.R")
+system("rm -r res.*") # Remove previous results folders, if any
 ```
 
 # Helper functions
@@ -148,6 +149,8 @@ cancer = "BRCA"
 
 # Censor KM plots at certain duration
 max_days <- 3650 # 3650 days = 10 years
+# If true, Analysis 3 (survival differences in subcategories) will be run for each cancer
+subcategories_in_all_cancers <- TRUE
 ```
 
 # Load data
@@ -185,7 +188,7 @@ colnames(clin)[1] <- "AffyID"
 # selected_genes = c("CPEB2") # BRCA
 # selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
 # selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
-selected_genes = "TMEM97"; cancer_RNASeq2 = c("BRCA")
+selected_genes = "IGFBP3"; cancer_RNASeq2 = c("BRCA")
 # selected_genes = "DYRK1A"
 # selected_genes = "DCAF7"
 # selected_genes = "MBD2" # AML
@@ -198,7 +201,6 @@ selected_genes = "TMEM97"; cancer_RNASeq2 = c("BRCA")
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
 
 ```{r analysis1}
-system("rm -r res.*") # Remove previous results folders, if any
 system("mkdir res") # Create results folder
 # Censor KM plots at certain duration
 index <- clin$OS <= max_days & !is.na(clin$OS)
@@ -220,7 +222,7 @@ system("mv res res.genes.Analysis1")
 
 ```{r analysis2}
 # All cancers with RNASeq2 data
-cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "LGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") 
 data.type = "RNASeq2"; type = "" 
 system("mkdir res") # Create results folder
 for (cancer_type in cancer_RNASeq2) {
@@ -245,21 +247,21 @@ for (cancer_type in cancer_RNASeq2) {
   dev.off()
 }
 ### Plot the results of one gene across all cancers
-library(dplyr)
-library(ggplot2)
 # Read in analysis natrix
 mtx <- read.table("res/global_stats.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE, fill = TRUE)
 # Add -log10-transformed p-value
 mtx <- mtx %>% mutate(log10.pval = -1 * log10(p.value))
-# Print into PDF
-png(paste0("res/", selected_genes, "_all_TCGA_cancers.png"))
-mtx %>% subset(Gene == selected_genes) %>% 
-  ggplot(aes(x = factor(Cancer, levels(factor(Cancer))[order(log10.pval)]), y = log10.pval)) + 
+# Print into PNG
+mtx_to_plot <- mtx %>% subset(Gene == selected_genes)
+mtx_to_plot <- mtx_to_plot[order(mtx_to_plot$log10.pval), ]
+mtx_to_plot$Cancer <- factor(mtx_to_plot$Cancer, levels = mtx_to_plot$Cancer)
+ggplot(mtx_to_plot, aes(x = Cancer, y = log10.pval)) + 
   geom_bar(stat = "identity") + 
   theme(legend.position="none") +
   labs(x="Cancer", y="-log10(p-value)") +
-  coord_flip()
-dev.off()
+  coord_flip() +
+  theme_cowplot() 
+ggsave(paste0("res/", selected_genes, "_all_TCGA_cancers.png"), width = 5, height = 6.5)
 # Rename the results folder
 system("mv res res.genes.Analysis2")
 ```
@@ -267,9 +269,15 @@ system("mv res res.genes.Analysis2")
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
 
 ```{r analysis3}
-cancer_RNASeq2 = c("BRCA")
 system("mkdir res") # Create results folder
-for (cancer_type in cancer_RNASeq2) {
+# If true, analyze survival differences in subcategories in all cancers
+if (subcategories_in_all_cancers) {
+  cancer <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "LGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") 
+} else {
+  cancer <- cancer # Selected in settings
+}
+data.type = "RNASeq2"; type = "" 
+for (cancer_type in cancer) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   # BRCA-specific - replace original annotations with XENA
