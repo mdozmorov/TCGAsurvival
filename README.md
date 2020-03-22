@@ -19,6 +19,7 @@ For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
 - [Cancer types](data/CancerDataChecklist_AppendixA.PDF)
 - [Data types](data/DataPlatforms_AppendixB.PDF)
 - [Clinical values](data/ClinicalVariables_AppendixC.PDF)
+- [Number of samples per cancer](data.TCGA/TCGA_cancer_counts.csv)
 
 ## Data preparation
 
@@ -134,6 +135,8 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 - `patientsAll.tsv` - TCGA sample clinical information, including PAM50, from https://tcia.at/home
 
 - `TCGA_489_UE.k4.txt` - Ovarian cancer classification into four subtypes, from `https://github.com/aedin/OvarianCancerSubtypes/data/23257362`
+
+- `TCGA_cancer_counts.csv` - number of samples per cancer. Created by `misc/TCGA_preprocessing.R`
 
 - `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 

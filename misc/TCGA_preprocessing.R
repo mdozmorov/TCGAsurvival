@@ -154,3 +154,19 @@ get_data(cancers = cancer_TCGA, data.type = data.type, type = type, data_dir = d
 
 # Cleanup intermediate files
 unlink(paste0(data_dir, "/*.txt.gz"))
+
+# Get number of subjects for all cancers
+# All cancers
+all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS", "GBMLGG", "LGG")
+data.type = "RNASeq2"; type = "" 
+cancer_counts = rbind()
+for (cancer_type in all_cancers) {
+  print(paste0("Processing cancer ", cancer_type))
+  mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  # Prepare expression data
+  expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
+  cancer_counts <- rbind(cancer_counts, c(cancer_type, nrow(expr)))
+}  
+cancer_counts <- data.frame(Cancer = cancer_counts[, 1], Samples = as.numeric(cancer_counts[, 2]))
+cancer_counts <- cancer_counts[order(cancer_counts$Samples, decreasing = TRUE), ]
+write.table(cancer_counts, "data.TCGA/TCGA_cancer_counts.csv", sep = ",", row.names = FALSE, quote = FALSE)
