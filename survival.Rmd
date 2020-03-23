@@ -1,5 +1,5 @@
 ---
-title: "TCGA survival analysis"
+title: "TCGA BRCA survival analysis"
 output:
   html_document:
     toc: true
@@ -30,7 +30,7 @@ options(stringsAsFactors = FALSE)
 
 ## Survival analysis of gene expression data from TCGA
 
-Level 3 gene expression data summarized as RSEM values was obtained using the TCGA2STAT R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meyer curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
+Level 3 gene expression data summarized as RSEM values was obtained using the `TCGA2STAT` R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meier curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
 
 We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
 
@@ -42,15 +42,14 @@ Samples in the selected cancer cohort were sorted by expression of the selected 
 # Libraries
 
 ```{r libraries}
-library(TCGA2STAT)
+# library(TCGA2STAT)
 library(ggplot2)
-library(reshape2)
 library(cowplot)
+library(reshape2)
 if (!require(survplot)) {
-  install.packages("data/survplot_0.0.7.tar.gz", repos = NULL, type="source")
+  install.packages("misc/survplot_0.0.7.tar.gz", repos = NULL, type="source")
 }
 source("Supplemental_R_script_1.R")
-system("rm -r res.*") # Remove previous results folders, if any
 ```
 
 # Helper functions
@@ -83,7 +82,7 @@ summarize_data <- function(mtx = mtx) {
   clin_vars <- apply(mtx$clinical, 2, function(x) length(table(x[ !(is.na(x) & x != "" )]))) %>% as.data.frame()
   # Filter clinical variables to have at least 2, but no more than 10 categories,
   # And they are not dates
-  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
+  clin_vars <- clin_vars[ as.numeric(clin_vars$.) > 1 & as.numeric(clin_vars$.) < 10 & !grepl("years|days|date|vital|OS|RFS|TIME|sample_type", rownames(clin_vars), perl = TRUE) , , drop = FALSE]
   print(kable(clin_vars))
   return(rownames(clin_vars))
 }
@@ -141,12 +140,14 @@ cancer = "BRCA"
 # # Sarcoma
 # cancer = "SARC" 
 # # Pancreatic cancer
-#cancer = "PAAD" 
+# cancer = "PAAD" 
 # # Lung adenocarcinoma
 # cancer = "LUAD"
 # # Lung squamous cell carcinoma
 # cancer = "LUSC"
 
+# Censor KM plots at certain duration
+max_days <- 3650 # 3650 days = 10 years
 # If true, Analysis 3 (survival differences in subcategories) will be run for each cancer
 subcategories_in_all_cancers <- TRUE
 ```
@@ -157,25 +158,6 @@ subcategories_in_all_cancers <- TRUE
 mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 clinical_annotations <- summarize_data(mtx = mtx)
 ```
-
-```{r eval=FALSE}
-# If needed, same the full clinical annotation and the expression matrices in an Excel file
-library(MDmisc)
-fileName <- paste0("results/", cancer, ".xlsx") # File name to save the results
-unlink(fileName) # Delete the old file, if it exists
-wb <- openxlsx::createWorkbook(fileName) # Create new worksheet
-# Make expression matrix
-mtx_expr <- data.frame(ID = mtx$merged.dat[, "bcr"], mtx$merged.dat[ , 4:ncol(mtx$merged.dat)]) # Append IDs
-# Make clinical matrix
-mtx_clin <- mtx$clinical[rownames(mtx$clinical) %in% mtx_expr$ID, ] # Subset full clinical data to IDs that have expression
-mtx_clin <- mtx_clin[match(mtx_expr$ID, rownames(mtx_clin)), ] # Match the order of expression and clinical sample IDs
-mtx_clin <- data.frame(ID = rownames(mtx_clin), mtx_clin) # Append IDs
-all_equal(mtx_expr$ID, mtx_clin$ID) # Should be TRUE
-# Save the results
-save_res(mtx_expr, fileName = fileName, wb = wb, sheetName = "Expression")
-save_res(mtx_clin, fileName = fileName, wb = wb, sheetName = "Clinical")
-```
-
 
 ```{r processData}
 # Prepare expression data
@@ -195,32 +177,24 @@ colnames(clin)[1] <- "AffyID"
 
 ```{r selectedGenes}
 # Select genes of interest
-# selected_genes = c("TMEM219", "IGFBP3") # BRCA
-# selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
-# selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
-# selected_genes = c("MTDH", "SND1", "TAF2") # LIHC
-# selected_genes = c("NF1") # LIHC
-# selected_genes = c("ANLN") # PAN
-# selected_genes = c("TAF2") # LIHC
-# selected_genes = c("CPEB2") # BRCA
-# selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer = c("PAAD")
-# selected_genes = c("hsa.mir.142"); cancer = c("BRCA")
 selected_genes = "IGFBP3"
-# selected_genes = "DYRK1A"
-# selected_genes = "DCAF7"
-# selected_genes = "MBD2" # AML
-# selected_genes = c("FOXP3") # BRCA
-# selected_genes = c("TNFRSF1B") # TNFR2, BRCA
-# selected_genes = c("RORC") # BRCA
+# Remove previous results
+system(paste0("rm -r ", selected_genes,".Analysis*"))
 ```
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
 
 ```{r analysis1}
 system("mkdir res") # Create results folder
+# Censor KM plots at certain duration
+index <- clin$OS <= max_days & !is.na(clin$OS)
+clin <- clin[index, ]
+expr <- expr[index, ]
+# Run survival analysis for selected genes
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = TRUE)
+dev.off()
 # Rename the results folder
-system("mv res res.genes.Analysis1")
+system(paste0("mv res ", selected_genes, ".Analysis1"))
 ```
 
 ```{r analysisExploratory, eval = FALSE}
@@ -268,7 +242,7 @@ ggplot(mtx_to_plot, aes(x = Cancer, y = log10.pval)) +
   theme_cowplot() 
 ggsave(paste0("res/", selected_genes, "_all_TCGA_cancers.png"), width = 5, height = 6.5)
 # Rename the results folder
-system("mv res res.genes.Analysis2")
+system(paste0("mv res ", selected_genes, ".Analysis2"))
 ```
 
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
@@ -296,6 +270,10 @@ for (cancer_type in cancer) {
   # Prepare clinical data
   clin <- mtx$merged.dat[, 1:3]
   colnames(clin)[1] <- "AffyID"
+  # Censor KM plots at certain duration
+  index <- clin$OS <= max_days & !is.na(clin$OS)
+  clin <- clin[index, ]
+  expr <- expr[index, ]
   # Full clinical information
   # clin_full <- mtx$clinical
   clin_full <- mtx$clinical[rownames(mtx$clinical) %in% clin$AffyID, ]
@@ -333,7 +311,7 @@ for (cancer_type in cancer) {
   }
 }
 # Rename the results folder
-system("mv res res.genes.Analysis3")
+system(paste0("mv res ", selected_genes, ".Analysis3"))
 ```
 
 ```{r analysis4, eval = FALSE}
@@ -378,7 +356,7 @@ for (annotation in clinical_annotations) {
 system("mv res res.genes.Analysis4")
 ```
 
-```{r, eval = FALSE}
+```{r}
 # Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories
 system("mkdir -p res")
 # Select cancer and load expression data
@@ -386,37 +364,32 @@ cancer <- "BRCA"
 mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 
 # Prepare clinical data
+mtx$clinical <- read.csv("data.TCGA/BRCA_XENA_clinical.csv", row.names = 1)
 clin <- mtx$merged.dat[, 1:3]
 colnames(clin)[1] <- "AffyID"
-clin_full   <- mtx$clinical # Full clinical data
-clin_merged <- inner_join(clin, data.frame(AffyID = rownames(clin_full), clin_full), by = c("AffyID"))
-clin <- clin_merged
-# BRCA-specific
-clin_pam50 <- read.table("data.TCGA/PAM50_classification.txt", sep = "\t", header = TRUE) # PAM50 classifier
-clin_pam50 <- clin_pam50[ !grepl("-01B", clin_pam50$Particpant.ID), ]
-clin_pam50$Particpant.ID <- gsub("-01A", "", clin_pam50$Particpant.ID)
-clin_merged <- inner_join(clin, clin_pam50, by = c( "AffyID" = "Particpant.ID"))
-clin <- clin_merged
-
+# Full clinical information
+clin_full <- mtx$clinical
+# Match to the order of small clinical annitation
+clin_full <- clin_full[rownames(clin_full) %in% clin$AffyID, ]
+clin_full <- clin_full[match(clin$AffyID, rownames(clin_full)), ]
 # Select clinical category and subcategories
 clinical_annotations <- summarize_data(mtx = mtx)
-# clinical_annotations_selected <- "pathologyMstage"
-clinical_annotations_selected <- "Subtype" # For PAM50 classifier
+clinical_annotations_selected <- "PAM50Call_RNAseq" # For PAM50 classifier
+clin <- cbind(clin, clin_full[, clinical_annotations_selected, drop = FALSE])
 
 print(paste0("Number of patients in each subcategory, in the ", clinical_annotations_selected, " category"))
 table(clin[, clinical_annotations_selected]) 
-# group1 <- "m0"   ; group2 <- "m1"
-group1 <- "LumA"; group2 <- "Basal" # For PAM50 classifier
-group_combinations <- combn(unique(clin[, clinical_annotations_selected]), 2) # All pairs for the groups
+# All pairs of subcategories
+group_combinations <- combn(unique(clin[!is.na(clin[, clinical_annotations_selected]), clinical_annotations_selected]), 2) 
 # Survival analysis for all group combinations
 for (pair in 1:ncol(group_combinations)) {
   # KM analysis on subcategories
-  kmplot.clin(clin = clin, event_index=2, time_index=3, clinical_annotations = clinical_annotations_selected, group1 = group_combinations[1, pair], group2 = group_combinations[2, pair], cancer_type = cancer, fileType = "png", use_survminer = FALSE)
+  kmplot.clin(clin = clin, event_index=2, time_index=3, clinical_annotations = clinical_annotations_selected, group1 = group_combinations[1, pair], group2 = group_combinations[2, pair], cancer_type = cancer, fileType = "png", use_survminer = TRUE)
 }
 
 
 # Plot expression boxplots for the selected gene in selected subcategories
-selected_genes = c("MIA") # BRCA
+# selected_genes = c("SDC1") # BRCA
 # Prepare expression data
 expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
 # Filter out low expressed genes
@@ -428,27 +401,15 @@ expr <- expr[ expr$AffyID %in% clin$AffyID, ]
 expr <- expr[match(clin$AffyID, expr$AffyID), ]
 # A matrix to plot
 mtx_to_plot <- data.frame(Gene = log2(expr[, selected_genes] + 1), Clinical = clin[, clinical_annotations_selected])
+mtx_to_plot <- mtx_to_plot[complete.cases(mtx_to_plot), ]
+save(mtx_to_plot, file = "res/mtx_to_plot.rda")
 # Plot and save
 p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value, fill = Clinical)) +
   geom_boxplot() +
   ylab("log2 expression")
 plot(p)
 ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".png"), p, width = 5, height = 4, device = "png")
-system("mv res res.genes.Analysis5")
-
-## ANOVA and Tukey's test
-# What are the mean log2-expression per clinical group
-tapply(mtx_to_plot$Gene, mtx_to_plot$Clinical, mean)
-# ANOVA
-groupdiff <- lm(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
-# summary(groupdiff)
-anova(groupdiff)
-# Tukey HSD
-a1 <- aov(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
-summary(a1)
-posthoc <- TukeyHSD(x=a1, 'mtx_to_plot$Clinical', conf.level=0.95)
-posthoc
-plot(posthoc)
+system(paste0("mv res ", selected_genes, ".Analysis5"))
 ```
 
 ```{r eval = FALSE}
@@ -466,10 +427,10 @@ selected_genes <- "interferon_signature"
 
 pdf(file = paste0("res/dimreduction_", selected_genes, ".pdf"))
 # All cancers with RNASeq2 data
-cancer = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
+cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") # "GBMLGG", "LGG", 
 data.type = "RNASeq2"; type = "" 
 # Process each cancer
-for (cancer_type in cancer) {
+for (cancer_type in cancer_RNASeq2) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   # Prepare subset of expression data for a given signature
