@@ -29,13 +29,14 @@ library(knitr)
 library(ggplot2)
 library(plotly)
 library(writexl)
+library(readr)
 ```
 
 # Data from CELLX
 
 - Go to [http://54.149.52.246/cgi-bin/RPPA/cellx.cgi](http://54.149.52.246/cgi-bin/RPPA/cellx.cgi)
 - Select "Expression" tab out of "CNV"/"Expression"/"Mutation"/"Other" tabs
-- Select "RSEM-barplot" option on the sidebar. Read more about RSEM selected_gene expression measures at [https://deweylab.github.io/RSEM/](https://deweylab.github.io/RSEM/)
+- Select the "RSEM-barplot" option on the sidebar. Read more about RSEM selected_gene expression measures at [https://deweylab.github.io/RSEM/](https://deweylab.github.io/RSEM/)
 - Select any cancer-associated selected_gene from [http://cancer.sanger.ac.uk/census](http://cancer.sanger.ac.uk/census), e.g., "ERBB2". Alternatively, use any selected_gene name you may find biologically interesting
 - Enter lower-case selected_gene name into the "HUGO" textbox at the bottom of the page
 - Click "Submit" - the page will refresh in ~20 sec
@@ -55,7 +56,7 @@ fileNameOut1 <- paste0("results/CELLX_analysis_", selected_gene, ".xlsx") # Outp
 ```{r data.setup, include=F}
 # Read annotations
 cancers <- openxlsx::read.xlsx("data.TCGA/TCGA_cancers.xlsx")
-cells <- read.table("data.TCGA/CCLE_Cell_lines_annotations_20181226.txt", sep = "\t", header = TRUE, fill = TRUE)
+cells <- read_tsv("data.TCGA/CCLE_Cell_lines_annotations_20181226.txt")
 cells <- mutate(cells, Cell.ID = as.character(sapply(cells$CCLE_ID, function(x) strsplit(x, "_")[[1]][1])) )# Add cell ID column
 
 # Read expression data
@@ -123,7 +124,7 @@ rsem
 
 The table below displays differential expression statistics comparing the expression levels of `r selected_gene` in normal versus cancer tissues (where at least `r min_number_of_normal` normal samples are available) by Welch two-sample t-test.
 
-The table is sorted by "p_value" column, from most to least significant. Positive/negative log2 Fold change indicate the gene is up/down in cancer samples, respectively.
+The table is sorted by the absolute "Fold_change" level, from largest to smallest. Positive/negative log2 Fold change indicates the gene is up/down in cancer samples, respectively, and "p-value" indicates the level of differential expression.
 
 ```{r expression.t.table}
 # # Check if all normal tissues have a cancer tissue counterpart and vice versa
@@ -162,7 +163,7 @@ for (i in 1:length(cancer)) {
 }  
     
 t.table <- t.table[complete.cases(t.table), ]
-t.table <- t.table[ order(as.numeric(t.table$p_value), decreasing = FALSE), ]
+t.table <- t.table[ order(abs(as.numeric(t.table$Fold_change)), decreasing = TRUE), ]
 t.table <- left_join(t.table, cancers, by = c("Cancer_name" = "Acronym"))
 t.table <- t.table[, c("Cancer_name", "Cancer.Name", "Fold_change", "p_value", "Mean_expression_normal", "Mean_expression_cancer")] 
 t.table$p_value <- formatC(as.numeric(t.table$p_value), format = "e", digits = 2)
