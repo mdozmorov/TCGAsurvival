@@ -30,13 +30,13 @@ options(stringsAsFactors = FALSE)
 
 ## Survival analysis of gene expression data from TCGA
 
-Level 3 gene expression data summarized as RSEM values was obtained using the `TCGA2STAT` R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers was obtained separately. The data was log2-transformed and analyzed using Kaplan-Meier curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
+Level 3 gene expression data summarized as RSEM values were obtained using the `TCGA2STAT` R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers were obtained separately. The data was log2-transformed and analyzed using Kaplan-Meier curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
 
-We took the advantage of the availability of clinical annotations. To identify if expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
+We took advantage of the availability of clinical annotations. To identify if the expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
 
 ## Differential expression analysis
 
-Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
+Samples in the selected cancer cohort were sorted by expression of the selected genes. Differentially expressed genes were detected between samples in the upper 75 percentile of the expression gradient and samples in the lower 25 percentile using `limma` v 3.32.6 R package [@Ritchie:2015aa; @Smyth:2004aa]. P-values were corrected for multiple testing using the False Discovery Rate (FDR) method [@Benjamini:1995aa]. Genes differentially expressed at FDR < 0.01 were selected for further analysis.
 
 
 # Libraries
@@ -129,22 +129,21 @@ type = ""
 # type = "450K"
 # clinical = TRUE
 
-# Breast cancer
-cancer = "BRCA" 
-# # Ovarian cancer
-# cancer = "OV"
-# # Liver hepatocellular carcinoma
-# cancer = "LIHC" 
-# # Head and Neck squamous cell carcinoma
-# cancer = "HNSC" 
-# # Sarcoma
-# cancer = "SARC" 
-# # Pancreatic cancer
-# cancer = "PAAD" 
-# # Lung adenocarcinoma
-# cancer = "LUAD"
-# # Lung squamous cell carcinoma
-# cancer = "LUSC"
+# Select cancer type
+cancer = "BRCA"   # Breast cancer
+# cancer = "OV"   # Ovarian cancer
+# cancer = "LIHC" # Liver hepatocellular carcinoma
+# cancer = "HNSC" # Head and Neck squamous cell carcinoma
+# cancer = "SARC" # Sarcoma
+# cancer = "PAAD" # Pancreatic cancer
+# cancer = "LUAD" # Lung adenocarcinoma
+# cancer = "LUSC" # Lung squamous cell carcinoma
+
+# Select genes of interest
+selected_genes = "IGFBP3"
+
+# Remove previous results
+system(paste0("rm -r ", selected_genes,".Analysis*"))
 
 # Censor KM plots at certain duration
 max_days <- 3650 # 3650 days = 10 years
@@ -171,15 +170,6 @@ expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 # Prepare clinical data
 clin <- mtx$merged.dat[, 1:3]
 colnames(clin)[1] <- "AffyID"
-```
-
-# Select genes
-
-```{r selectedGenes}
-# Select genes of interest
-selected_genes = "IGFBP3"
-# Remove previous results
-system(paste0("rm -r ", selected_genes,".Analysis*"))
 ```
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
