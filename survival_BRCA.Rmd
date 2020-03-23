@@ -50,7 +50,6 @@ if (!require(survplot)) {
   install.packages("misc/survplot_0.0.7.tar.gz", repos = NULL, type="source")
 }
 source("Supplemental_R_script_1.R")
-system("rm -r res.*") # Remove previous results folders, if any
 ```
 
 # Helper functions
@@ -178,24 +177,9 @@ colnames(clin)[1] <- "AffyID"
 
 ```{r selectedGenes}
 # Select genes of interest
-# selected_genes = c("TMEM219", "IGFBP3") # BRCA
-# selected_genes = c("BCL2L11", "MYC", "MYCN") # LUAD
-# selected_genes = c("LAPTM4B", "PIP5K1C") # HNSC
-# selected_genes = c("MTDH", "SND1", "TAF2") # LIHC
-# selected_genes = c("NF1") # LIHC
-# selected_genes = c("ANLN") # PAN
-# selected_genes = c("TAF2") # LIHC
-# selected_genes = c("CPEB2") # BRCA
-# selected_genes = c("PECAM1", "S1PR1", "SPNS2", "TEK", "TIE1"); cancer_RNASeq2 = c("PAAD")
-# selected_genes = c("hsa.mir.142"); cancer_RNASeq2 = c("BRCA")
-selected_genes = "IGFBP3"; cancer_RNASeq2 = c("BRCA")
-# selected_genes = "DYRK1A"
-# selected_genes = "DCAF7"
-# selected_genes = "MBD2" # AML
-# selected_genes = c("FOXP3") # BRCA
-# selected_genes = c("TNFRSF1B") # TNFR2, BRCA
-# selected_genes = c("RORC") # BRCA
-# selected_genes = c("SIAH1") # OV
+selected_genes = "IGFBP3"
+# Remove previous results
+system(paste0("rm -r ", selected_genes,".Analysis*"))
 ```
 
 ### Analysis 1: Selected genes, selected cancers, no clinical annotations
@@ -210,7 +194,7 @@ expr <- expr[index, ]
 kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer, fileType = "png", use_survminer = TRUE)
 dev.off()
 # Rename the results folder
-system("mv res res.genes.Analysis1")
+system(paste0("mv res ", selected_genes, ".Analysis1"))
 ```
 
 ```{r analysisExploratory, eval = FALSE}
@@ -222,10 +206,10 @@ system("mv res res.genes.Analysis1")
 
 ```{r analysis2}
 # All cancers with RNASeq2 data
-cancer_RNASeq2 = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "LGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS") 
+all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "LGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
 data.type = "RNASeq2"; type = "" 
 system("mkdir res") # Create results folder
-for (cancer_type in cancer_RNASeq2) {
+for (cancer_type in all_cancers) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
   # Prepare expression data
@@ -238,13 +222,8 @@ for (cancer_type in cancer_RNASeq2) {
   # Prepare clinical data
   clin <- mtx$merged.dat[, 1:3]
   colnames(clin)[1] <- "AffyID"
-  # Censor KM plots at certain duration
-  index <- clin$OS <= max_days & !is.na(clin$OS)
-  clin <- clin[index, ]
-  expr <- expr[index, ]
   # Run survival analysis for selected genes
   kmplot(expr, clin, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = cancer_type, fileType = "png", use_survminer = TRUE)
-  dev.off()
 }
 ### Plot the results of one gene across all cancers
 # Read in analysis natrix
@@ -263,7 +242,7 @@ ggplot(mtx_to_plot, aes(x = Cancer, y = log10.pval)) +
   theme_cowplot() 
 ggsave(paste0("res/", selected_genes, "_all_TCGA_cancers.png"), width = 5, height = 6.5)
 # Rename the results folder
-system("mv res res.genes.Analysis2")
+system(paste0("mv res ", selected_genes, ".Analysis2"))
 ```
 
 ### Analysis 3: Selected genes, all (or, selected) cancers, all unique categories
@@ -280,9 +259,6 @@ data.type = "RNASeq2"; type = ""
 for (cancer_type in cancer) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
-  # BRCA-specific - replace original annotations with XENA
-  mtx$clinical <- read.csv("data.TCGA/XENA_classification.csv", row.names = 1)
-  
   clinical_annotations <- summarize_data(mtx = mtx)
   # Prepare expression data
   expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
@@ -299,11 +275,11 @@ for (cancer_type in cancer) {
   clin <- clin[index, ]
   expr <- expr[index, ]
   # Full clinical information
-  clin_full <- mtx$clinical
-  # Match to the order of small clinical annitation
-  clin_full <- clin_full[rownames(clin_full) %in% clin$AffyID, ]
-  clin_full <- clin_full[match(clin$AffyID, rownames(clin_full)), ]
-
+  # clin_full <- mtx$clinical
+  clin_full <- mtx$clinical[rownames(mtx$clinical) %in% clin$AffyID, ]
+  clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
+  all.equal(rownames(clin_full), expr$AffyID)
+  
   # For each clinical annotation
   for (annotation in clinical_annotations) { 
     # Get the number of patients per category in the current annotation
@@ -328,15 +304,14 @@ for (cancer_type in cancer) {
         # For this subset of expression, filter out low expressed genes
         index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
         expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
-        # Run survival analysis for selected genes
+        # Perform actual survival analysis
         kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "png", use_survminer = TRUE)
-        dev.off()
       }
     }
   }
 }
 # Rename the results folder
-system("mv res res.genes.Analysis3")
+system(paste0("mv res ", selected_genes, ".Analysis3"))
 ```
 
 ```{r analysis4, eval = FALSE}
@@ -434,7 +409,7 @@ p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value
   ylab("log2 expression")
 plot(p)
 ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".png"), p, width = 5, height = 4, device = "png")
-system("mv res res.genes.Analysis5")
+system(paste0("mv res ", selected_genes, ".Analysis5"))
 ```
 
 ```{r eval = FALSE}
