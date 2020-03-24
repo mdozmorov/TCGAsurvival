@@ -29,7 +29,7 @@ options(stringsAsFactors = FALSE)
 # Select cancer type
 cancer <- "BRCA"
 # Select genes of interest
-selected_genes   <- "IGFBP3" # Search and replace the name of the selected_genes
+selected_genes   <- "TMEM219" # Search and replace the name of the selected_genes
 
 n_max  <- 10 # Maximum number of rows to output in tables
 p_val_cutoff   <- 0.05 # Regular p-value cutoff
@@ -174,7 +174,7 @@ global_stats[global_stats$p.value < p_val_cutoff, ] %>% head(., n = n_max) %>% k
 Only results for cancers with clinical subtypes where `r selected_genes` significantly (p-value < `r p_val_cutoff`) affects survival are shown
 
 ```{r results="asis"}
-all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "LGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "TGCT", "THCA", "THYM", "UCEC", "UCS")
+all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "FPPP", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "STES", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM")
 for (cancer_selected in all_cancers) {
   global_stats_subset <- global_stats[grepl(paste0("^", cancer_selected, "-"), global_stats$Cancer, ignore.case = FALSE) & global_stats$p.value < p_val_cutoff, , drop = FALSE] 
   rownames(global_stats_subset) <- NULL
@@ -202,9 +202,9 @@ for (selected_clinical_subcategory in clinical_subcategories) {
 
 ## Survival analysis of selected_genes expression data from TCGA
 
-Level 3 selected_genes expression data summarized as RSEM values were obtained using the `TCGA2STAT` R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers were obtained separately. The data was log2-transformed and analyzed using Kaplan-Meier curves and Cox proportional hazard model. Each selected_genes of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best selected_genes expression cutoff that separates high/low expression subgroups with differential survival.
+Gene expression data summarized as RSEM values were obtained using the `TCGA2STAT` R package v 1.2, along with the corresponding clinical annotations. Data for each of the 34 cancers were obtained separately. The data were log2-transformed and analyzed using Kaplan-Meier curves and Cox proportional hazard model. Each gene of interest was analyzed for its effect on survival by separating patients into high/low expression subgroups. A modified approach from [@Mihaly:2013aa] was used to estimate the best gene expression cutoff that separates high/low expression subgroups with differential survival.
 
-We took advantage of the availability of clinical annotations. To identify if the expression of a selected_genes of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
+We took advantage of the availability of clinical annotations. To identify if the expression of a gene of interest affects survival in any specific clinical subgroup, subsets of patients annotated with specific clinical annotations were selected (e.g., “males” or “females” in the “gender” clinical annotation). Subgroups with < 40 patients were not considered.
 
 ## Differential expression analysis
 
