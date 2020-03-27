@@ -140,7 +140,7 @@ cancer = "BRCA"   # Breast cancer
 # cancer = "LUSC" # Lung squamous cell carcinoma
 
 # Select genes of interest
-selected_genes = "IGFBP3"
+selected_genes = "LCE2B"
 
 # Remove previous results
 system(paste0("rm -r ", selected_genes,".Analysis*"))
@@ -156,15 +156,12 @@ subcategories_in_all_cancers <- TRUE
 ```{r loadData}
 mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
 clinical_annotations <- summarize_data(mtx = mtx)
-```
-
-```{r processData}
 # Prepare expression data
 expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
 # Filter out low expressed genes
 # Should be more than 90% of non-zero values
-ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
-expr <- expr[, apply(expr, 2, ff)] 
+# ff <- genefilter::pOverA(p = 0.9, A = 0, na.rm = TRUE) 
+# expr <- expr[, apply(expr, 2, ff)] 
 expr <- data.frame(AffyID = mtx$merged.dat$bcr, expr, stringsAsFactors = FALSE)
 
 # Prepare clinical data
@@ -196,7 +193,7 @@ system(paste0("mv res ", selected_genes, ".Analysis1"))
 
 ```{r analysis2}
 # All cancers with RNASeq2 data
-all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "STES", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM")
+all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "STES", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") # "LAML", 
 data.type = "RNASeq2"; type = "" 
 system("mkdir res") # Create results folder
 for (cancer_type in all_cancers) {
@@ -219,7 +216,7 @@ for (cancer_type in all_cancers) {
 # Read in analysis natrix
 mtx <- read.table("res/global_stats.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE, fill = TRUE)
 # Add -log10-transformed p-value
-mtx <- mtx %>% mutate(log10.pval = -1 * log10(p.value))
+mtx <- mtx %>% mutate(log10.pval = -1 * log10(p.adjust(p.value, method = "BH")))
 # Print into PNG
 mtx_to_plot <- mtx %>% subset(Gene == selected_genes)
 mtx_to_plot <- mtx_to_plot[order(mtx_to_plot$log10.pval), ]
@@ -241,7 +238,7 @@ system(paste0("mv res ", selected_genes, ".Analysis2"))
 system("mkdir res") # Create results folder
 # If true, analyze survival differences in subcategories in all cancers
 if (subcategories_in_all_cancers) {
-  cancer <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LAML", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "STES", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") 
+  cancer <- c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "STES", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") # "LAML", 
 } else {
   cancer <- cancer # Selected in settings
 }
@@ -249,6 +246,10 @@ data.type = "RNASeq2"; type = ""
 for (cancer_type in cancer) {
   print(paste0("Processing cancer ", cancer_type))
   mtx <- load_data(disease = cancer_type, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+  if (cancer_type == "BRCA") {
+    # BRCA-specific - replace original annotations with XENA	
+    mtx$clinical <- read.csv("data.TCGA/XENA_classification.csv", row.names = 1)
+  }
   clinical_annotations <- summarize_data(mtx = mtx)
   # Prepare expression data
   expr <- mtx$merged.dat[ , 4:ncol(mtx$merged.dat)] %>% as.matrix
@@ -266,6 +267,10 @@ for (cancer_type in cancer) {
   expr <- expr[index, ]
   # Full clinical information
   # clin_full <- mtx$clinical
+  # Match to the order of small clinical annitation	
+  # clin_full <- clin_full[rownames(clin_full) %in% clin$AffyID, ]	
+  # clin_full <- clin_full[match(clin$AffyID, rownames(clin_full)), ]
+  
   clin_full <- mtx$clinical[rownames(mtx$clinical) %in% clin$AffyID, ]
   clin_full <- clin_full[match(expr$AffyID, rownames(clin_full)), ]
   all.equal(rownames(clin_full), expr$AffyID)
@@ -292,8 +297,8 @@ for (cancer_type in cancer) {
         # Get a subset of expression information for these patients
         expr_selected <- expr[ index_patients, ]
         # For this subset of expression, filter out low expressed genes
-        index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
-        expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
+        # index_genes <- apply(expr_selected %>% dplyr::select(-AffyID), 2, ff) # index of expression values to keep
+        # expr_selected <- cbind(expr_selected$AffyID, dplyr::select(expr_selected, -AffyID)[, index_genes]) # patient IDs and expression values to keep
         # Perform actual survival analysis
         kmplot(expr_selected, clin_selected, event_index=2, time_index=3,  affyid = selected_genes, auto_cutoff="true", transform_to_log2 = TRUE, cancer_type = paste(c(cancer_type, annotation, names(annotations)[ num_of_selected_categories] ), collapse = "-"), fileType = "png", use_survminer = TRUE)
       }
