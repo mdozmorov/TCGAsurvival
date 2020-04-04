@@ -30,6 +30,7 @@ library(ggplot2)
 library(plotly)
 library(writexl)
 library(readr)
+library(cowplot)
 ```
 
 # Data from CELLX
@@ -44,7 +45,7 @@ library(readr)
 - Import the downloaded data into R
 
 ```{r settings}
-selected_gene <- "IGFBP3" # Change 
+selected_gene <- "TMEM219" # Change 
 min_number_of_normal <- 12 # Minimum number of samples to conduct a test
 n_top <- 15 # How many top results to use
 fileNameIn1 <- paste0("data/RSEM_expression_", selected_gene, ".data.tsv") # Input data
@@ -109,10 +110,10 @@ pander(expr_ccle_top)
 rsem <- ggplot(expr_tcga, aes(affy_source, eval(parse(text = selected_gene)))) + 
   geom_boxplot(aes(fill = tissue), outlier.shape = 1) + 
   scale_fill_manual(name = "", values = c("red", "green")) + 
-  theme_bw() + 
+  theme_cowplot() + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1), panel.grid.major = element_blank()) + 
-  labs(title = paste("RSEM Expression", selected_gene), x = NULL) +
-  ylab("log2-transformed expression") +
+  labs(title = paste("Tumor-Normal Expression, ", selected_gene), x = NULL) +
+  ylab("log2(RSEM) gene expression") +
   theme(legend.position="bottom")
 
 rsem
@@ -199,14 +200,15 @@ expr2$tissue <- relevel(expr2$tissue, ref = "Normal") # Make normal boxplot plot
 rsem_int <- ggplot(expr2, aes(tissue, eval(parse(text = selected_gene)))) + 
   geom_boxplot(aes(fill = tissue), outlier.shape = 1) + 
   scale_fill_manual(name = "", values = c("green", "red")) + 
-  theme_bw() + 
+  theme_cowplot() + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1), panel.grid.major = element_blank()) + 
-  labs(title = paste("RSEM Expression", selected_gene, "\n"), x = NULL) + 
-  facet_wrap(~Cancer, nrow = 4) + guides(fill = F)  +
-  ylab("log2-transformed expression")
+  labs(title = paste("Tumor-Normal Expression, ", selected_gene, "\n"), x = NULL) + 
+  facet_wrap(~Cancer, ncol = 7) + guides(fill = F)  +
+  ylab("log2(RSEM) gene expression")
 
 # ggplotly(rsem_int, tooltip = c("colour", "text"))
 plot(rsem_int)
+ggsave(paste0("CELLX_", selected_gene, ".pdf"), width = 6, height = 5)
 ```    
 
 ```{r}
