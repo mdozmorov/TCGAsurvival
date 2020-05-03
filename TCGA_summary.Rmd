@@ -29,9 +29,9 @@ options(stringsAsFactors = FALSE)
 
 ```{r settings}
 # Select cancer type
-cancer <- "BRCA"
+cancer <- "PRAD"
 # Select genes of interest
-selected_genes   <- "IGFBP3" # Search and replace the name of the selected_genes
+selected_genes   <- "DST" # Search and replace the name of the selected_genes
 
 n_max  <- 10 # Maximum number of rows to output in tables
 p_val_cutoff   <- 0.05 # Regular p-value cutoff
@@ -75,7 +75,9 @@ Top `r n_max` clinincal subtypes across all cancers where `r selected_genes` sig
 ```{r}
 mtx <- read.table(paste0(selected_genes, ".Analysis3/global_stats.txt"), sep = "\t", header = TRUE, fill = TRUE)
 # Correct for multiple testing in individual cancers
-all_cancers = c("ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "STES", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") # "LAML", 
+# all_cancers = c("ACC", "BLCA", "PRAD", "CESC", "CHOL", "COAD", "COADREAD", "DLBC", "ESCA", "GBM", "GBMLGG", "HNSC", "KICH", "KIPAN", "KIRC", "KIRP", "LGG", "LIHC", "LUAD", "LUSC", "MESO", "OV", "PAAD", "PCPG", "PRAD", "READ", "SARC", "SKCM", "STAD", "STES", "TGCT", "THCA", "THYM", "UCEC", "UCS", "UVM") # "LAML", 
+# Get all cancers from the matrix itself
+all_cancers <- sapply(mtx$Cancer, function(x) strsplit(x, "-")[[1]][1]) %>% unname %>% unique 
 all_adjusted_p_values <- c()
 for (cancer_selected in all_cancers) {
   mtx_subset <- mtx[grepl(paste0("^", cancer_selected, "-"), mtx$Cancer, ignore.case = FALSE), , drop = FALSE] 
@@ -193,25 +195,25 @@ print(global_stats_subset$Cancer[5])
 knitr::include_graphics(paste0(selected_genes, ".Analysis3/", selected_genes, "_", global_stats_subset$Cancer[5], ".png"))
 ```
 
-## Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, selected_genes expression differences across categories
+## Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, selected_genes expression differences across categories. NOT RUN
 
 Expression of `r selected_genes` in selected clinical subcategories
 
-```{r echo=FALSE, out.height='250px'}
-# 'PAM50Call_RNAseq' for BRCA, 'subtype' for OV
+```{r echo=FALSE, out.height='250px', eval=FALSE}
+# 'PAM50Call_RNAseq' for PRAD, 'subtype' for OV
 knitr::include_graphics(paste0(selected_genes, ".Analysis5/", cancer, "_", selected_genes, "_PAM50Call_RNAseq.png"))
 ```
 
 What are the means of log2-expression per clinical subgroup?
 
-```{r}
+```{r eval=FALSE}
 load(file = paste0(selected_genes, ".Analysis5/mtx_to_plot.rda"))
 tapply(mtx_to_plot$Gene, mtx_to_plot$Clinical, mean)
 ```
 
 Is the expression of selected_genes `r selected_genes` significantly different across clinical subgroups? Significant "Pr(>F)" suggests "Yes"
 
-```{r}
+```{r eval=FALSE}
 # ANOVA
 groupdiff <- lm(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
 # summary(groupdiff)
@@ -220,7 +222,7 @@ anova(groupdiff)
 
 Which pair of clinical categories have significant differences? "p.adj" and confidence intervals that do not cross 0 suggest significant differences in selected_genes expression between the subgroups in the corresponding pairwise comparison. Tukey HSD (Honest Significant Difference) test
 
-```{r}
+```{r eval=FALSE}
 # Tukey HSD
 a1 <- aov(mtx_to_plot$Gene ~ mtx_to_plot$Clinical)
 # summary(a1)
