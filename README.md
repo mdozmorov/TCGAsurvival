@@ -15,7 +15,7 @@ For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
 
 ## Data description
 
-- Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/), [vignette](https://cran.r-project.org/web/packages/TCGA2STAT/vignettes/TCGA2STAT.html).
+- Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/), [GitHub repo](https://github.com/zhandong/TCGA2STAT). First, install `BiocManager::install("CNTools")`, clone the repository `git clone https://github.com/zhandong/TCGA2STAT`, and install from source `install.packages("TCGA2STAT_1.2.tar.gz", repos = NULL, type = "source")`
 - [Cancer types](data/CancerDataChecklist_AppendixA.PDF)
 - [Data types](data/DataPlatforms_AppendixB.PDF)
 - [Clinical values](data/ClinicalVariables_AppendixC.PDF)
