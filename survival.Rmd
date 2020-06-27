@@ -111,7 +111,6 @@ make_expression_matrix <- function(mtx = mtx, disease = cancer, data.type = data
 # Path where the downloaded data is stored
 data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mikhail
 # data_dir = "/Users/stevenmeas/TCGAsurvival/data" # Steve
-
 # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 # Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
 # Expression types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
@@ -470,7 +469,7 @@ save(mtx_to_plot, file = "res/mtx_to_plot.rda")
 # Plot and save
 p <- ggplot(melt(mtx_to_plot, id.vars = "Clinical"), aes(x = Clinical, y = value, fill = Clinical)) +
   geom_boxplot() +
-  ylab("log2 expression")
+  ylab("log2 expression") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 plot(p)
 ggsave(filename = paste0("res/", cancer, "_", selected_genes, "_", clinical_annotations_selected, ".png"), p, width = 5, height = 4, device = "png")
 system(paste0("mv res ", selected_genes, ".Analysis5"))
