@@ -109,11 +109,8 @@ make_expression_matrix <- function(mtx = mtx, disease = cancer, data.type = data
 
 ```{r settings}
 # Path where the downloaded data is stored
-# data_dir = "/Users/stevenmeas/TCGAsurvival/data" # Mac
-data_dir = "/Users/stevenmeas/TCGAsurvival/data" # Mac
-# data_dir = "F:/Data/GenomeRunner/TCGAsurvival/data" # Windows
-# data_dir = "D:"
-# results_dir = "/Users/mdozmorov/Dropbox" # Path where the results are stored
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mikhail
+# data_dir = "/Users/stevenmeas/TCGAsurvival/data" # Steve
 
 # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 # Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
