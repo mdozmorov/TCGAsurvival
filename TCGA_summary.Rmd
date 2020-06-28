@@ -1,6 +1,5 @@
 ---
 title: "TCGA survival analysis"
-author: "Mikhail Dozmorov"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
@@ -24,6 +23,8 @@ set.seed(1)
 library(dplyr)
 options(stringsAsFactors = FALSE)
 ```
+
+# Settings
 
 ```{r settings}
 # Settings
@@ -107,7 +108,7 @@ mtx_pdf[order(mtx_pdf$FDR), ] %>% head(., n = n_max) %>% pander
 
 ## Analysis 3: Cancer-specific top clinical subtypes where `r selected_genes` significantly affects survival, for each cancer
 
-Only results for cancers with clinical subtypes where `r selected_genes` significantly (adjusted p-value < `r p_adj_cutoff`) affects survival are shown
+Only results for cancers with clinical subtypes where `r selected_genes` significantly (adjusted p-value < `r p_adj_cutoff`) affects survival are shown. The table is sorted by the "Number of significant" column. Cancers with zero Number of significant subtypes are not shown.
 
 ```{r}
 clinical_subgroups_stats <- list() # List to collect statistics about clinical subgroups
@@ -122,10 +123,11 @@ clinical_subgroups_stats <- do.call(rbind.data.frame, clinical_subgroups_stats)
 clinical_subgroups_stats <- clinical_subgroups_stats %>% mutate( Proportion = as.numeric(clinical_subgroups_stats[, 3]) / as.numeric(clinical_subgroups_stats[, 2]) )
 colnames(clinical_subgroups_stats) <- c("Cancer", "Number of clinical subgroups", "Number of significant", "Proportion of significant")
 clinical_subgroups_stats <- left_join(clinical_subgroups_stats, cancers, by = c("Cancer" = "Acronym"))
-clinical_subgroups_stats <- clinical_subgroups_stats[order(clinical_subgroups_stats$`Proportion of significant`, decreasing = TRUE), ]
+clinical_subgroups_stats <- clinical_subgroups_stats[order(as.numeric(clinical_subgroups_stats$`Number of significant`), decreasing = TRUE), ]
+clinical_subgroups_stats <- clinical_subgroups_stats[as.numeric(clinical_subgroups_stats$`Number of significant`) > 0, ]
 clinical_subgroups_stats$`Proportion of significant` <- round(clinical_subgroups_stats$`Proportion of significant`, digits = 2)
 rownames(clinical_subgroups_stats) <- NULL
-pander(clinical_subgroups_stats)
+kable(clinical_subgroups_stats, caption = paste0("Summary of the number of clinical subtypes where the expression of ", selected_genes, " significantly affects survival"))
 ```
 
 ```{r}
@@ -220,9 +222,9 @@ if (cancer %in% c("BRCA","OV")){
 opts_chunk$set(eval = continue_analysis, include = continue_analysis)
 ```
 
-## Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, selected_genes expression differences across categories.
+## Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, selected_genes expression differences across categories
 
-Expression of `r selected_genes` in selected clinical subcategories
+Expression of `r selected_genes` in selected clinical subcategories. Valid only for BRCA or OV cancer types.
 
 ```{r out.height='250px'}
 # 'PAM50Call_RNAseq' for PRAD, 'subtype' for OV
