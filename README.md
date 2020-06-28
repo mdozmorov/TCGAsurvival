@@ -47,21 +47,17 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 - `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. [Example](examples/CELLX_analysis.pdf)
 
 - `survival.Rmd` - a pipeline to run survival analyses for all cancers. Adjust settings `cancer = "BRCA"` and `selected_genes = "IGFBP3"` to the desired cancer and gene IDs. These IDs should be the same in `TCGA_summary.Rmd` that'll summarize the output into [Survival analysis summary](examples/TCGA_summary.pdf)
-    - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `<selected_genes>.Analysis1` folder.
+    - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `<selected_genes>.<cancer>.Analysis1` folder.
     - `Exploratory` - All genes, selected cancers, no clinical annotations. Not run by default.
-    - `Analysis 2` - Selected genes, all (or selected) cancers, no clinical annotations. Results are in `<selected_genes>.Analysis2` folder.
-    - `Analysis 3` - Selected genes, all (or, selected) cancers, all unique clinical (sub)groups. Results are in `<selected_genes>.Analysis3` folder. Open file `global_stats.txt` in Excel, sort by p-value (log-rank test) and explore in which clinical (sub)groups expression of the selected gene affects survival the most.
+    - `Analysis 2` - Selected genes, all (or selected) cancers, no clinical annotations. Results are in `<selected_genes>.<cancer>.Analysis2` folder.
+    - `Analysis 3` - Selected genes, all (or, selected) cancers, all unique clinical (sub)groups. Results are in `<selected_genes>.<cancer>.Analysis3` folder. Open file `global_stats.txt` in Excel, sort by p-value (log-rank test) and explore in which clinical (sub)groups expression of the selected gene affects survival the most.
     - `Analysis 4` - Selected genes, selected cancers, all combinations of clinical annotations. Not run by default.
-    - `Analysis 5` - Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories. Results are in `<selected_genes>.Analysis5`
+    - `Analysis 5` - Analysis 5: Clinical-centric analysis. Selected cancer, selected clinical subcategory, survival difference between all pairs of subcategories. Results are in `<selected_genes>.<cancer>.Analysis5`
     - `Analysis 6` - Dimensionality reduction of a gene signature across all cancers using NMF, PCA, or FA For each cancer, extracts gene expression of a signature, reduces its dimensionality, plots a heatmap sorted by the first component, biplots, saves eigenvectors in files named after cancer, signature, method. They are used in `correlations.Rmd`. Not run by default
-
-- `survival_OVCA.Rmd` - survival analyses adjusted for OV (Analysis 3)
 
 - `survival_Neuroblastoma.Rmd` - survival analysis for Neuroblastoma samples from TARGET database. Prepare the data with `misc/cgdsr_preprocessing.R`, see Methods section for data description.
 
-- `TCGA_summary.Rmd` - summary report for the `survival.Rmd` output. In which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Change `cancer = "BRCA"` and `selected_genes = "IGFBP3"` to the desired cancer and gene IDs. Uses results from `<selected_genes>.Analysis*` folders. [Survival analysis summary](examples/TCGA_summary.pdf)
-
-- `TCGA_summary_OVCA.Rmd` - summary report tuned for `survival_OVCA.Rmd` output. Includes Analysis 5
+- `TCGA_summary.Rmd` - summary report for the `survival.Rmd` output. In which cancers, and clinical subgroups, expression of the selected gene affects survival the most. Change `cancer = "BRCA"` and `selected_genes = "IGFBP3"` to the desired cancer and gene IDs. Uses results from `<selected_genes>.<cancer>.Analysis*` folders. [Survival analysis summary](examples/TCGA_summary.pdf)
 
 - `TCGA_CNV.Rmd` - Separate samples based on copy number variation of one or several genes, do survival and differential expression analysis on the two groups, and KEGG enrichment. An ad hoc analysis, requires manual intervention.
 
