@@ -109,8 +109,8 @@ make_expression_matrix <- function(mtx = mtx, disease = cancer, data.type = data
 
 ```{r settings}
 # Path where the downloaded data is stored
-# data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mikhail
- data_dir = "/Users/stevenmeas/TCGAsurvival/data" # Steve
+data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Mikhail
+# data_dir = "/Users/stevenmeas/TCGAsurvival/data" # Steve
 # Cancer types: http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
 # Data types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
 # Expression types: http://www.liuzlab.org/TCGA2STAT/DataPlatforms.pdf
@@ -129,7 +129,7 @@ type = ""
 # clinical = TRUE
 
 # Select cancer type
-cancer = "MESO" # Breast cancer
+cancer = "BRCA" # Breast cancer
 # cancer = "OV"   # Ovarian cancer
 # cancer = "LIHC" # Liver hepatocellular carcinoma
 # cancer = "HNSC" # Head and Neck squamous cell carcinoma
@@ -148,7 +148,7 @@ system(paste0("rm -r ", selected_genes, ".", cancer, ".Analysis*"))
 # Censor KM plots at certain duration
 max_days <- 3650 # 3650 days = 10 years
 # If true, Analysis 3 (survival differences in subcategories) will be run for each cancer
-subcategories_in_all_cancers <- FALSE
+subcategories_in_all_cancers <- TRUE
 ```
 
 # Load data
