@@ -32,8 +32,7 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 - **In all other scripts, change the `data_dir` variable to the path where the downloaded data is stored**
 
 ## Analysis examples
-
-- [CELLX analysis summary, "CELLX_analysis.Rmd"](examples/CELLX_analysis.pdf). Compare with published [Table 1. Comparison of IGFBP3 Expression between Cancers and Normal Tissue](https://www.sciencedirect.com/science/article/pii/S1936523316301371?via%3Dihub#t0005), [Paper](https://www.ncbi.nlm.nih.gov/pubmed/27888710)
+- [tnmplot.com/](https://tnmplot.com/) - differential gene expression analysis in Tumor, Normal and Metastatic tissues. Bartha, Áron, and Balázs Győrffy. “[TNMplot.Com: A Web Tool for the Comparison of Gene Expression in Normal, Tumor and Metastatic Tissues](https://doi.org/10.1101/2020.11.10.376228)” 
 - [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary.pdf)
 - [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
 - [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
@@ -43,8 +42,6 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 ## Analysis scripts
 
 - **In all other scripts, Change Path where the downloaded data is stored, `data_dir` variable**
-
-- `CELLX_analysis.Rmd` - Tumor-normal expression of selected gene in all TCGA cancers. In which cancers expression of the selected gene up- or downregulated the most in tumor vs. normal comparison. See the instructions in the document. Change `gene <- "XXXX"` as needed. [Example](examples/CELLX_analysis.pdf)
 
 - `survival.Rmd` - a pipeline to run survival analyses for all cancers. Adjust settings `cancer = "BRCA"` and `selected_genes = "IGFBP3"` to the desired cancer and gene IDs. These IDs should be the same in `TCGA_summary.Rmd` that'll summarize the output into [Survival analysis summary](examples/TCGA_summary.pdf). Note if `subcategories_in_all_cancers <- TRUE`, survival analysis is done for all subcategories and all cancers, time consuming.
     - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `<selected_genes>.<cancer>.Analysis1` folder.
@@ -80,6 +77,10 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 - `Supplemental_R_script_1.R` - a modified script to run gene-specific or global survival analysis, from [http://kmplot.com](http://kmplot.com), [Source](http://kmplot.com/analysis/studies/Supplemental%20R%20script%201.R)
 
 - `TCPA_correlation.Rmd` - experimenting with TCPA data.
+
+# Legacy analyses
+
+- [CELLX analysis summary, "CELLX_analysis.Rmd"](examples/CELLX_analysis.pdf). Compare with published [Table 1. Comparison of IGFBP3 Expression between Cancers and Normal Tissue](https://www.sciencedirect.com/science/article/pii/S1936523316301371?via%3Dihub#t0005), [Paper](https://www.ncbi.nlm.nih.gov/pubmed/27888710)
 
 ## Misc scripts
 
