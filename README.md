@@ -32,7 +32,7 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 - **In all other scripts, change the `data_dir` variable to the path where the downloaded data is stored**
 
 ## Analysis examples
-- [TNMplot.Rmd](TNMplot.Rmd) - differential gene expression analysis in Tumor, Normal and Metastatic tissues. Reimplementation of online service [tnmplot.com/](https://tnmplot.com/) by Bartha, Áron, and Balázs Győrffy. “[TNMplot.Com: A Web Tool for the Comparison of Gene Expression in Normal, Tumor and Metastatic Tissues](https://doi.org/10.1101/2020.11.10.376228)” 
+- [TNMplot.Rmd](examples/TNMplot.pdf) - differential gene expression analysis in Tumor, Normal and Metastatic tissues. Reimplementation of online service [tnmplot.com/](https://tnmplot.com/) by Bartha, Áron, and Balázs Győrffy. “[TNMplot.Com: A Web Tool for the Comparison of Gene Expression in Normal, Tumor and Metastatic Tissues](https://doi.org/10.1101/2020.11.10.376228)” 
 - [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary.pdf)
 - [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
 - [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
