@@ -1,0 +1,170 @@
+---
+title: "Breast cancer, gene expression analysis in 'black or african-american' and 'white' cohorts, in PAM50 subtypes"
+author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: yes
+    theme: united
+bibliography: data.TCGA/TCGA.bib
+csl: styles.ref/genomebiology.csl
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+
+```{r}
+library(curatedTCGAData)
+library(TCGAutils)
+library(ggplot2)
+library("ggsci")
+library(scales)
+# scales::show_col(pal_lancet("lanonc")(8))
+mycols = pal_lancet("lanonc")(8)
+library(grid)
+library(gridExtra)
+library(readr)
+library(DescTools)
+library(ggprism)
+```
+
+```{r echo=TRUE}
+selected_genes <- c("MYC")
+```
+
+```{r results='hide'}
+brca <- curatedTCGAData(diseaseCode = "BRCA", assays = "RNASeq2GeneNorm", FALSE, version = "2.0.1")
+# Select only solid tumors
+brca.primary.solid.tumor <- TCGAsplitAssays(brca, c("01"))
+# Raw data
+xdata.raw <- t(assay(brca.primary.solid.tumor[[1]]))
+xdata.ids <- TCGAbarcode(rownames(xdata.raw))
+rownames(xdata.raw) <- xdata.ids
+
+# getSubtypeMap(brca.primary.solid.tumor)
+# getClinicalNames("BRCA")
+# ydata <- colData(matchmae) %>% as.data.frame() %>% select(patientID, race, ethnicity, Integrated.Clusters..with.PAM50.)
+# table(ydata$Integrated.Clusters..with.PAM50.)
+
+ydata.xena <- read_csv("data.TCGA/XENA_classification.csv")
+table(ydata.xena$PAM50Call_RNAseq)
+
+# Subset the data
+ydata.xena <- ydata.xena[!is.na(ydata.xena$PAM50Call_RNAseq) & (ydata.xena$race %in% c("white", "black or african american")), ]
+# Check all samples are unique. Should be TRUE
+nrow(ydata.xena) == length(unique(ydata.xena$sampleID))
+# Check that all Xena samples have TCGA data. Should be character(0)
+setdiff(ydata.xena$sampleID, xdata.ids)
+
+xdata.raw_subset <- xdata.raw[rownames(xdata.raw) %in% ydata.xena$sampleID, selected_genes, drop = FALSE]
+xdata.raw_subset <- xdata.raw_subset[match(ydata.xena$sampleID, rownames(xdata.raw_subset)), , drop = FALSE]
+all.equal(rownames(xdata.raw_subset), ydata.xena$sampleID)
+```
+
+# Number of samples per Race and PAM50 subtypes
+
+```{r}
+mtx_subset <- data.frame(PAM50 = ydata.xena$PAM50Call_RNAseq, Race = ydata.xena$race, Expression = xdata.raw_subset[, selected_genes]  )
+# log2 transform expression
+mtx_subset$Expression <- log2(mtx_subset$Expression)
+# Correct race for plotting
+mtx_subset$Race <- ifelse(mtx_subset$Race == "white", "white", "black")
+# Tablulate samples
+table(mtx_subset$Race, mtx_subset$PAM50) %>% pander()
+```
+
+# Expression analysis in 'black or african-american' and 'white' cohorts, in PAM50 subtypes
+
+```{r fig.height=4}
+ggplot(mtx_subset, aes(x = Race, y = Expression, fill = Race, color = Race)) + 
+  geom_boxplot() +
+  geom_jitter(shape=20, position=position_jitter(0.2, 0.3), size = 1, alpha = 0.5) +
+  theme_bw() +
+  scale_fill_manual(values = mycols[c(6, 3)]) +
+  scale_color_manual(values = mycols[c(2, 1)]) +
+  labs(y = expression(log[2](Expression))) +
+  facet_grid(~ PAM50)
+
+ggsave("results/Figure_PAM50_EA_AA.png", width = 7, height = 3, dpi = 300)
+```
+
+# T-test, differences between races in individual subtypes
+
+For each PAM50 subtypes, compare expression between EA and AA cohorts. Only p-values are shown
+
+### In Basal
+
+```{r}
+# DunnettTest(x = mtx_subset$Expression[mtx_subset$PAM50 == "Basal"], g = factor(mtx_subset$Race[mtx_subset$PAM50 == "Basal"]))
+t.test(mtx_subset$Expression[mtx_subset$PAM50 == "Basal" & mtx_subset$Race == "white"], mtx_subset$Expression[mtx_subset$PAM50 == "Basal" & mtx_subset$Race == "black"])$p.value
+```
+
+### In Her2
+
+```{r}
+t.test(mtx_subset$Expression[mtx_subset$PAM50 == "Her2" & mtx_subset$Race == "white"], mtx_subset$Expression[mtx_subset$PAM50 == "Her2" & mtx_subset$Race == "black"])$p.value
+```
+
+### In LumA
+
+```{r}
+t.test(mtx_subset$Expression[mtx_subset$PAM50 == "LumA" & mtx_subset$Race == "white"], mtx_subset$Expression[mtx_subset$PAM50 == "LumA" & mtx_subset$Race == "black"])$p.value
+```
+
+### In LumB
+
+```{r}
+t.test(mtx_subset$Expression[mtx_subset$PAM50 == "LumB" & mtx_subset$Race == "white"], mtx_subset$Expression[mtx_subset$PAM50 == "LumB" & mtx_subset$Race == "black"])$p.value
+```
+
+### In Normal
+
+Not enough observations
+
+```{r eval=FALSE}
+t.test(mtx_subset$Expression[mtx_subset$PAM50 == "Normal" & mtx_subset$Race == "white"], mtx_subset$Expression[mtx_subset$PAM50 == "Normal" & mtx_subset$Race == "black"])$p.value
+```
+
+# Two-way Anova
+
+Race and PAM50 effects across all subtypes.
+
+```{r}
+model <- aov(Expression ~ PAM50 + Race, data = mtx_subset)
+summary(model)
+```
+
+Across all subtypes, "Race" differences `r ifelse(summary(model)[[1]]["Race", "Pr(>F)"] < 0.05, "are", "are not")` significant
+
+Across all subtypes, "PAM50" differences `r ifelse(summary(model)[[1]]["PAM50", "Pr(>F)"] < 0.05, "are", "are not")` significant
+
+## Dunnett post-hoc test, differences between PAM50 subtypes separately in European-American and African-American cohorts
+
+### In EA cohort ("white" in TCGA classification)
+
+```{r}
+DunnettTest(x = mtx_subset$Expression[mtx_subset$Race == "white"], g = factor(mtx_subset$PAM50[mtx_subset$Race == "white"]))
+```
+
+### In AA cohort ("black or african american" in TCGA classification)
+
+```{r}
+DunnettTest(x = mtx_subset$Expression[mtx_subset$Race == "black"], g = factor(mtx_subset$PAM50[mtx_subset$Race == "black"]))
+```
+
+
+
+
