@@ -15,6 +15,8 @@ For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
 
 ## Data description
 
+Scripts are being transitioned to use [curatedTCGAData](https://bioconductor.org/packages/curatedTCGAData/) and [TCGAutils](https://bioconductor.org/packages/TCGAutils/) R packages.
+
 - Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/), [GitHub repo](https://github.com/zhandong/TCGA2STAT). First, install `BiocManager::install("CNTools")`, clone the repository `git clone https://github.com/zhandong/TCGA2STAT`, and install from source `install.packages("TCGA2STAT_1.2.tar.gz", repos = NULL, type = "source")`
 - [Cancer types](data/CancerDataChecklist_AppendixA.PDF)
 - [Data types](data/DataPlatforms_AppendixB.PDF)
@@ -32,6 +34,7 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 - **In all other scripts, change the `data_dir` variable to the path where the downloaded data is stored**
 
 ## Analysis examples
+
 - [TNMplot.Rmd](examples/TNMplot.pdf) - differential gene expression analysis in Tumor, Normal and Metastatic tissues. Reimplementation of online service [tnmplot.com/](https://tnmplot.com/) by Bartha, Áron, and Balázs Győrffy. “[TNMplot.Com: A Web Tool for the Comparison of Gene Expression in Normal, Tumor and Metastatic Tissues](https://doi.org/10.1101/2020.11.10.376228)” 
 - [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary.pdf)
 - [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
