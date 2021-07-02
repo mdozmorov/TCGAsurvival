@@ -1,0 +1,138 @@
+---
+title: "TCGA survival analysis"
+output:
+  html_document:
+    toc: true
+    # toc_float: true
+    theme: united
+    # theme: cerulean
+    # number_sections: true
+date: "`r Sys.Date()`"
+author: "Mikhail Dozmorov"
+bibliography: data.TCGA/TCGA.bib
+csl: styles.ref/genomebiology.csl
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+
+```{r}
+library(curatedTCGAData)
+library(TCGAutils)
+library(ggplot2)
+library("ggsci")
+mycols = pal_lancet("lanonc")(8)
+library(grid)
+library(gridExtra)
+library(ggprism)
+```
+
+```{r}
+selected_genes <- c("XPO1")
+```
+
+
+```{r}
+brca <- curatedTCGAData(diseaseCode = "BRCA", assays = "RNASeq2GeneNorm", FALSE)
+# https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/sample-type-codes
+# 01	Primary Solid Tumor
+# 11	Solid Tissue Normal
+sampleTables(brca)
+#   01   06   11 
+# 1093    7  112
+```
+
+# Tumor-normal pairs comparison
+
+```{r}
+(tnmae <- splitAssays(brca, c("01", "11")))
+(matchmae <- as(tnmae, "MatchedAssayExperiment"))
+
+selected_expr_tumor  <- assay(matchmae[[1]])[selected_genes, ]
+selected_expr_normal <- assay(matchmae[[2]])[selected_genes, ]
+
+# T-test to put on a plot
+res <- t.test(selected_expr_normal, selected_expr_tumor, paired = TRUE)$p.value
+grob <- grobTree(textGrob(paste0("p-value: ", formatC(res, format = "e")), x=0.1,  y=0.90, hjust=0, gp=gpar(col="black", fontsize=8, fontface="italic")))
+
+mtx_to_plot <- data.frame(Status = c(rep("Tumor", length(selected_expr_tumor)), rep("Normal", length(selected_expr_normal))), Expression = c(selected_expr_tumor, selected_expr_normal))
+# ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+#   geom_boxplot() +
+#   theme_bw() +
+#   scale_fill_manual(values = mycols[c(3, 2, 1)]) +
+#   geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+#   annotation_custom(grob)
+
+ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+  geom_boxplot() +
+  scale_fill_prism(palette = "prism_light") +
+  geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+  annotation_custom(grob) +
+  theme_prism(palette = "prism_light")
+
+ggsave("results/Figure_TN_paired.png", width = 4, height = 4, dpi = 300)
+```
+
+# Tumor-normal-metastatic comparison
+
+```{r}
+(tnmae <- splitAssays(brca, c("01", "11", "06")))
+selected_expr_tumor  <- assay(tnmae[[1]])[selected_genes, ]
+selected_expr_met    <- assay(tnmae[[2]])[selected_genes, ]
+selected_expr_normal <- assay(tnmae[[3]])[selected_genes, ]
+
+mtx_to_plot <- data.frame(Status = c(rep("Tumor", length(selected_expr_tumor)), rep("Normal", length(selected_expr_normal)), rep("Metastatic", length(selected_expr_met))), Expression = c(selected_expr_tumor, selected_expr_normal, selected_expr_met))
+mtx_to_plot$Status <- factor(mtx_to_plot$Status, levels = c("Normal", "Tumor", "Metastatic"))
+
+res_tn <- t.test(selected_expr_tumor, selected_expr_normal)$p.value %>% formatC(., format = "e")
+res_tm <- t.test(selected_expr_tumor, selected_expr_met)$p.value %>% formatC(., format = "e")
+res_mn <- t.test(selected_expr_met, selected_expr_normal)$p.value %>% formatC(., format = "e")
+grob <- textGrob(paste0("T vs. N: ", res_tn, ", T vs. M: ", res_tm, ", M vs. N: ", res_mn)) #, gp=gpar(col="black", fontsize=8, fontface="italic")))
+my_text <- paste0("T vs. N: ", res_tn, ", T vs. M: ", res_tm, ", M vs. N: ", res_mn)
+my_grob <- grid.text(my_text, x=0.5, y=0.9, gp=gpar(col="black", fontsize=6, fontface="italic"))
+
+# ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+#   geom_boxplot() +
+#   theme_bw() +
+#   scale_fill_manual(values = mycols[c(3, 2, 1)]) +
+#   geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+#   annotation_custom(my_grob)
+
+ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+  geom_boxplot() +
+  # scale_fill_prism(palette = "prism_light") +
+  scale_fill_manual(values = c(prism_color_pal(palette = "prism_light")(10)[6], prism_color_pal(palette = "prism_light")(10)[7], prism_color_pal(palette = "prism_light")(10)[9])) +
+  geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+  annotation_custom(my_grob) +
+  theme_prism(palette = "prism_light")
+
+ggsave("results/Figure_TNM.png", width = 5, height = 4, dpi = 300)
+
+```
+
+```{r}
+library(scales)
+
+show_palette <- function(palette) {
+  scales::show_col(
+    prism_colour_pal(palette = palette)(
+      attr(prism_colour_pal(palette = palette), "max_n")
+    )
+  )
+}
+
+# show the colours in the palette "pearl"
+show_palette("prism_light")
+```
+

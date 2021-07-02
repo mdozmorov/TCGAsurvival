@@ -32,7 +32,7 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 - **In all other scripts, change the `data_dir` variable to the path where the downloaded data is stored**
 
 ## Analysis examples
-- [tnmplot.com/](https://tnmplot.com/) - differential gene expression analysis in Tumor, Normal and Metastatic tissues. Bartha, Áron, and Balázs Győrffy. “[TNMplot.Com: A Web Tool for the Comparison of Gene Expression in Normal, Tumor and Metastatic Tissues](https://doi.org/10.1101/2020.11.10.376228)” 
+- [TNMplot.Rmd](TNMplot.Rmd) - differential gene expression analysis in Tumor, Normal and Metastatic tissues. Reimplementation of online service [tnmplot.com/](https://tnmplot.com/) by Bartha, Áron, and Balázs Győrffy. “[TNMplot.Com: A Web Tool for the Comparison of Gene Expression in Normal, Tumor and Metastatic Tissues](https://doi.org/10.1101/2020.11.10.376228)” 
 - [Survival analysis summary, "survival.Rmd", then "TCGA_summary.Rmd"](examples/TCGA_summary.pdf)
 - [Differential expression analysis results, "TCGA_DEGs.Rmd"](examples/TCGA_DEGs_MIA.pdf), [Example Exel output](examples/TCGA_DEGs_MIA.xlsx) 
 - [Expression analysis summary, "TCGA_expression.Rmd"](examples/TCGA_expression.pdf)
@@ -41,7 +41,7 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 
 ## Analysis scripts
 
-- **In all other scripts, Change Path where the downloaded data is stored, `data_dir` variable**
+- **In all other scripts, change Path where the downloaded data is stored, `data_dir` variable**
 
 - `survival.Rmd` - a pipeline to run survival analyses for all cancers. Adjust settings `cancer = "BRCA"` and `selected_genes = "IGFBP3"` to the desired cancer and gene IDs. These IDs should be the same in `TCGA_summary.Rmd` that'll summarize the output into [Survival analysis summary](examples/TCGA_summary.pdf). Note if `subcategories_in_all_cancers <- TRUE`, survival analysis is done for all subcategories and all cancers, time consuming.
     - `Analysis 1` - Selected genes, selected cancers, no clinical annotations. Results are in `<selected_genes>.<cancer>.Analysis1` folder.
