@@ -47,6 +47,7 @@ selected_genes <- c("MYC")
 
 ```{r results='hide'}
 brca <- curatedTCGAData(diseaseCode = "BRCA", assays = "RNASeq2GeneNorm", FALSE, version = "2.0.1")
+# sampleTables(brca)
 # Select only solid tumors
 brca.primary.solid.tumor <- TCGAsplitAssays(brca, c("01"))
 # Raw data
@@ -56,8 +57,8 @@ rownames(xdata.raw) <- xdata.ids
 
 # getSubtypeMap(brca.primary.solid.tumor)
 # getClinicalNames("BRCA")
-# ydata <- colData(matchmae) %>% as.data.frame() %>% select(patientID, race, ethnicity, Integrated.Clusters..with.PAM50.)
-# table(ydata$Integrated.Clusters..with.PAM50.)
+# ydata <- colData(brca.primary.solid.tumor) %>% as.data.frame() %>% select(patientID, race, ethnicity, PAM50.mRNA)
+# table(ydata$PAM50.mRNA)
 
 ydata.xena <- read_csv("data.TCGA/XENA_classification.csv")
 table(ydata.xena$PAM50Call_RNAseq)
@@ -72,21 +73,46 @@ setdiff(ydata.xena$sampleID, xdata.ids)
 xdata.raw_subset <- xdata.raw[rownames(xdata.raw) %in% ydata.xena$sampleID, selected_genes, drop = FALSE]
 xdata.raw_subset <- xdata.raw_subset[match(ydata.xena$sampleID, rownames(xdata.raw_subset)), , drop = FALSE]
 all.equal(rownames(xdata.raw_subset), ydata.xena$sampleID)
-```
 
-# Number of samples per Race and PAM50 subtypes
-
-```{r}
+# Prepare matrix for plotting
 mtx_subset <- data.frame(PAM50 = ydata.xena$PAM50Call_RNAseq, Race = ydata.xena$race, Expression = xdata.raw_subset[, selected_genes]  )
 # log2 transform expression
 mtx_subset$Expression <- log2(mtx_subset$Expression)
 # Correct race for plotting
 mtx_subset$Race <- ifelse(mtx_subset$Race == "white", "white", "black")
 # Tablulate samples
-table(mtx_subset$Race, mtx_subset$PAM50) %>% pander()
 ```
 
-# Expression analysis in 'black or african-american' and 'white' cohorts, in PAM50 subtypes
+# All BRCA Expression analysis in 'black or african-american' and 'white' cohorts
+
+```{r}
+table(mtx_subset$Race) %>% pander()
+```
+
+```{r fig.height=4, fig.width=4}
+ggplot(mtx_subset, aes(x = Race, y = Expression, fill = Race, color = Race)) + 
+  geom_boxplot() +
+  geom_jitter(shape=20, position=position_jitter(0.2, 0.3), size = 1, alpha = 0.5) +
+  theme_bw() +
+  scale_fill_manual(values = mycols[c(6, 3)]) +
+  scale_color_manual(values = mycols[c(2, 1)]) +
+  labs(y = expression(log[2](Expression)))
+
+ggsave("results/Figure_All_EA_AA.png", width = 3, height = 3, dpi = 300)
+```
+
+### T-test, differences between races in all BRCA
+
+```{r}
+t.test(mtx_subset$Expression[mtx_subset$Race == "white"], mtx_subset$Expression[mtx_subset$Race == "black"])$p.value
+```
+
+
+# PAM50 subtypes Expression analysis in 'black or african-american' and 'white' cohorts
+
+```{r}
+table(mtx_subset$Race, mtx_subset$PAM50) %>% pander()
+```
 
 ```{r fig.height=4}
 ggplot(mtx_subset, aes(x = Race, y = Expression, fill = Race, color = Race)) + 
@@ -101,7 +127,7 @@ ggplot(mtx_subset, aes(x = Race, y = Expression, fill = Race, color = Race)) +
 ggsave("results/Figure_PAM50_EA_AA.png", width = 7, height = 3, dpi = 300)
 ```
 
-# T-test, differences between races in individual subtypes
+### T-test, differences between races in individual subtypes
 
 For each PAM50 subtypes, compare expression between EA and AA cohorts. Only p-values are shown
 
