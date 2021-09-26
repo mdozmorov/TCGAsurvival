@@ -15,7 +15,10 @@ For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
 
 ## Data description
 
-Scripts are being transitioned to use [curatedTCGAData](https://bioconductor.org/packages/curatedTCGAData/) and [TCGAutils](https://bioconductor.org/packages/TCGAutils/) R packages.
+Scripts are being transitioned to use the following packages.
+
+- [curatedTCGAData](https://bioconductor.org/packages/curatedTCGAData/) and [cBioPortalData](https://bioconductor.org/packages/cBioPortalData/) R/Bioconductor packages, interface to TCGA and the cBioPortal API, MultiAssayExperiment data structure, uniform processing. TCGAutils](https://bioconductor.org/packages/TCGAutils/) for data manipulation. [DelayedMatrix](https://bioconductor.org/packages/DelayedArray) for handling large methylation data (HDF5-based). Tables - Cancer types and Data types. 
+    - Ramos, Marcel, Ludwig Geistlinger, Sehyun Oh, Lucas Schiffer, Rimsha Azhar, Hanish Kodali, Ino de Bruijn et al. "[Multiomic Integration of Public Oncology Databases in Bioconductor](https://doi.org/10.1200/cci.19.00119)." JCO Clinical Cancer Informatics 1 (2020)
 
 - Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/), [GitHub repo](https://github.com/zhandong/TCGA2STAT). First, install `BiocManager::install("CNTools")`, clone the repository `git clone https://github.com/zhandong/TCGA2STAT`, and install from source `install.packages("TCGA2STAT_1.2.tar.gz", repos = NULL, type = "source")`
 - [Cancer types](data/CancerDataChecklist_AppendixA.PDF)
