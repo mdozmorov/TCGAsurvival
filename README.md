@@ -11,7 +11,7 @@
   * [brca_mbcproject_wagle_2017](#brca_mbcproject_wagle_2017)
   * [TCGA_Ovarian](#TCGA_Ovarian)
 
-For more cancer-related notes, see https://github.com/mdozmorov/Cancer_notes
+[awesome-TCGA](https://github.com/IARCbioinfo/awesome-TCGA) - Curated list of TCGA resources. For more cancer-related notes, see my [Cancer_notes](https://github.com/mdozmorov/Cancer_notes)
 
 ## Data description
 
