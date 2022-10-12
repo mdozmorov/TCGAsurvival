@@ -140,6 +140,8 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 
 - `TCGA_489_UE.k4.txt` - Ovarian cancer classification into four subtypes, from `https://github.com/aedin/OvarianCancerSubtypes/data/23257362`
 
+- `TCGA_Ancestry.xlsx` - Admixture and Ethnicity Calls of all TCGA samples. Table S1 from Carrot-Zhang, Jian, Nyasha Chambwe, Jeffrey S. Damrauer, Theo A. Knijnenburg, A. Gordon Robertson, Christina Yau, Wanding Zhou, et al. “Comprehensive Analysis of Genetic Ancestry and Its Molecular Correlates in Cancer.” Cancer Cell 37, no. 5 (May 2020): 639-654.e6. https://doi.org/10.1016/j.ccell.2020.04.012.
+
 - `TCGA_cancer_counts.csv` - number of samples per cancer. Created by `misc/TCGA_preprocessing.R`
 
 - `TCGA_cancers.xlsx` - TCGA cancer abbreviations, from http://www.liuzlab.org/TCGA2STAT/CancerDataChecklist.pdf
