@@ -28,12 +28,17 @@ options(stringsAsFactors = FALSE)
 # Libraries
 
 ```{r libraries}
+if (!require(TCGA2STAT)) {
+  install.packages("https://cran.r-project.org/src/contrib/Archive/TCGA2STAT/TCGA2STAT_1.2.tar.gz", repos = NULL, type="source")
+}
+if (!require(survplot)) {
+  install.packages("data/survplot_0.0.7.tar.gz", repos = NULL, type="source")
+}
+
 library(TCGA2STAT)
+library(survplot)
 library(ggplot2)
 library(reshape2)
-if (!require(survplot)) {
-  install.packages("survplot_0.0.7.tar.gz", repos = NULL, type="source")
-}
 source("Supplemental_R_script_1.R")
 ```
 
@@ -106,8 +111,8 @@ data_dir = "/Users/mdozmorov/Documents/Data/GenomeRunner/TCGAsurvival/data" # Ma
 # General settings
 cancer = "nbl_target" 
 data.type = "2018_pub"
-# type = "mrna" # Doesn't work as of 08-15-2018
-type = "mrna_median_Zscores" 
+type = "mrna" # Doesn't work as of 08-15-2018
+# type = "mrna_median_Zscores" 
 
 # Maximum number of days to take for survival analysis
 max_days <- 200 * 30 # In days, # months x # days. For all days, use, e.g., 200 * 30
@@ -135,7 +140,7 @@ We took the advantage of the availability of clinical annotations. To identify i
 # Load data
 
 ```{r loadData}
-mtx <- load_data(disease = cancer, data.type = data.type, type = type, data_dir = data_dir, force_reload = FALSE)
+mtx <- load_data(disease = cancer, data.type = data.type, type = "", data_dir = data_dir, force_reload = FALSE)
 clinical_annotations <- summarize_data(mtx = mtx)
 ```
 

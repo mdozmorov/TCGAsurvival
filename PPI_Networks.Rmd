@@ -31,6 +31,8 @@ library(networkD3)
 library(igraph)
 ```
 
+[Cancer networks and data](https://cytoscape.org/cytoscape-automation/for-scripters/R/notebooks/Cancer-networks-and-data.nb.html) - This vignette will demonstrate network retrieval from the STRING database, basic analysis, loading and visualization TCGA data in Cytoscape from R using the RCy3 package. Relevant subnetworks will be identified using different strategies, including network connectivity. At the end of this vignette, you will have will be a visualization of TCGA data on a subnetwork built around highly mutated genes in the relevant cancer type.
+
 ## Settings
 
 ```{r}
