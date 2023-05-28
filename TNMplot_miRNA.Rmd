@@ -1,0 +1,206 @@
+---
+title: "Breast Cancer, miRNA expression in Tumor, Normal, and Metastatic samples, in PAM50 subtypes"
+author: "Mikhail Dozmorov"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: no
+    theme: united
+bibliography: data.TCGA/TCGA.bib
+csl: styles.ref/genomebiology.csl
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Set up the environment
+library(knitr)
+opts_chunk$set(cache.path='cache/', fig.path='img/', cache=F, tidy=T, fig.keep='high', echo=F, dpi=100, warnings=F, message=F, comment=NA, warning=F, results='as.is', fig.width = 10, fig.height = 6) #out.width=700, 
+library(pander)
+panderOptions('table.split.table', Inf)
+set.seed(1)
+library(dplyr)
+options(stringsAsFactors = FALSE)
+```
+
+
+```{r}
+library(curatedTCGAData)
+library(TCGAutils)
+library(ggplot2)
+library("ggsci")
+library(scales)
+# scales::show_col(pal_lancet("lanonc")(8))
+mycols = pal_lancet("lanonc")(8)
+library(grid)
+library(gridExtra)
+library(ggprism)
+library(readr)
+library(stringr)
+library(writexl)
+```
+
+```{r echo=TRUE}
+selected_genes <- c("hsa-let-7a-1")
+```
+
+```{r}
+dir_data <- "/Users/mdozmorov/Documents/Work/GitHub/TCGAsurvival"
+# Create results directory if not exist
+if (!dir.exists(file.path(dir_data, "results"))) dir.create(file.path(dir_data, "results"))
+# Save the data
+fileNameOut1 <- file.path(dir_data, "results/TCGA_BRCA_miRNA.xlsx")
+```
+
+```{r results='hide'}
+brca <- curatedTCGAData(diseaseCode = "BRCA", assays = "miRNASeqGene", FALSE, version = "2.0.1")
+# https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/sample-type-codes
+# 01	Primary Solid Tumor
+# 11	Solid Tissue Normal
+sampleTables(brca)
+#  01  06  11 
+# 755   7  87 
+```
+
+# Tumor-normal pairs comparison
+
+```{r message=FALSE, results='hide'}
+(tnmae <- TCGAsplitAssays(brca, c("01", "11")))
+(matchmae <- as(tnmae, "MatchedAssayExperiment"))
+
+selected_expr_tumor  <- assay(matchmae[[1]])[selected_genes, ]
+selected_expr_normal <- assay(matchmae[[2]])[selected_genes, ]
+
+# T-test to put on a plot
+res <- t.test(selected_expr_normal, selected_expr_tumor, paired = TRUE)$p.value
+grob <- grobTree(textGrob(paste0("p-value: ", formatC(res, format = "e")), x=0.1,  y=0.90, hjust=0, gp=gpar(col="black", fontsize=10, fontface="italic")))
+
+mtx_to_plot <- data.frame(Status = c(rep("Tumor", length(selected_expr_tumor)), rep("Normal", length(selected_expr_normal))), Expression = c(selected_expr_tumor, selected_expr_normal))
+# ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+#   geom_boxplot() +
+#   theme_bw() +
+#   scale_fill_manual(values = mycols[c(3, 2, 1)]) +
+#   geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+#   annotation_custom(grob)
+```
+
+```{r fig.height=4, fig.width=4}
+p1 <- ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+  geom_boxplot() +
+  scale_fill_prism(palette = "prism_light") +
+  geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+  annotation_custom(grob) +
+  theme_prism(palette = "prism_light")
+
+# ggsave("results/Figure_TN_paired.png", plot = p1, width = 4, height = 4, dpi = 300)
+```
+
+# Tumor-normal-metastatic comparison
+
+```{r message=FALSE, results='hide'}
+(tnmae <- TCGAsplitAssays(brca, c("01", "11", "06")))
+selected_expr_tumor  <- assay(tnmae[[1]])[selected_genes, ]
+selected_expr_met    <- assay(tnmae[[2]])[selected_genes, ]
+selected_expr_normal <- assay(tnmae[[3]])[selected_genes, ]
+
+mtx_to_plot <- data.frame(Status = c(rep("Tumor", length(selected_expr_tumor)), rep("Normal", length(selected_expr_normal)), rep("Metastatic", length(selected_expr_met))), Expression = c(selected_expr_tumor, selected_expr_normal, selected_expr_met))
+mtx_to_plot$Status <- factor(mtx_to_plot$Status, levels = c("Normal", "Tumor", "Metastatic"))
+
+res_tn <- t.test(selected_expr_tumor, selected_expr_normal)$p.value %>% formatC(., format = "e")
+res_tm <- t.test(selected_expr_tumor, selected_expr_met)$p.value %>% formatC(., format = "e")
+res_mn <- t.test(selected_expr_met, selected_expr_normal)$p.value %>% formatC(., format = "e")
+grob <- textGrob(paste0("T vs. N: ", res_tn, ", T vs. M: ", res_tm, ", M vs. N: ", res_mn)) #, gp=gpar(col="black", fontsize=8, fontface="italic")))
+my_text <- paste0("T vs. N: ", res_tn, ", T vs. M: ", res_tm, ", M vs. N: ", res_mn)
+my_grob <- grid.text(my_text, x=0.5, y=0.9, gp=gpar(col="black", fontsize=6, fontface="italic"))
+
+# ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+#   geom_boxplot() +
+#   theme_bw() +
+#   scale_fill_manual(values = mycols[c(3, 2, 1)]) +
+#   geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+#   annotation_custom(my_grob)
+```
+
+```{r fig.height=4, fig.width=5}
+p2 <- ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
+  geom_boxplot() +
+  # scale_fill_prism(palette = "prism_light") +
+  scale_fill_manual(values = c(prism_color_pal(palette = "prism_light")(10)[6], prism_color_pal(palette = "prism_light")(10)[7], prism_color_pal(palette = "prism_light")(10)[9])) +
+  geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+  annotation_custom(my_grob) +
+  theme_prism(palette = "prism_light")
+
+# ggsave("results/Figure_TNM.png", plot = p2, width = 5, height = 4, dpi = 300)
+```
+
+```{r fig.height=4}
+grid.arrange(p1, p2, ncol = 2)
+```
+
+# PAM50
+
+```{r fig.height=4, fig.width=5}
+# PAM50 annotations
+pam50 <- read_tsv("data.TCGA/PAM50_classification.txt", col_types = c("cc"))
+# Get tumor only
+tnmae_tumor <- TCGAsplitAssays(brca, c("01"))
+# Get selected gene
+selected_expr_tumor  <- assay(tnmae[[1]])[selected_genes, ]
+# Matrix for plotting, with Sample ID shortened to match PAM50
+mtx_to_plot <- data.frame(Sample = str_sub(names(selected_expr_tumor), start = 1, end = 16),
+                          Expression = selected_expr_tumor)
+mtx_to_plot <- left_join(mtx_to_plot, pam50, by = c("Sample" = "Particpant ID"))
+mtx_to_plot <- mtx_to_plot[!is.na(mtx_to_plot$Subtype), ]
+# table(mtx_to_plot$Subtype)
+# Basal  Her2  LumA  LumB 
+#    71    31   233   100 
+
+p3 <- ggplot(mtx_to_plot, aes(x = Subtype, y = log2(Expression), fill = Subtype)) +
+  geom_boxplot() +
+  # scale_fill_prism(palette = "prism_light") +
+  scale_fill_manual(values = c(prism_color_pal(palette = "prism_light")(10)[6:9])) +
+  geom_jitter(shape=20, position=position_jitter(0.2), size = 1, alpha = 0.2) +
+  # annotation_custom(my_grob) +
+  theme_prism(palette = "prism_light")
+p3
+```
+
+# Save the data
+
+- Original data description: "Gene-level log2 RPM miRNA expression values"
+- The data seems NOT to be log2-transformed. I log2-transformed it manually
+- The data is saved in `r basename(fileNameOut1)`
+
+```{r}
+# Tumor-specific expression
+mtx <- log2(assay(tnmae_tumor) + 1)
+# Transpose and make a data frame
+mtx_to_save <- t(mtx) 
+mtx_to_save <- data.frame(Sample = rownames(mtx_to_save), 
+                          `Participant ID` = str_sub(rownames(mtx_to_save), start = 1, end = 16),
+                          mtx_to_save)
+# Attach PAM50 and sort
+mtx_to_save <- left_join(mtx_to_save, pam50, by = c("Participant.ID" = "Particpant ID"))
+mtx_to_save <- mtx_to_save %>% relocate("Subtype", .after = "Participant.ID") %>% dplyr::arrange(Subtype)
+
+write_xlsx(mtx_to_save, fileNameOut1)
+```
+
+
+```{r eval=FALSE}
+library(scales)
+
+show_palette <- function(palette) {
+  scales::show_col(
+    prism_colour_pal(palette = palette)(
+      attr(prism_colour_pal(palette = palette), "max_n")
+    )
+  )
+}
+
+# show the colours in the palette "pearl"
+show_palette("prism_light")
+```
+
