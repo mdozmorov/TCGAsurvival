@@ -133,6 +133,10 @@ First, get the data locally using `misc/TCGA_preprocessing.R` script.
 
 - `Immune_resistant_program.xlsx` - A gene expression program associated with T cell exclusion and immune evasion. Supplementary Table S4 - genes associated with the immune resistance program, described in Methods. Jerby-Arnon, Livnat, Parin Shah, Michael S. Cuoco, Christopher Rodman, Mei-Ju Su, Johannes C. Melms, Rachel Leeson, et al. “A Cancer Cell Program Promotes T Cell Exclusion and Resistance to Checkpoint Blockade.” Cell 175, no. 4 (November 2018): 984-997.e24. https://doi.org/10.1016/j.cell.2018.09.006.
 
+- `Lehmann_2019_Data1_BRCA_subtypes.xlsx` - Subtype annotation, ER, PR and HER2 calls for TCGA, CPTAC, METABRIC, MET500 samples. From [Lehmann 2019 et al.](https://www.nature.com/articles/s41467-021-26502-6#Sec49)
+
+- `Lehmann_2019_Data2_TNBCsubtype.xlsx` -  TNBCsubtype clinical information and cell type, mutational, immune signatures, for each TNBCtype subtype. From [Lehmann 2019 et al.](https://www.nature.com/articles/s41467-021-26502-6#Sec49)
+
 - `gene_signatures_323.xls` - 323 gene signatures from Fan, Cheng, Aleix Prat, Joel S. Parker, Yufeng Liu, Lisa A. Carey, Melissa A. Troester, and Charles M. Perou. “Building Prognostic Models for Breast Cancer Patients Using Clinical Variables and Hundreds of Gene Expression Signatures.” BMC Medical Genomics 4 (January 9, 2011): 3. https://doi.org/10.1186/1755-8794-4-3.
 
 - `PAM50_classification.txt` - sample classification into PAM50 types
