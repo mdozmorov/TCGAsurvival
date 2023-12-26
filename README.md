@@ -20,6 +20,8 @@ Scripts are being transitioned to use the [curatedTCGAData](https://bioconductor
   Ramos, Marcel, Ludwig Geistlinger, Sehyun Oh, Lucas Schiffer, Rimsha Azhar, Hanish Kodali, Ino de Bruijn et al. "Multiomic Integration of Public Oncology Databases in Bioconductor", JCO Clinical Cancer Informatics 1 (2020), https://doi.org/10.1200/cci.19.00119
 </details>
 
+- [TCGAplot](https://github.com/tjhwangxiong/TCGAplot) - R package for pan-cancer TCGA analysis. DEG analysis, correlation analysis between gene expression and TMB, MSI, TIME, and promoter methylation. Visualization. Links to other online TCGA analysis tools. [Paper](https://doi.org/10.1186/s12859-023-05615-3)
+
 - Public data is available through the [TCGA2STAT R package](http://www.liuzlab.org/TCGA2STAT/), [GitHub repo](https://github.com/zhandong/TCGA2STAT). First, install `BiocManager::install("CNTools")`, clone the repository `git clone https://github.com/zhandong/TCGA2STAT`, and install from source `install.packages("TCGA2STAT_1.2.tar.gz", repos = NULL, type = "source")`
 - [Cancer types](data/CancerDataChecklist_AppendixA.PDF)
 - [Data types](data/DataPlatforms_AppendixB.PDF)
