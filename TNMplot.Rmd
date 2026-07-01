@@ -40,7 +40,7 @@ library(ggprism)
 ```
 
 ```{r echo=TRUE}
-selected_genes <- c("MYC")
+selected_genes <- c("TACSTD2")
 ```
 
 
@@ -57,7 +57,8 @@ sampleTables(brca)
 # Tumor-normal pairs comparison
 
 ```{r message=FALSE, results='hide'}
-(tnmae <- splitAssays(brca, c("01", "11")))
+makeHitList(brca, list("01", "11"))
+(tnmae <- TCGAsplitAssays(brca, c("01", "11")))
 (matchmae <- as(tnmae, "MatchedAssayExperiment"))
 
 selected_expr_tumor  <- assay(matchmae[[1]])[selected_genes, ]
@@ -65,7 +66,7 @@ selected_expr_normal <- assay(matchmae[[2]])[selected_genes, ]
 
 # T-test to put on a plot
 res <- t.test(selected_expr_normal, selected_expr_tumor, paired = TRUE)$p.value
-grob <- grobTree(textGrob(paste0("p-value: ", formatC(res, format = "e")), x=0.1,  y=0.90, hjust=0, gp=gpar(col="black", fontsize=10, fontface="italic")))
+grob <- grid:::grobTree(grid::grid.text(paste0("p-value: ", formatC(res, format = "e")), x=0.1,  y=0.90, hjust=0, gp=grid::gpar(col="black", fontsize=10, fontface="italic")))
 
 mtx_to_plot <- data.frame(Status = c(rep("Tumor", length(selected_expr_tumor)), rep("Normal", length(selected_expr_normal))), Expression = c(selected_expr_tumor, selected_expr_normal))
 # ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
@@ -90,7 +91,7 @@ ggsave("results/Figure_TN_paired.png", plot = p1, width = 4, height = 4, dpi = 3
 # Tumor-normal-metastatic comparison
 
 ```{r message=FALSE, results='hide'}
-(tnmae <- splitAssays(brca, c("01", "11", "06")))
+(tnmae <- TCGAsplitAssays(brca, c("01", "11", "06")))
 selected_expr_tumor  <- assay(tnmae[[1]])[selected_genes, ]
 selected_expr_met    <- assay(tnmae[[2]])[selected_genes, ]
 selected_expr_normal <- assay(tnmae[[3]])[selected_genes, ]
@@ -101,9 +102,9 @@ mtx_to_plot$Status <- factor(mtx_to_plot$Status, levels = c("Normal", "Tumor", "
 res_tn <- t.test(selected_expr_tumor, selected_expr_normal)$p.value %>% formatC(., format = "e")
 res_tm <- t.test(selected_expr_tumor, selected_expr_met)$p.value %>% formatC(., format = "e")
 res_mn <- t.test(selected_expr_met, selected_expr_normal)$p.value %>% formatC(., format = "e")
-grob <- textGrob(paste0("T vs. N: ", res_tn, ", T vs. M: ", res_tm, ", M vs. N: ", res_mn)) #, gp=gpar(col="black", fontsize=8, fontface="italic")))
+grob <- grid::grid.text(paste0("T vs. N: ", res_tn, ", T vs. M: ", res_tm, ", M vs. N: ", res_mn)) #, gp=gpar(col="black", fontsize=8, fontface="italic")))
 my_text <- paste0("T vs. N: ", res_tn, ", T vs. M: ", res_tm, ", M vs. N: ", res_mn)
-my_grob <- grid.text(my_text, x=0.5, y=0.9, gp=gpar(col="black", fontsize=6, fontface="italic"))
+my_grob <- grid::grid.text(my_text, x=0.5, y=0.9, gp=grid::gpar(col="black", fontsize=6, fontface="italic"))
 
 # ggplot(mtx_to_plot, aes(x = Status, y = Expression, fill = Status)) +
 #   geom_boxplot() +
