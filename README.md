@@ -33,6 +33,11 @@ Scripts are being transitioned to use the [curatedTCGAData](https://bioconductor
 - [Clinical values](data/ClinicalVariables_AppendixC.PDF)
 - [Number of samples per cancer](data.TCGA/TCGA_cancer_counts.csv)
 
+- Cleaned Survival data in TCGA cancers. OS Overall Survival, DSS Disease Specific Survival, DFI Disease Free Interval, PFI Progression Free Interval. Tables with recommendations which type of survival data is good and which is not. [Table S1](https://www.cell.com/cell/fulltext/S0092-8674(18)30229-0?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0092867418302290%3Fshowall%3Dtrue#supplementary-material) - Survival times for all 11,160 TCGA samples. <details>
+  <summary>Paper</summary>
+  Liu, Jianfang, Tara Lichtenberg, Katherine A. Hoadley, et al. “An Integrated TCGA Pan-Cancer Clinical Data Resource to Drive High-Quality Survival Outcome Analytics.” Cell 173, no. 2 (2018): 400-416.e11. https://doi.org/10.1016/j.cell.2018.02.052.
+</details>
+
 ## Data preparation
 
 First, get the data locally using `misc/TCGA_preprocessing.R` script.
